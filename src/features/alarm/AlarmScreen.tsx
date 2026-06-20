@@ -61,12 +61,6 @@ export function AlarmScreen() {
     <div className="screen">
       <h1 className="screen-title">アラーム</h1>
 
-      {!isNative() && (
-        <p className="banner">
-          ブラウザでは通知は発火しません。実機（iOS / Android）で通知の権限を許可すると、設定時刻に通知が届きます。
-        </p>
-      )}
-
       {reminderTime && (
         <Card tight>
           <div className="spread">
