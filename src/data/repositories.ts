@@ -107,3 +107,24 @@ export async function exportAll(): Promise<string> {
 export async function wipeAll(): Promise<void> {
   await Promise.all([removeKey(KEYS.sessions), removeKey(KEYS.alarms), removeKey(KEYS.settings)]);
 }
+
+/**
+ * Overwrite stored data from a validated backup (Settings → Import). Settings
+ * are merged onto the current defaults so older backups stay forward-compatible.
+ */
+export async function importAll(data: {
+  sessions: SleepSession[];
+  alarms: AlarmConfig[];
+  settings: UserSettings | null;
+}): Promise<void> {
+  const tasks: Promise<void>[] = [
+    setJSON(KEYS.sessions, data.sessions),
+    setJSON(KEYS.alarms, data.alarms),
+  ];
+  // Only touch settings when the backup carried a valid set; a missing or
+  // corrupt settings block leaves the user's current preferences intact.
+  if (data.settings) {
+    tasks.push(setJSON(KEYS.settings, { ...DEFAULT_SETTINGS, ...data.settings }));
+  }
+  await Promise.all(tasks);
+}

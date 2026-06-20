@@ -7,7 +7,8 @@ import { TimeDial } from '../../components/TimeDial';
 import { Toggle } from '../../components/Toggle';
 import type { ThemePref } from '../../domain/types';
 import { formatDurationJa } from '../../domain/format';
-import { exportAll, wipeAll } from '../../data/repositories';
+import { exportAll, importAll, wipeAll } from '../../data/repositories';
+import { parseBackup } from '../../domain/backup';
 import { isNative } from '../../lib/platform';
 
 const THEME_LABEL: Record<ThemePref, string> = {
@@ -25,6 +26,9 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
 
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [exported, setExported] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
 
   const onExport = async () => {
     const json = await exportAll();
@@ -42,6 +46,20 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       .slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const onImport = async () => {
+    const result = parseBackup(importText);
+    if (!result.ok) {
+      setImportError(result.error);
+      return;
+    }
+    await importAll(result.data);
+    await init(); // reload everything from the restored data
+    setImportOpen(false);
+    setImportText('');
+    setImportError(null);
+    onClose();
   };
 
   const onWipe = async () => {
@@ -154,6 +172,19 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           </Button>
         </div>
         <div className="set-row">
+          <span className="set-label">バックアップから読み込み</span>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setImportError(null);
+              setImportText('');
+              setImportOpen(true);
+            }}
+          >
+            読み込む
+          </Button>
+        </div>
+        <div className="set-row">
           <span className="set-label" style={{ color: '#d9748a' }}>
             すべてのデータを削除
           </span>
@@ -179,6 +210,45 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             />
             <Button block onClick={() => setExported(null)}>
               閉じる
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {importOpen && (
+        <div className="sheet-backdrop" onClick={() => setImportOpen(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: 18 }}>バックアップから読み込み</h2>
+            <p className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+              書き出したJSONを貼り付けてください。現在の記録・アラームは
+              上書きされます。
+            </p>
+            <textarea
+              className="textarea"
+              style={{ minHeight: 180 }}
+              placeholder='{"app":"Madoromi", ...}'
+              value={importText}
+              onChange={(e) => {
+                setImportText(e.target.value);
+                setImportError(null);
+              }}
+            />
+            {importError && (
+              <span style={{ color: '#d9748a', fontSize: 13 }}>
+                {importError}
+              </span>
+            )}
+            <Button
+              variant="primary"
+              block
+              large
+              disabled={importText.trim() === ''}
+              onClick={() => void onImport()}
+            >
+              上書きして読み込む
+            </Button>
+            <Button variant="ghost" block onClick={() => setImportOpen(false)}>
+              やめる
             </Button>
           </div>
         </div>
