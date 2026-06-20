@@ -2,8 +2,10 @@ import {
   LocalNotifications,
   type ScheduleOptions,
 } from '@capacitor/local-notifications';
-import type { AlarmConfig, UserSettings } from '../domain/types';
-import { parseHm, subtractMinutesHm } from '../domain/format';
+import type { AlarmConfig, SleepSession, UserSettings } from '../domain/types';
+import { parseHm } from '../domain/format';
+import { bedtimeReminderContent } from '../domain/bedtime';
+import { sleepDebtMin } from '../domain/debt';
 import { isNative } from './platform';
 
 /**
@@ -41,6 +43,7 @@ function notifId(alarmId: string, slot: number): number {
 export async function syncSchedules(
   alarms: AlarmConfig[],
   settings: UserSettings,
+  sessions: SleepSession[] = [],
 ): Promise<void> {
   if (!isNative()) return;
   try {
@@ -80,17 +83,19 @@ export async function syncSchedules(
       }
     }
 
-    // Bedtime reminder: target wake − target duration.
+    // Bedtime reminder: recovery-aware, matching Home's suggested bedtime —
+    // earlier (and saying so) when there is sleep debt to pay back gently.
     if (settings.bedtimeReminder) {
-      const bedtime = subtractMinutesHm(
-        settings.defaultWakeTime,
-        settings.targetDurationMin,
-      );
-      const { hour, minute } = parseHm(bedtime);
+      const reminder = bedtimeReminderContent({
+        wakeTime: settings.defaultWakeTime,
+        targetMin: settings.targetDurationMin,
+        debtMin: sleepDebtMin(sessions, settings.targetDurationMin),
+      });
+      const { hour, minute } = parseHm(reminder.bedtimeHm);
       toSchedule.push({
         id: BEDTIME_ID,
-        title: 'そろそろおやすみの時間です',
-        body: '目標の睡眠時間を確保するための目安です',
+        title: reminder.title,
+        body: reminder.body,
         schedule: { on: { hour, minute }, allowWhileIdle: true },
       });
     }

@@ -6,7 +6,9 @@ import { Button } from '../../components/Button';
 import { Toggle } from '../../components/Toggle';
 import { AlarmEditor } from './AlarmEditor';
 import type { AlarmConfig } from '../../domain/types';
-import { weekdayJa, subtractMinutesHm } from '../../domain/format';
+import { weekdayJa } from '../../domain/format';
+import { recommendedBedtime } from '../../domain/bedtime';
+import { sleepDebtMin } from '../../domain/debt';
 import { uid } from '../../lib/id';
 import { ensurePermission } from '../../lib/notifications';
 import { isNative } from '../../lib/platform';
@@ -32,6 +34,7 @@ function repeatLabel(days: number[]): string {
 export function AlarmScreen() {
   const alarms = useStore((s) => s.alarms);
   const settings = useStore((s) => s.settings);
+  const sessions = useStore((s) => s.sessions);
   const saveAlarm = useStore((s) => s.saveAlarm);
   const deleteAlarm = useStore((s) => s.deleteAlarm);
 
@@ -44,9 +47,14 @@ export function AlarmScreen() {
     setEditing(newAlarm(settings.defaultWakeTime));
   };
 
-  const reminderTime = settings.bedtimeReminder
-    ? subtractMinutesHm(settings.defaultWakeTime, settings.targetDurationMin)
+  const bedtimePlan = settings.bedtimeReminder
+    ? recommendedBedtime({
+        wakeTime: settings.defaultWakeTime,
+        targetMin: settings.targetDurationMin,
+        debtMin: sleepDebtMin(sessions, settings.targetDurationMin),
+      })
     : undefined;
+  const reminderTime = bedtimePlan?.bedtimeHm;
 
   return (
     <div className="screen">
@@ -67,7 +75,11 @@ export function AlarmScreen() {
                 {reminderTime}
               </div>
             </div>
-            <span className="pill">目標から逆算</span>
+            <span className="pill">
+              {bedtimePlan && bedtimePlan.recoveryMin > 0
+                ? '回復のため早め'
+                : '目標から逆算'}
+            </span>
           </div>
         </Card>
       )}

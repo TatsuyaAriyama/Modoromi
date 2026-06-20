@@ -71,7 +71,7 @@ export const useStore = create<AppState>((set, get) => ({
       settingsRepo.get(),
     ]);
     set({ sessions, alarms, settings, loaded: true });
-    void syncSchedules(alarms, settings);
+    void syncSchedules(alarms, settings, sessions);
   },
 
   startSession() {
@@ -125,6 +125,7 @@ export const useStore = create<AppState>((set, get) => ({
       sessions: [...s.sessions, session],
       pendingMorning: null,
     }));
+    void syncSchedules(get().alarms, settings, get().sessions);
   },
 
   dismissMorning() {
@@ -136,6 +137,7 @@ export const useStore = create<AppState>((set, get) => ({
       sessions: [...s.sessions, pendingMorning],
       pendingMorning: null,
     }));
+    void syncSchedules(get().alarms, get().settings, get().sessions);
   },
 
   async updateSession(session) {
@@ -143,11 +145,13 @@ export const useStore = create<AppState>((set, get) => ({
     set((s) => ({
       sessions: s.sessions.map((x) => (x.id === session.id ? session : x)),
     }));
+    void syncSchedules(get().alarms, get().settings, get().sessions);
   },
 
   async deleteSession(id) {
     await sleepRepo.remove(id);
     set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) }));
+    void syncSchedules(get().alarms, get().settings, get().sessions);
   },
 
   async saveAlarm(alarm) {
@@ -159,24 +163,25 @@ export const useStore = create<AppState>((set, get) => ({
       return [...list, alarm];
     })();
     set({ alarms });
-    void syncSchedules(alarms, get().settings);
+    void syncSchedules(alarms, get().settings, get().sessions);
   },
 
   async deleteAlarm(id) {
     await alarmRepo.remove(id);
     const alarms = get().alarms.filter((a) => a.id !== id);
     set({ alarms });
-    void syncSchedules(alarms, get().settings);
+    void syncSchedules(alarms, get().settings, get().sessions);
   },
 
   async saveSettings(settings) {
     await settingsRepo.set(settings);
     set({ settings });
-    void syncSchedules(get().alarms, settings);
+    void syncSchedules(get().alarms, settings, get().sessions);
   },
 
   async replaceSessions(sessions) {
     await sleepRepo.replaceAll(sessions);
     set({ sessions });
+    void syncSchedules(get().alarms, get().settings, sessions);
   },
 }));

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_RECOVERY_MIN,
   RECOVERY_NIGHTS,
+  bedtimeReminderContent,
   recommendedBedtime,
 } from './bedtime';
 
@@ -47,5 +48,39 @@ describe('recommendedBedtime', () => {
     const p = recommendedBedtime({ wakeTime: WAKE, targetMin: TARGET, debtMin: debt });
     // a single night never pays back more than ~1/RECOVERY_NIGHTS of the debt
     expect(p.recoveryMin).toBeLessThanOrEqual(debt / RECOVERY_NIGHTS + 5);
+  });
+});
+
+describe('bedtimeReminderContent', () => {
+  it('fires at the plain bedtime with neutral copy when there is no debt', () => {
+    const r = bedtimeReminderContent({
+      wakeTime: WAKE,
+      targetMin: TARGET,
+      debtMin: 0,
+    });
+    expect(r.bedtimeHm).toBe('23:30');
+    expect(r.recoveryMin).toBe(0);
+    expect(r.title).toBe('そろそろおやすみの時間です');
+    expect(r.body).not.toContain('早め');
+  });
+
+  it('fires earlier and explains the recovery when debt exists', () => {
+    const r = bedtimeReminderContent({
+      wakeTime: WAKE,
+      targetMin: TARGET,
+      debtMin: 120, // → 30 min earlier
+    });
+    expect(r.bedtimeHm).toBe('23:00');
+    expect(r.recoveryMin).toBe(30);
+    expect(r.title).toContain('早め');
+    expect(r.body).toContain('30分');
+    expect(r.body).toContain('睡眠負債');
+  });
+
+  it('matches recommendedBedtime so the notification and Home agree', () => {
+    const o = { wakeTime: WAKE, targetMin: TARGET, debtMin: 200 };
+    expect(bedtimeReminderContent(o).bedtimeHm).toBe(
+      recommendedBedtime(o).bedtimeHm,
+    );
   });
 });
