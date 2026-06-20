@@ -76,6 +76,10 @@
 }
 .stat-val {
   font-size: 20px;
+  /* Fixed line box so number-only values (e.g. "73") share the same baseline
+     as values containing Japanese glyphs ("7時間31分"), which otherwise raise
+     the line box under line-height: normal and look misaligned. */
+  line-height: 1.5;
 }
 
 .debt-status-good {
