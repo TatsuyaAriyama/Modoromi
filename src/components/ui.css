@@ -1,0 +1,183 @@
+/* Shared component styles (plain CSS, class-namespaced). */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+}
+
+.card-pad-tight {
+  padding: var(--space-4);
+}
+
+/* Buttons */
+.btn {
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 14px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  transition: transform 0.08s ease, opacity 0.2s ease, background 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-contrast);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-accent {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-danger {
+  background: transparent;
+  color: #d9748a;
+  border: 1px solid rgba(217, 116, 138, 0.4);
+}
+.btn-block {
+  width: 100%;
+}
+.btn-lg {
+  padding: 18px 28px;
+  font-size: 18px;
+}
+
+/* MoodPicker */
+.mood {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+.mood-opt {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: var(--space-4) var(--space-2);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.mood-opt[data-selected='true'] {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface-2));
+}
+.mood-emoji {
+  font-size: 24px;
+}
+.mood-label {
+  font-size: 13px;
+}
+
+/* TimeDial */
+.dial {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.dial-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+.dial-step {
+  width: 40px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+}
+.dial-val {
+  font-size: 40px;
+  min-width: 64px;
+  text-align: center;
+}
+.dial-sep {
+  font-size: 36px;
+  opacity: 0.5;
+}
+
+/* misc */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  background: var(--surface-2);
+  color: var(--text-mute);
+}
+.toggle {
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  background: var(--surface-2);
+  position: relative;
+  transition: background 0.2s ease;
+  flex: 0 0 auto;
+}
+.toggle[data-on='true'] {
+  background: var(--primary);
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+.toggle[data-on='true']::after {
+  transform: translateX(18px);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.field label {
+  font-size: 14px;
+  color: var(--text-mute);
+}
+.input,
+.textarea,
+.select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 16px;
+  width: 100%;
+}
+.textarea {
+  resize: vertical;
+  min-height: 64px;
+}

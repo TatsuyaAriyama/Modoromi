@@ -1,0 +1,78 @@
+/* Madoromi — design tokens derived from the app icon (twilight: violet → rose). */
+
+:root {
+  /* Brand core (icon-derived) */
+  --violet: #876ac8;
+  --violet-deep: #6a56a8;
+  --mauve: #a87dc3;
+  --rose: #c98fb4;
+  --mist: #f7f4fb;
+  --ink: #211c2e;
+
+  --gradient-twilight: linear-gradient(
+    180deg,
+    #6a56a8 0%,
+    #876ac8 45%,
+    #a87dc3 75%,
+    #c98fb4 100%
+  );
+
+  /* Radii / spacing / typography */
+  --radius-card: 18px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
+  --font-num: "SF Mono", "SFMono-Regular", ui-monospace, "Menlo", monospace;
+
+  --shadow-soft: 0 8px 30px rgba(20, 14, 40, 0.18);
+}
+
+/* ---- day theme (bright lavender) ---- */
+[data-theme="day"] {
+  --bg: #f3eff7;
+  --surface: #fbf9fd;
+  --surface-2: #f0eaf7;
+  --text: #211c2e;
+  --text-mute: #6e6680;
+  --primary: #7a61ba;
+  --primary-contrast: #ffffff;
+  --accent: #b86e9c;
+  --border: rgba(33, 28, 46, 0.08);
+  --hero-fg: var(--mist);
+}
+
+/* ---- night theme (default) ---- */
+[data-theme="night"] {
+  --bg: #1a1430;
+  --surface: #251c40;
+  --surface-2: #2e2450;
+  --text: #ece7f5;
+  --text-mute: #9a8fb5;
+  --primary: #9b81db;
+  --primary-contrast: #15102a;
+  --accent: #d99bc4;
+  --border: rgba(236, 231, 245, 0.1);
+  --hero-fg: var(--mist);
+}
+
+/* ---- sleep theme (active session, minimal luminance) ---- */
+[data-theme="sleep"] {
+  --bg: #0d0a18;
+  --surface: #0d0a18;
+  --surface-2: #120e20;
+  --text: #9c84b8;
+  --text-mute: #5a4f72;
+  --primary: #6f5d9c;
+  --primary-contrast: #0d0a18;
+  --accent: #6f5d9c;
+  --border: rgba(156, 132, 184, 0.12);
+  --hero-fg: #9c84b8;
+}
