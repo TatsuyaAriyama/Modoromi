@@ -16,6 +16,7 @@ import {
   type RegularityLevel,
 } from '../../domain/consistency';
 import { weeklyReview } from '../../domain/review';
+import { deriveInsights } from '../../domain/insights';
 import {
   formatDateJa,
   formatDurationJa,
@@ -50,6 +51,10 @@ export function HistoryScreen() {
   );
   const review = useMemo(
     () => weeklyReview(sessions, targetMin),
+    [sessions, targetMin],
+  );
+  const insights = useMemo(
+    () => deriveInsights(sessions, targetMin),
     [sessions, targetMin],
   );
 
@@ -92,6 +97,21 @@ export function HistoryScreen() {
           </span>
         )}
       </Card>
+
+      {insights.length > 0 && (
+        <Card tight>
+          <div className="stat-label" style={{ marginBottom: 6 }}>
+            気づき
+          </div>
+          <ul className="insight-list">
+            {insights.map((i) => (
+              <li key={i.id} className="insight-item">
+                {i.text}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       <Card tight>
         <div className="summary-row">
