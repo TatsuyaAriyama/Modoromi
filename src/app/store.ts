@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type {
   AlarmConfig,
   Mood,
+  Movement,
   SleepSession,
   UserSettings,
 } from '../domain/types';
@@ -34,7 +35,7 @@ interface AppState {
   init(): Promise<void>;
 
   startSession(): void;
-  endSession(): void;
+  endSession(movements?: Movement[]): void;
   cancelSession(): void;
 
   saveMorningCheck(input: {
@@ -76,7 +77,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({ active: { id: uid(), startedAt: new Date().toISOString() } });
   },
 
-  endSession() {
+  endSession(movements) {
     const { active } = get();
     if (!active) return;
     const endedAt = new Date().toISOString();
@@ -92,6 +93,7 @@ export const useStore = create<AppState>((set, get) => ({
       startedAt: active.startedAt,
       endedAt,
       durationMin,
+      ...(movements ? { movements } : {}),
     };
     set({ active: null, pendingMorning: session });
   },
@@ -107,6 +109,7 @@ export const useStore = create<AppState>((set, get) => ({
       pendingMorning.durationMin,
       mood,
       settings.targetDurationMin,
+      pendingMorning.movements,
     );
     const session: SleepSession = {
       ...pendingMorning,

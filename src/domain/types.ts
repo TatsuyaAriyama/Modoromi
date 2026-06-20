@@ -1,5 +1,15 @@
 export type Mood = 'fresh' | 'normal' | 'groggy';
 
+/**
+ * A detected body movement during sleep.
+ * `t` is minutes elapsed since the session started; `magnitude` is the
+ * gravity-excluded acceleration peak (m/s²) that triggered the detection.
+ */
+export interface Movement {
+  t: number;
+  magnitude: number;
+}
+
 export interface SleepSession {
   id: string;
   startedAt: string; // ISO
@@ -9,7 +19,12 @@ export interface SleepSession {
   subjective?: number; // 1–5 (optional)
   note?: string;
   qualityScore?: number; // 0–100, confirmed after morning check
-  // Reserved for Phase 2: movements?: { t: number; magnitude: number }[]
+  /**
+   * Body movements recorded via the accelerometer. Presence of the array
+   * (even when empty) means motion was tracked — empty = perfectly still.
+   * Absent means motion was unavailable (e.g. browser, permission denied).
+   */
+  movements?: Movement[];
 }
 
 export interface AlarmConfig {
@@ -30,4 +45,10 @@ export interface UserSettings {
   defaultWakeTime: string; // "HH:mm"
   bedtimeReminder: boolean;
   onboarded: boolean; // first-launch flow completed
+  /**
+   * Smart wake: end the session a little early when body movement suggests
+   * light sleep within the window before the set alarm. Only fires while the
+   * session screen is foregrounded.
+   */
+  smartAlarm: boolean;
 }

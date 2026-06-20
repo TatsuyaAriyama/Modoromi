@@ -44,6 +44,11 @@ export function MorningScreen() {
           <div className="morning-dur num">
             {formatDurationJa(pending.durationMin)}
           </div>
+          {pending.movements && (
+            <p className="muted" style={{ marginTop: 4 }}>
+              寝返り <span className="num">{pending.movements.length}</span> 回
+            </p>
+          )}
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>

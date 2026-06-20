@@ -56,6 +56,27 @@ describe('computeQualityScore', () => {
     // ds=0.5 -> 0.3 ; ms=0.6 -> 0.24 ; *100 = 54
     expect(computeQualityScore(225, 'normal', 450)).toBe(54);
   });
+
+  it('folds in stability when motion was tracked (empty = still)', () => {
+    // 3-term: ds=1*0.5 + ms(fresh=1)*0.3 + ss(still=1)*0.2 = 1.0 -> 100
+    expect(computeQualityScore(450, 'fresh', 450, [])).toBe(100);
+  });
+
+  it('restless night lowers the score vs a still one', () => {
+    const still = computeQualityScore(450, 'fresh', 450, []);
+    const restless = computeQualityScore(
+      450,
+      'fresh',
+      450,
+      Array.from({ length: 60 }, (_, i) => ({ t: i, magnitude: 2 })),
+    );
+    expect(restless).toBeLessThan(still);
+  });
+
+  it('on-target + groggy + still night', () => {
+    // ds=1*0.5 + ms(groggy=0.3)*0.3 + ss=1*0.2 = 0.79 -> 79
+    expect(computeQualityScore(450, 'groggy', 450, [])).toBe(79);
+  });
 });
 
 describe('isQualityConfirmed', () => {

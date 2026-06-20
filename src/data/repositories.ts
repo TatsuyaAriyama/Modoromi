@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   defaultWakeTime: '07:00',
   bedtimeReminder: false,
   onboarded: false,
+  smartAlarm: false,
 };
 
 /**

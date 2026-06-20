@@ -124,6 +124,26 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             label="就寝リマインダー"
           />
         </div>
+
+        <div
+          className="set-row"
+          style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}
+        >
+          <div className="spread">
+            <span className="set-label">スマート起床</span>
+            <Toggle
+              on={settings.smartAlarm}
+              onChange={(smartAlarm) =>
+                void saveSettings({ ...settings, smartAlarm })
+              }
+              label="スマート起床"
+            />
+          </div>
+          <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+            アラーム前30分以内に体動から浅い眠りを検知すると、少し早めに起こします。
+            画面を点けたままのセッション中のみ動作します。
+          </span>
+        </div>
       </Card>
 
       <Card>
