@@ -11,6 +11,11 @@ import {
   buildDaySeries,
 } from '../../domain/history';
 import {
+  consistencyScore,
+  regularityLevel,
+  type RegularityLevel,
+} from '../../domain/consistency';
+import {
   formatDateJa,
   formatDurationJa,
   isoToHm,
@@ -18,6 +23,12 @@ import {
 import type { SleepSession } from '../../domain/types';
 
 type Range = 'week' | 'month';
+
+const REGULARITY_LABEL: Record<RegularityLevel, string> = {
+  high: '高い',
+  medium: 'ふつう',
+  low: 'ばらつき',
+};
 
 export function HistoryScreen() {
   const sessions = useStore((s) => s.sessions);
@@ -32,6 +43,10 @@ export function HistoryScreen() {
   );
   const avgDur = averageDuration(series);
   const avgQ = averageQuality(series);
+  const consistency = useMemo(
+    () => consistencyScore(sessions, days),
+    [sessions, days],
+  );
 
   const sorted = useMemo(
     () =>
@@ -70,6 +85,14 @@ export function HistoryScreen() {
           <div className="stat">
             <span className="stat-label">平均質スコア</span>
             <span className="stat-val num">{avgQ ?? '—'}</span>
+          </div>
+          <div className="stat">
+            <span className="stat-label">規則性</span>
+            <span className="stat-val">
+              {consistency == null
+                ? '—'
+                : REGULARITY_LABEL[regularityLevel(consistency)]}
+            </span>
           </div>
         </div>
       </Card>

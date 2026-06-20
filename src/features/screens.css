@@ -60,6 +60,32 @@
   color: #d9748a;
 }
 
+/* Thinking condition */
+.cond-headline {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: 30px;
+  line-height: 1.1;
+  margin: 2px 0;
+}
+.cond-index {
+  font-size: 16px;
+  opacity: 0.65;
+}
+.cond-sharp {
+  color: #6fbf95;
+}
+.cond-steady {
+  color: var(--primary);
+}
+.cond-foggy {
+  color: var(--accent);
+}
+.cond-depleted {
+  color: #d9748a;
+}
+
 .cta-wrap {
   margin-top: auto;
   display: flex;

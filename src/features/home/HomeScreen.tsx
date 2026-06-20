@@ -2,11 +2,13 @@ import '../screens.css';
 import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
 import { EyeMark } from '../../components/EyeMark';
+import { lastSession, sleepDebtMin } from '../../domain/debt';
 import {
-  debtStatus,
-  lastSession,
-  sleepDebtMin,
-} from '../../domain/debt';
+  consistencyScore,
+  regularityLevel,
+  type RegularityLevel,
+} from '../../domain/consistency';
+import { thinkingCondition, type ThinkingTier } from '../../domain/condition';
 import {
   formatDateJa,
   formatDurationJa,
@@ -16,10 +18,24 @@ import {
 import { isQualityConfirmed } from '../../domain/score';
 import { tapMedium } from '../../lib/haptics';
 
-const DEBT_COPY: Record<ReturnType<typeof debtStatus>, string> = {
-  good: '思考のキレを保ちやすい状態です',
-  mild: '少し負債がたまっています。今夜は早めの就寝を',
-  notable: '思考のキレに影響が出やすい状態です',
+const TIER_LABEL: Record<ThinkingTier, string> = {
+  sharp: '冴えている',
+  steady: 'おだやか',
+  foggy: 'ややぼんやり',
+  depleted: '要回復',
+};
+
+const TIER_COPY: Record<ThinkingTier, string> = {
+  sharp: '思考がよく回りそうな一日です',
+  steady: '安定したコンディションです',
+  foggy: '無理せず、軽めの集中から始めましょう',
+  depleted: '回復を優先して。今夜は早めの就寝を',
+};
+
+const REGULARITY_LABEL: Record<RegularityLevel, string> = {
+  high: '高い',
+  medium: 'ふつう',
+  low: 'ばらつき',
 };
 
 export function HomeScreen({
@@ -36,7 +52,14 @@ export function HomeScreen({
 
   const last = lastSession(sessions);
   const debt = sleepDebtMin(sessions, settings.targetDurationMin);
-  const status = debtStatus(debt);
+  const consistency = consistencyScore(sessions);
+  const lastQuality =
+    last && isQualityConfirmed(last) ? (last.qualityScore ?? null) : null;
+  const condition = thinkingCondition({
+    lastQuality,
+    debtMin: debt,
+    consistency,
+  });
 
   const nextAlarm = alarms
     .filter((a) => a.enabled)
@@ -97,22 +120,35 @@ export function HomeScreen({
         )}
       </Card>
 
-      {/* Sleep debt */}
+      {/* Thinking condition (synthesises quality, debt, regularity) */}
       <Card tight>
         <div className="spread">
-          <div>
-            <div className="stat-label">睡眠負債（直近7日）</div>
-            <div className="stat-val num" style={{ fontSize: 24 }}>
-              {debt > 0
-                ? `-${formatDurationJa(debt)}`
-                : formatDurationJa(0)}
-            </div>
-          </div>
+          <div className="stat-label">今日の思考コンディション</div>
           <EyeMark size={36} color="var(--text-mute)" />
         </div>
-        <p className={`muted debt-status-${status}`} style={{ fontSize: 13, marginTop: 6 }}>
-          {DEBT_COPY[status]}
+        <div className={`cond-headline cond-${condition.tier}`}>
+          {TIER_LABEL[condition.tier]}
+          <span className="cond-index num">{condition.index}</span>
+        </div>
+        <p className={`muted cond-${condition.tier}`} style={{ fontSize: 13 }}>
+          {TIER_COPY[condition.tier]}
         </p>
+        <div className="summary-row" style={{ marginTop: 10 }}>
+          <div className="stat">
+            <span className="stat-label">睡眠負債（7日）</span>
+            <span className="stat-val num">
+              {debt > 0 ? `-${formatDurationJa(debt)}` : formatDurationJa(0)}
+            </span>
+          </div>
+          <div className="stat">
+            <span className="stat-label">規則性</span>
+            <span className="stat-val">
+              {consistency == null
+                ? '—'
+                : REGULARITY_LABEL[regularityLevel(consistency)]}
+            </span>
+          </div>
+        </div>
       </Card>
 
       {/* Primary CTA */}
