@@ -3,6 +3,7 @@ import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
 import { EyeMark } from '../../components/EyeMark';
 import { lastSession, sleepDebtMin } from '../../domain/debt';
+import { recommendedBedtime } from '../../domain/bedtime';
 import {
   consistencyScore,
   regularityLevel,
@@ -13,7 +14,6 @@ import {
   formatDateJa,
   formatDurationJa,
   isoToHm,
-  subtractMinutesHm,
 } from '../../domain/format';
 import { isQualityConfirmed } from '../../domain/score';
 import { tapMedium } from '../../lib/haptics';
@@ -65,9 +65,12 @@ export function HomeScreen({
     .filter((a) => a.enabled)
     .map((a) => a.time)
     .sort()[0];
-  const reminderTime = settings.bedtimeReminder
-    ? subtractMinutesHm(settings.defaultWakeTime, settings.targetDurationMin)
-    : undefined;
+  const plan = recommendedBedtime({
+    wakeTime: settings.defaultWakeTime,
+    targetMin: settings.targetDurationMin,
+    debtMin: debt,
+  });
+  const reminderTime = settings.bedtimeReminder ? plan.bedtimeHm : undefined;
 
   return (
     <div className="screen">
@@ -154,7 +157,15 @@ export function HomeScreen({
       {/* Primary CTA */}
       <div className="cta-wrap">
         {reminderTime && (
-          <span className="pill">就寝リマインダー {reminderTime}</span>
+          <span className="pill">
+            {plan.recoveryMin > 0 ? 'おすすめ就寝' : '就寝リマインダー'}{' '}
+            {reminderTime}
+          </span>
+        )}
+        {reminderTime && plan.recoveryMin > 0 && (
+          <span className="muted" style={{ fontSize: 12.5 }}>
+            睡眠負債のぶん、いつもより{formatDurationJa(plan.recoveryMin)}早めに
+          </span>
         )}
         {last && !isQualityConfirmed(last) && (
           <span className="muted" style={{ fontSize: 13 }}>
