@@ -154,21 +154,23 @@
   align-items: center;
 }
 .cta-hero {
-  width: 184px;
-  height: 184px;
+  width: 188px;
+  height: 188px;
   border-radius: 50%;
   border: none;
   background: var(--gradient-twilight);
   color: var(--mist);
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: 23px;
   font-weight: 600;
+  letter-spacing: 0.12em;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   box-shadow: var(--shadow-soft);
-  transition: transform 0.1s ease;
+  transition: transform 0.1s ease, box-shadow 0.3s ease;
 }
 .cta-hero:active {
   transform: scale(0.96);

@@ -38,7 +38,9 @@ export function MorningScreen() {
       <div className="screen morning-wrap">
         <EyeMark size={72} color="var(--primary)" open={eyeOpen} />
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: 22 }}>おはようございます</h1>
+          <h1 className="display" style={{ fontSize: 26, letterSpacing: '0.04em' }}>
+            おはようございます
+          </h1>
           <p className="muted" style={{ marginTop: 6 }}>
             {isoToHm(pending.startedAt)} → {isoToHm(pending.endedAt)}
           </p>

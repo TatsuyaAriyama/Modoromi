@@ -15,9 +15,10 @@
 .btn {
   border: none;
   border-radius: var(--radius-pill);
-  padding: 14px 22px;
+  padding: 15px 24px;
   font-size: 16px;
   font-weight: 600;
+  letter-spacing: 0.03em;
   transition: transform 0.08s ease, opacity 0.2s ease, background 0.2s ease;
   display: inline-flex;
   align-items: center;
