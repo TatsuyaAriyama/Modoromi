@@ -124,9 +124,10 @@
 .pill {
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
+  padding: 5px 13px;
   border-radius: var(--radius-pill);
-  font-size: 13px;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
   background: var(--surface-2);
   color: var(--text-mute);
 }
