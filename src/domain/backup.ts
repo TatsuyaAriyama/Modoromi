@@ -14,16 +14,25 @@ import type {
  * malformed file is rejected whole rather than partially applied.
  */
 export interface BackupData {
+  /** Schema version the payload was migrated up to (always BACKUP_VERSION). */
+  version: number;
   sessions: SleepSession[];
   alarms: AlarmConfig[];
   settings: UserSettings | null;
 }
+
+/**
+ * Current backup schema version. Bump this whenever the on-disk shape changes
+ * in a way that needs a migration, and add a step to `MIGRATIONS`.
+ */
+export const BACKUP_VERSION = 1;
 
 /** Stable, language-agnostic reasons a backup file was rejected. */
 export type BackupError =
   | 'invalid-json'
   | 'not-object'
   | 'not-madoromi'
+  | 'unsupported-version'
   | 'sessions-corrupt'
   | 'sessions-invalid'
   | 'alarms-corrupt'
@@ -107,21 +116,62 @@ function parseSettings(x: unknown): UserSettings | null {
 }
 
 /**
+ * A single forward migration step: it receives the backup object already at
+ * version `from` and returns it reshaped to version `from + 1`. Steps are pure
+ * and run in sequence, so each only has to worry about one version bump.
+ */
+type Migration = (raw: Record<string, unknown>) => Record<string, unknown>;
+
+/**
+ * Ordered migration steps, indexed by source version: MIGRATIONS[0] takes a
+ * pre-versioning (v0) export up to v1, MIGRATIONS[1] would take v1 → v2, and so
+ * on. The v0 → v1 step is structural-identity — the v1 schema is a superset of
+ * the original, and the field validators already tolerate the optional fields
+ * that older exports omit — but it gives every future bump a tested home.
+ */
+const MIGRATIONS: Migration[] = [
+  // v0 → v1: original exports lacked a `version` field; nothing else changed.
+  (raw) => raw,
+];
+
+/**
+ * Bring a parsed backup object up to BACKUP_VERSION by running each migration
+ * step in turn. A version-less export is treated as the pre-versioning v0.
+ * Returns null when the file declares a version newer than this build can read.
+ */
+function migrate(
+  raw: Record<string, unknown>,
+): Record<string, unknown> | null {
+  const from = isNum(raw.version) ? raw.version : 0;
+  if (from > BACKUP_VERSION) return null;
+  let cur = raw;
+  for (let v = from; v < BACKUP_VERSION; v++) {
+    cur = MIGRATIONS[v](cur);
+  }
+  return cur;
+}
+
+/**
  * Parse and validate a backup JSON string produced by `exportAll`.
  * Pure — no I/O. Callers persist `data` only when `ok` is true.
  */
 export function parseBackup(text: string): BackupParseResult {
-  let raw: unknown;
+  let parsed: unknown;
   try {
-    raw = JSON.parse(text);
+    parsed = JSON.parse(text);
   } catch {
     return { ok: false, error: 'invalid-json' };
   }
-  if (!isObject(raw)) {
+  if (!isObject(parsed)) {
     return { ok: false, error: 'not-object' };
   }
-  if (raw.app !== undefined && raw.app !== 'Madoromi') {
+  if (parsed.app !== undefined && parsed.app !== 'Madoromi') {
     return { ok: false, error: 'not-madoromi' };
+  }
+
+  const raw = migrate(parsed);
+  if (raw === null) {
+    return { ok: false, error: 'unsupported-version' };
   }
 
   if (raw.sessions !== undefined && !Array.isArray(raw.sessions)) {
@@ -143,6 +193,7 @@ export function parseBackup(text: string): BackupParseResult {
   return {
     ok: true,
     data: {
+      version: BACKUP_VERSION,
       sessions: sessionsRaw as SleepSession[],
       alarms: alarmsRaw as AlarmConfig[],
       settings: parseSettings(raw.settings),

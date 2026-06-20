@@ -160,6 +160,7 @@ export const messages: Record<string, Msg> = {
   'backup.invalid-json': { en: 'Could not read the file as JSON', ja: 'JSONとして読み取れませんでした' },
   'backup.not-object': { en: 'Not a backup file', ja: 'バックアップの形式ではありません' },
   'backup.not-madoromi': { en: 'Not a Madoromi backup', ja: 'Madoromiのバックアップではありません' },
+  'backup.unsupported-version': { en: 'This backup is from a newer version of Madoromi', ja: '新しいバージョンのMadoromiで作成されたバックアップです' },
   'backup.sessions-corrupt': { en: 'Sleep records are corrupted', ja: '記録データが壊れています' },
   'backup.sessions-invalid': { en: 'Sleep records contain an invalid entry', ja: '記録データに不正な項目があります' },
   'backup.alarms-corrupt': { en: 'Alarm data is corrupted', ja: 'アラームデータが壊れています' },

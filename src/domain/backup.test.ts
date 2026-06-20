@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseBackup } from './backup';
+import { BACKUP_VERSION, parseBackup } from './backup';
 import type { AlarmConfig, SleepSession, UserSettings } from './types';
 
 const session: SleepSession = {
@@ -48,10 +48,39 @@ describe('parseBackup', () => {
     const r = parseBackup(blob());
     expect(r.ok).toBe(true);
     if (r.ok) {
+      expect(r.data.version).toBe(BACKUP_VERSION);
       expect(r.data.sessions).toHaveLength(1);
       expect(r.data.alarms).toHaveLength(1);
       expect(r.data.settings?.targetDurationMin).toBe(450);
     }
+  });
+
+  it('migrates a version-less (legacy) export up to the current version', () => {
+    const legacy = JSON.stringify({
+      app: 'Madoromi',
+      // no `version` field — predates schema versioning
+      sessions: [session],
+      alarms: [alarm],
+      settings,
+    });
+    const r = parseBackup(legacy);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.version).toBe(BACKUP_VERSION);
+      expect(r.data.sessions).toHaveLength(1);
+    }
+  });
+
+  it('rejects a backup from a newer schema this build cannot read', () => {
+    const r = parseBackup(blob({ version: BACKUP_VERSION + 1 }));
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toBe('unsupported-version');
+  });
+
+  it('accepts a backup that declares the current version', () => {
+    const r = parseBackup(blob({ version: BACKUP_VERSION }));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.version).toBe(BACKUP_VERSION);
   });
 
   it('rejects non-JSON input', () => {
