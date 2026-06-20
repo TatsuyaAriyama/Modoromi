@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Time-Sensitive notifications let the morning alarm break through Focus /
+	  scheduled summaries. NOTE: this does NOT override the hardware silent
+	  switch — that needs the Critical Alerts entitlement, which Apple grants
+	  only by special request. Enable "Time Sensitive Notifications" under
+	  Signing & Capabilities in Xcode so this matches the provisioning profile.
+	-->
+	<key>com.apple.developer.usernotifications.time-sensitive</key>
+	<true/>
+</dict>
+</plist>
