@@ -77,6 +77,22 @@ p {
   background: var(--bg);
   transition: background 0.5s ease;
 }
+/* A faint twilight glow at the top — quiet atmosphere, never noise. */
+.app-frame::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 360px;
+  background: radial-gradient(130% 100% at 50% -12%, var(--glow) 0%, transparent 62%);
+  pointer-events: none;
+  z-index: 0;
+}
+.app-frame > * {
+  position: relative;
+  z-index: 1;
+}
 
 .screen {
   flex: 1;

@@ -18,7 +18,7 @@
   );
 
   /* Radii / spacing / typography */
-  --radius-card: 18px;
+  --radius-card: 22px;
   --radius-pill: 999px;
   --space-1: 4px;
   --space-2: 8px;
@@ -42,8 +42,14 @@
   --tracking-normal: 0;
   --tracking-wide: 0.06em;
   --tracking-wider: 0.14em;
+  --tracking-widest: 0.24em;
 
+  /* Elevation & motion */
   --shadow-soft: 0 8px 30px rgba(20, 14, 40, 0.18);
+  --shadow-card: 0 18px 40px -24px rgba(8, 5, 20, 0.7);
+  --shadow-orb: 0 30px 70px -18px rgba(108, 86, 168, 0.6);
+  --hairline: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* ---- day theme (bright lavender) ---- */
@@ -56,8 +62,9 @@
   --primary: #7a61ba;
   --primary-contrast: #ffffff;
   --accent: #b86e9c;
-  --border: rgba(33, 28, 46, 0.08);
+  --border: rgba(33, 28, 46, 0.07);
   --hero-fg: var(--mist);
+  --glow: rgba(122, 97, 186, 0.16);
 }
 
 /* ---- night theme (default) ---- */
@@ -70,8 +77,9 @@
   --primary: #9b81db;
   --primary-contrast: #15102a;
   --accent: #d99bc4;
-  --border: rgba(236, 231, 245, 0.1);
+  --border: rgba(236, 231, 245, 0.08);
   --hero-fg: var(--mist);
+  --glow: rgba(155, 129, 219, 0.2);
 }
 
 /* ---- sleep theme (active session, minimal luminance) ---- */
@@ -84,6 +92,7 @@
   --primary: #6f5d9c;
   --primary-contrast: #0d0a18;
   --accent: #6f5d9c;
-  --border: rgba(156, 132, 184, 0.12);
+  --border: rgba(156, 132, 184, 0.1);
   --hero-fg: #9c84b8;
+  --glow: transparent;
 }

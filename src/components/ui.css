@@ -5,6 +5,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   padding: var(--space-5);
+  box-shadow: var(--hairline), var(--shadow-card);
 }
 
 .card-pad-tight {
