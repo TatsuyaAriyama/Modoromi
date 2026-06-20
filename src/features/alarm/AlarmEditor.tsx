@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import '../screens.css';
 import type { AlarmConfig } from '../../domain/types';
 import { weekdayJa } from '../../domain/format';
 import { Button } from '../../components/Button';
 import { TimeDial } from '../../components/TimeDial';
 import { Toggle } from '../../components/Toggle';
+import { ALARM_SOUNDS, AlarmPlayer, normalizeSound } from '../../lib/alarmSound';
 
 export function AlarmEditor({
   initial,
@@ -17,7 +18,16 @@ export function AlarmEditor({
   onDelete?: () => void;
   onClose: () => void;
 }) {
-  const [draft, setDraft] = useState<AlarmConfig>(initial);
+  const [draft, setDraft] = useState<AlarmConfig>({
+    ...initial,
+    sound: normalizeSound(initial.sound),
+  });
+
+  // A dedicated player for the editor's sound preview.
+  const previewRef = useRef<AlarmPlayer | null>(null);
+  if (previewRef.current === null) previewRef.current = new AlarmPlayer();
+  useEffect(() => () => previewRef.current?.dispose(), []);
+  const preview = (id: string) => previewRef.current?.preview(id);
 
   const toggleDay = (d: number) => {
     setDraft((s) => ({
@@ -63,6 +73,35 @@ export function AlarmEditor({
           <span className="muted" style={{ fontSize: 12 }}>
             未選択なら次回のみ（単発）
           </span>
+        </div>
+
+        <div className="field">
+          <label>サウンド</label>
+          <div className="sound-row">
+            <select
+              className="select"
+              style={{ flex: 1 }}
+              value={draft.sound}
+              onChange={(e) => {
+                const sound = e.target.value;
+                setDraft((s) => ({ ...s, sound }));
+                preview(sound);
+              }}
+            >
+              {ALARM_SOUNDS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="back-btn"
+              onClick={() => preview(draft.sound)}
+            >
+              試聴
+            </button>
+          </div>
         </div>
 
         <div className="set-row">

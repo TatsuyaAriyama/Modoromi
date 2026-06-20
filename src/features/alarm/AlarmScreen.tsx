@@ -9,6 +9,7 @@ import type { AlarmConfig } from '../../domain/types';
 import { weekdayJa } from '../../domain/format';
 import { recommendedBedtime } from '../../domain/bedtime';
 import { sleepDebtMin } from '../../domain/debt';
+import { DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
 import { uid } from '../../lib/id';
 import { ensurePermission } from '../../lib/notifications';
 import { isNative } from '../../lib/platform';
@@ -18,7 +19,7 @@ function newAlarm(time: string): AlarmConfig {
     id: uid(),
     time,
     repeatDays: [],
-    sound: 'default',
+    sound: DEFAULT_ALARM_SOUND,
     snoozeEnabled: true,
     snoozeMinutes: 5,
     enabled: true,

@@ -538,6 +538,58 @@
   align-items: center;
 }
 
+/* In-app alarm ring (foreground wake) */
+.alarm-ring {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  padding: var(--space-7) var(--space-5);
+  background: var(--gradient-twilight);
+  color: var(--mist);
+  animation: ring-in 0.4s ease;
+}
+@keyframes ring-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.alarm-ring-time {
+  font-size: 72px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.alarm-ring-title {
+  font-size: 20px;
+  opacity: 0.92;
+  letter-spacing: 0.06em;
+}
+.alarm-ring-actions {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-4);
+}
+.alarm-ring-snooze {
+  color: var(--mist);
+  opacity: 0.85;
+}
+.sound-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 /* Wind-down (pre-sleep breathing) */
 .wind-wrap {
   height: 100%;

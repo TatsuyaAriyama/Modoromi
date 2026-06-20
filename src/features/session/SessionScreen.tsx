@@ -3,10 +3,14 @@ import '../screens.css';
 import { useStore } from '../../app/store';
 import { EyeMark } from '../../components/EyeMark';
 import { Toggle } from '../../components/Toggle';
+import { Button } from '../../components/Button';
 import { disableKeepAwake, enableKeepAwake } from '../../lib/keepAwake';
 import { notifySuccess } from '../../lib/haptics';
 import { MotionRecorder, ensureMotionPermission } from '../../lib/motion';
+import { AlarmPlayer, DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
 import { shouldSmartWake } from '../../domain/motion';
+import { isAlarmDue } from '../../domain/alarmFire';
+import type { AlarmConfig } from '../../domain/types';
 
 const HOLD_MS = 1200;
 /** Smart-wake looks for light sleep within this many minutes before the alarm. */
@@ -33,6 +37,8 @@ export function SessionScreen() {
   const [keepAwake, setKeepAwake] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
   const [moveCount, setMoveCount] = useState(0);
+  const [ringing, setRinging] = useState(false);
+  const [snoozeUntil, setSnoozeUntil] = useState<number | null>(null);
   const holdStart = useRef<number | null>(null);
   const holding = useRef(false);
   const raf = useRef<number | null>(null);
@@ -41,17 +47,39 @@ export function SessionScreen() {
   const recorderRef = useRef<MotionRecorder | null>(null);
   if (recorderRef.current === null) recorderRef.current = new MotionRecorder();
 
+  // One alarm player per session.
+  const playerRef = useRef<AlarmPlayer | null>(null);
+  if (playerRef.current === null) playerRef.current = new AlarmPlayer();
+
+  // Latest inputs for the alarm-due check, read off the interval callback so
+  // detection lives at the timer source rather than in a state-reacting effect.
+  const dueInputs = useRef<{
+    active: typeof active;
+    alarm: AlarmConfig | null;
+    snoozeUntil: number | null;
+    ringing: boolean;
+  } | null>(null);
+
   // End the session, handing the recorded movements to the store.
   const wake = useCallback(() => {
     void notifySuccess();
     endSession(recorderRef.current?.stop());
   }, [endSession]);
 
-  // Live clock + recorded-movement count (read the ref off the render path).
+  // Live clock + recorded-movement count + alarm-due check, all off the timer.
   useEffect(() => {
     const t = setInterval(() => {
-      setNow(new Date());
+      const d = new Date();
+      setNow(d);
       setMoveCount(recorderRef.current?.current.length ?? 0);
+      const s = dueInputs.current;
+      if (s && !s.ringing && s.active && s.alarm) {
+        const due =
+          s.snoozeUntil != null
+            ? d.getTime() >= s.snoozeUntil
+            : isAlarmDue(s.alarm.time, s.active.startedAt, d);
+        if (due) setRinging(true);
+      }
     }, 1000);
     return () => clearInterval(t);
   }, []);
@@ -79,10 +107,41 @@ export function SessionScreen() {
     };
   }, [keepAwake]);
 
-  const nextAlarm = alarms
-    .filter((a) => a.enabled)
-    .map((a) => a.time)
-    .sort()[0];
+  const nextAlarmObj =
+    alarms
+      .filter((a) => a.enabled)
+      .sort((a, b) => a.time.localeCompare(b.time))[0] ?? null;
+  const nextAlarm = nextAlarmObj?.time;
+
+  // Keep the interval's alarm-due inputs current. In-app alarm rings at the
+  // set time (or when a snooze elapses) while this screen is foregrounded —
+  // the loud, reliable wake that doesn't depend on the OS notification
+  // surviving silent mode.
+  useEffect(() => {
+    dueInputs.current = { active, alarm: nextAlarmObj, snoozeUntil, ringing };
+  }, [active, nextAlarmObj, snoozeUntil, ringing]);
+
+  // Play / stop the tone as the ringing state flips.
+  useEffect(() => {
+    if (!ringing) return;
+    const player = playerRef.current;
+    player?.start(nextAlarmObj?.sound ?? DEFAULT_ALARM_SOUND);
+    void enableKeepAwake();
+    return () => player?.stop();
+  }, [ringing, nextAlarmObj]);
+
+  // Tear down the audio context when the session screen unmounts.
+  useEffect(() => () => playerRef.current?.dispose(), []);
+
+  const dismiss = () => {
+    setRinging(false);
+    wake();
+  };
+  const snooze = () => {
+    setRinging(false);
+    const min = nextAlarmObj?.snoozeMinutes ?? 5;
+    setSnoozeUntil(Date.now() + min * 60000);
+  };
 
   // Smart wake: each tick, check whether movement suggests light sleep inside
   // the window before the alarm. Only runs while this screen is foregrounded.
@@ -183,6 +242,26 @@ export function SessionScreen() {
           </button>
         </div>
       </div>
+
+      {ringing && (
+        <div className="alarm-ring">
+          <EyeMark size={72} color="var(--mist)" open />
+          <div className="alarm-ring-time num">
+            {hh}:{mm}
+          </div>
+          <div className="alarm-ring-title">起きる時間です</div>
+          <div className="alarm-ring-actions">
+            <Button block large onClick={dismiss}>
+              止めて起きる
+            </Button>
+            {nextAlarmObj?.snoozeEnabled && (
+              <button className="back-btn alarm-ring-snooze" onClick={snooze}>
+                スヌーズ {nextAlarmObj.snoozeMinutes}分
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
