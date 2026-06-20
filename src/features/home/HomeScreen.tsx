@@ -41,9 +41,11 @@ const REGULARITY_LABEL: Record<RegularityLevel, string> = {
 export function HomeScreen({
   onOpenSettings,
   onGoAlarm,
+  onStartNap,
 }: {
   onOpenSettings: () => void;
   onGoAlarm: () => void;
+  onStartNap: () => void;
 }) {
   const sessions = useStore((s) => s.sessions);
   const settings = useStore((s) => s.settings);
@@ -187,6 +189,9 @@ export function HomeScreen({
             アラームを設定する →
           </button>
         )}
+        <button className="back-btn" onClick={onStartNap}>
+          仮眠する →
+        </button>
       </div>
     </div>
   );

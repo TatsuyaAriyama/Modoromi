@@ -9,6 +9,7 @@ import { HistoryScreen } from './features/history/HistoryScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
 import { SessionScreen } from './features/session/SessionScreen';
 import { MorningScreen } from './features/morning/MorningScreen';
+import { NapScreen } from './features/nap/NapScreen';
 import { OnboardingScreen } from './features/onboarding/OnboardingScreen';
 
 const TABS: { key: TabKey; label: string }[] = [
@@ -27,6 +28,7 @@ export default function App() {
 
   const [tab, setTab] = useState<TabKey>('home');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [napOpen, setNapOpen] = useState(false);
 
   useEffect(() => {
     void init();
@@ -42,6 +44,7 @@ export default function App() {
   // Full-screen flows take over.
   if (active) return <SessionScreen />;
   if (pendingMorning) return <MorningScreen />;
+  if (napOpen) return <NapScreen onClose={() => setNapOpen(false)} />;
 
   return (
     <div className="app-frame">
@@ -53,6 +56,7 @@ export default function App() {
             <HomeScreen
               onOpenSettings={() => setSettingsOpen(true)}
               onGoAlarm={() => setTab('alarm')}
+              onStartNap={() => setNapOpen(true)}
             />
           )}
           {tab === 'alarm' && <AlarmScreen />}
