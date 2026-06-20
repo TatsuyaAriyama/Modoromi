@@ -15,6 +15,7 @@ import {
   regularityLevel,
   type RegularityLevel,
 } from '../../domain/consistency';
+import { weeklyReview } from '../../domain/review';
 import {
   formatDateJa,
   formatDurationJa,
@@ -47,6 +48,10 @@ export function HistoryScreen() {
     () => consistencyScore(sessions, days),
     [sessions, days],
   );
+  const review = useMemo(
+    () => weeklyReview(sessions, targetMin),
+    [sessions, targetMin],
+  );
 
   const sorted = useMemo(
     () =>
@@ -73,6 +78,20 @@ export function HistoryScreen() {
           </button>
         </div>
       </div>
+
+      <Card tight>
+        <div className="stat-label" style={{ marginBottom: 6 }}>
+          今週の振り返り
+        </div>
+        <p className="review-headline">{review.headline}</p>
+        {review.loggedNights > 0 && (
+          <span className="muted" style={{ fontSize: 12.5 }}>
+            記録 {review.loggedNights}日
+            {review.qualityDeltaVsPrev != null &&
+              ` ・ 先週比 ${review.qualityDeltaVsPrev > 0 ? '+' : ''}${review.qualityDeltaVsPrev}`}
+          </span>
+        )}
+      </Card>
 
       <Card tight>
         <div className="summary-row">
