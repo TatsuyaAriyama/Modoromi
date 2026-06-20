@@ -74,6 +74,17 @@ export const messages: Record<string, Msg> = {
   // ── charts a11y ─────────────────────────────────────────
   'chart.duration': { en: 'Daily sleep duration', ja: '日別の睡眠時間' },
   'chart.quality': { en: 'Quality-score trend', ja: '質スコアの推移' },
+  'chart.movement': { en: 'Body movement through the night', ja: '夜間の体動' },
+
+  // ── body movement (Session detail) ──────────────────────
+  'motion.title': { en: 'Body movement', ja: '体動' },
+  'motion.count': {
+    en: (p) => `${p.count} movements`,
+    ja: (p) => `寝返り ${p.count} 回`,
+  },
+  'motion.still': { en: 'Slept very still', ja: 'とても静かな眠り' },
+  'motion.calm': { en: 'Calm, settled sleep', ja: '落ち着いた眠り' },
+  'motion.restless': { en: 'A restless night', ja: '少し落ち着かない夜' },
 
   // ── weekly review (History) ─────────────────────────────
   'review.none': { en: 'No records yet this week', ja: '今週の記録はまだありません' },

@@ -32,6 +32,54 @@ export function stabilityScore(count: number, durationMin: number): number {
   return Math.min(1, Math.max(0, s));
 }
 
+export type RestlessnessLevel = 'still' | 'calm' | 'restless';
+
+/**
+ * Upper bounds (movements per hour) for the gentle three-step restlessness
+ * label. At or below `still` reads as a very still night; at or below `calm`
+ * as settled; anything above as restless.
+ */
+export const RESTLESS_LEVELS = {
+  still: 3,
+  calm: 10,
+} as const;
+
+/**
+ * Classify a night's movement density into a soft, non-clinical label.
+ * A "目安", never a verdict — the copy stays gentle on purpose.
+ */
+export function restlessnessLevel(
+  count: number,
+  durationMin: number,
+): RestlessnessLevel {
+  const perHour = movementsPerHour(count, durationMin);
+  if (perHour <= RESTLESS_LEVELS.still) return 'still';
+  if (perHour <= RESTLESS_LEVELS.calm) return 'calm';
+  return 'restless';
+}
+
+/**
+ * Bucket movements into `bins` equal time slices across the night (oldest →
+ * newest), returning a count per slice for a small sparkline. Movements
+ * outside [0, durationMin] are clamped into the nearest edge bin. Returns a
+ * zero-filled array when there is no usable data.
+ */
+export function movementHistogram(
+  movements: Movement[],
+  durationMin: number,
+  bins = 12,
+): number[] {
+  const size = Math.max(1, Math.floor(bins));
+  const out = new Array<number>(size).fill(0);
+  if (durationMin <= 0 || movements.length === 0) return out;
+  for (const m of movements) {
+    const frac = Math.min(1, Math.max(0, m.t / durationMin));
+    const idx = Math.min(size - 1, Math.floor(frac * size));
+    out[idx] += 1;
+  }
+  return out;
+}
+
 /**
  * Smart-wake decision, evaluated each tick while the session screen is
  * foregrounded. Returns true when the user should be woken now.

@@ -3,8 +3,10 @@ import '../screens.css';
 import type { Mood, SleepSession } from '../../domain/types';
 import { Button } from '../../components/Button';
 import { MoodPicker } from '../../components/MoodPicker';
+import { MovementGraph } from '../../components/MovementGraph';
 import { useStore } from '../../app/store';
 import { computeQualityScore } from '../../domain/score';
+import { movementHistogram, restlessnessLevel } from '../../domain/motion';
 import { formatDate, formatDuration, isoToHm } from '../../domain/format';
 import { useT, useLang } from '../../i18n/useT';
 
@@ -27,7 +29,12 @@ export function SessionDetail({
 
   const save = async () => {
     const qualityScore = mood
-      ? computeQualityScore(session.durationMin, mood, targetMin)
+      ? computeQualityScore(
+          session.durationMin,
+          mood,
+          targetMin,
+          session.movements,
+        )
       : undefined;
     await updateSession({
       ...session,
@@ -64,6 +71,31 @@ export function SessionDetail({
             </span>
           </div>
         </div>
+
+        {session.movements && (
+          <div className="field">
+            <label>{t('motion.title')}</label>
+            <div className="spread" style={{ marginBottom: 6 }}>
+              <span className="muted" style={{ fontSize: 13 }}>
+                {t(
+                  `motion.${restlessnessLevel(
+                    session.movements.length,
+                    session.durationMin,
+                  )}`,
+                )}
+              </span>
+              <span className="muted num" style={{ fontSize: 13 }}>
+                {t('motion.count', { count: session.movements.length })}
+              </span>
+            </div>
+            <MovementGraph
+              bins={movementHistogram(
+                session.movements,
+                session.durationMin,
+              )}
+            />
+          </div>
+        )}
 
         <div className="field">
           <label>{t('detail.condition')}</label>
