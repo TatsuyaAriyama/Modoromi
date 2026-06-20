@@ -27,6 +27,9 @@ export function BarChart({
   const n = Math.max(data.length, 1);
   const slot = W / n;
   const barW = Math.min(26, slot * 0.5);
+  // Thin out x-axis labels so dense (monthly) views stay legible — render at
+  // most one label per ~30px instead of overlapping every bar.
+  const labelStep = Math.max(1, Math.ceil(30 / slot));
 
   const y = (v: number) => padT + plotH * (1 - v / maxVal);
 
@@ -67,15 +70,17 @@ export function BarChart({
               fill="var(--primary)"
               opacity={d.value > 0 ? 0.92 : 0.25}
             />
-            <text
-              x={cx}
-              y={H - 6}
-              textAnchor="middle"
-              fontSize={10}
-              fill="var(--text-mute)"
-            >
-              {d.label}
-            </text>
+            {i % labelStep === 0 && (
+              <text
+                x={cx}
+                y={H - 6}
+                textAnchor="middle"
+                fontSize={10}
+                fill="var(--text-mute)"
+              >
+                {d.label}
+              </text>
+            )}
           </g>
         );
       })}

@@ -19,6 +19,8 @@ export function LineChart({
   const plotH = H - padB - padT;
   const plotW = W - padX * 2;
   const n = Math.max(data.length, 1);
+  // Thin out x-axis labels so dense (monthly) views stay legible.
+  const labelStep = Math.max(1, Math.ceil((30 * (n - 1)) / Math.max(plotW, 1)));
 
   const x = (i: number) =>
     padX + (n === 1 ? plotW / 2 : (plotW * i) / (n - 1));
@@ -75,18 +77,20 @@ export function LineChart({
           />
         ),
       )}
-      {data.map((d, i) => (
-        <text
-          key={`l${i}`}
-          x={x(i)}
-          y={H - 6}
-          textAnchor="middle"
-          fontSize={10}
-          fill="var(--text-mute)"
-        >
-          {d.label}
-        </text>
-      ))}
+      {data.map((d, i) =>
+        i % labelStep === 0 ? (
+          <text
+            key={`l${i}`}
+            x={x(i)}
+            y={H - 6}
+            textAnchor="middle"
+            fontSize={10}
+            fill="var(--text-mute)"
+          >
+            {d.label}
+          </text>
+        ) : null,
+      )}
     </svg>
   );
 }
