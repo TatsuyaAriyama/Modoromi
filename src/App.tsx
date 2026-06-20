@@ -9,6 +9,7 @@ import { HistoryScreen } from './features/history/HistoryScreen';
 import { SettingsScreen } from './features/settings/SettingsScreen';
 import { SessionScreen } from './features/session/SessionScreen';
 import { MorningScreen } from './features/morning/MorningScreen';
+import { OnboardingScreen } from './features/onboarding/OnboardingScreen';
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'home', label: '今日' },
@@ -20,6 +21,7 @@ export default function App() {
   useTheme();
   const init = useStore((s) => s.init);
   const loaded = useStore((s) => s.loaded);
+  const onboarded = useStore((s) => s.settings.onboarded);
   const active = useStore((s) => s.active);
   const pendingMorning = useStore((s) => s.pendingMorning);
 
@@ -33,6 +35,9 @@ export default function App() {
   if (!loaded) {
     return <div className="app-frame" />;
   }
+
+  // First launch: brand intro + goal + notification permission.
+  if (!onboarded) return <OnboardingScreen />;
 
   // Full-screen flows take over.
   if (active) return <SessionScreen />;

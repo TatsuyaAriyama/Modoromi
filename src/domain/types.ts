@@ -29,4 +29,5 @@ export interface UserSettings {
   targetDurationMin: number; // e.g. 450 (7.5h)
   defaultWakeTime: string; // "HH:mm"
   bedtimeReminder: boolean;
+  onboarded: boolean; // first-launch flow completed
 }
