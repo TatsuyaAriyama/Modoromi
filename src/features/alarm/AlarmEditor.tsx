@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import '../screens.css';
 import type { AlarmConfig } from '../../domain/types';
-import { weekdayJa } from '../../domain/format';
+import { weekdayName } from '../../domain/format';
 import { Button } from '../../components/Button';
 import { TimeDial } from '../../components/TimeDial';
 import { Toggle } from '../../components/Toggle';
 import { ALARM_SOUNDS, AlarmPlayer, normalizeSound } from '../../lib/alarmSound';
+import { useT, useLang } from '../../i18n/useT';
 
 export function AlarmEditor({
   initial,
@@ -18,6 +19,8 @@ export function AlarmEditor({
   onDelete?: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
+  const lang = useLang();
   const [draft, setDraft] = useState<AlarmConfig>({
     ...initial,
     sound: normalizeSound(initial.sound),
@@ -42,9 +45,9 @@ export function AlarmEditor({
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="spread">
-          <h2 style={{ fontSize: 18 }}>アラーム</h2>
+          <h2 style={{ fontSize: 18 }}>{t('alarm.title')}</h2>
           <button className="back-btn" onClick={onClose}>
-            閉じる
+            {t('common.close')}
           </button>
         </div>
 
@@ -57,7 +60,7 @@ export function AlarmEditor({
         </div>
 
         <div className="field">
-          <label>繰り返し</label>
+          <label>{t('editor.repeat')}</label>
           <div className="daypick">
             {[0, 1, 2, 3, 4, 5, 6].map((d) => (
               <button
@@ -66,17 +69,17 @@ export function AlarmEditor({
                 data-on={draft.repeatDays.includes(d)}
                 onClick={() => toggleDay(d)}
               >
-                {weekdayJa(d)}
+                {weekdayName(d, lang)}
               </button>
             ))}
           </div>
           <span className="muted" style={{ fontSize: 12 }}>
-            未選択なら次回のみ（単発）
+            {t('editor.repeatHint')}
           </span>
         </div>
 
         <div className="field">
-          <label>サウンド</label>
+          <label>{t('editor.sound')}</label>
           <div className="sound-row">
             <select
               className="select"
@@ -90,7 +93,7 @@ export function AlarmEditor({
             >
               {ALARM_SOUNDS.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.label}
+                  {t(`sound.${s.id}`)}
                 </option>
               ))}
             </select>
@@ -99,24 +102,24 @@ export function AlarmEditor({
               className="back-btn"
               onClick={() => preview(draft.sound)}
             >
-              試聴
+              {t('editor.preview')}
             </button>
           </div>
         </div>
 
         <div className="set-row">
-          <span className="set-label">スヌーズ</span>
+          <span className="set-label">{t('editor.snooze')}</span>
           <Toggle
             on={draft.snoozeEnabled}
             onChange={(snoozeEnabled) =>
               setDraft((s) => ({ ...s, snoozeEnabled }))
             }
-            label="スヌーズ"
+            label={t('editor.snooze')}
           />
         </div>
         {draft.snoozeEnabled && (
           <div className="set-row">
-            <span className="set-label">スヌーズ間隔</span>
+            <span className="set-label">{t('editor.snoozeInterval')}</span>
             <select
               className="select"
               style={{ width: 120 }}
@@ -130,7 +133,7 @@ export function AlarmEditor({
             >
               {[5, 10, 15].map((m) => (
                 <option key={m} value={m}>
-                  {m}分
+                  {t('unit.min', { n: m })}
                 </option>
               ))}
             </select>
@@ -138,11 +141,11 @@ export function AlarmEditor({
         )}
 
         <Button block large onClick={() => onSave(draft)}>
-          保存
+          {t('common.save')}
         </Button>
         {onDelete && (
           <Button variant="danger" block onClick={onDelete}>
-            このアラームを削除
+            {t('editor.delete')}
           </Button>
         )}
       </div>

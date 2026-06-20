@@ -6,8 +6,10 @@ import { Button } from '../../components/Button';
 import { Toggle } from '../../components/Toggle';
 import { AlarmEditor } from './AlarmEditor';
 import type { AlarmConfig } from '../../domain/types';
-import { weekdayJa } from '../../domain/format';
+import { weekdayName } from '../../domain/format';
 import { recommendedBedtime } from '../../domain/bedtime';
+import { useT, useLang } from '../../i18n/useT';
+import type { Lang } from '../../domain/types';
 import { sleepDebtMin } from '../../domain/debt';
 import { DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
 import { uid } from '../../lib/id';
@@ -26,13 +28,20 @@ function newAlarm(time: string): AlarmConfig {
   };
 }
 
-function repeatLabel(days: number[]): string {
-  if (days.length === 0) return '単発';
-  if (days.length === 7) return '毎日';
-  return days.map(weekdayJa).join('・');
+function repeatLabel(
+  days: number[],
+  lang: Lang,
+  t: (key: string) => string,
+  sep: string,
+): string {
+  if (days.length === 0) return t('alarm.repeatOnce');
+  if (days.length === 7) return t('alarm.repeatDaily');
+  return days.map((d) => weekdayName(d, lang)).join(sep);
 }
 
 export function AlarmScreen() {
+  const t = useT();
+  const lang = useLang();
   const alarms = useStore((s) => s.alarms);
   const settings = useStore((s) => s.settings);
   const sessions = useStore((s) => s.sessions);
@@ -59,21 +68,21 @@ export function AlarmScreen() {
 
   return (
     <div className="screen">
-      <h1 className="screen-title">アラーム</h1>
+      <h1 className="screen-title">{t('alarm.title')}</h1>
 
       {reminderTime && (
         <Card tight>
           <div className="spread">
             <div>
-              <div className="stat-label">就寝リマインダー</div>
+              <div className="stat-label">{t('home.bedtimeReminder')}</div>
               <div className="alarm-time num" style={{ fontSize: 22 }}>
                 {reminderTime}
               </div>
             </div>
             <span className="pill">
               {bedtimePlan && bedtimePlan.recoveryMin > 0
-                ? '回復のため早め'
-                : '目標から逆算'}
+                ? t('alarm.recoveryEarly')
+                : t('alarm.fromTarget')}
             </span>
           </div>
         </Card>
@@ -81,7 +90,7 @@ export function AlarmScreen() {
 
       {alarms.length === 0 ? (
         <Card>
-          <p className="empty">アラームはまだありません</p>
+          <p className="empty">{t('alarm.empty')}</p>
         </Card>
       ) : (
         <Card>
@@ -106,14 +115,16 @@ export function AlarmScreen() {
               >
                 <div className="alarm-time num">{a.time}</div>
                 <div className="alarm-meta">
-                  {repeatLabel(a.repeatDays)}
-                  {a.snoozeEnabled ? ` ・ スヌーズ${a.snoozeMinutes}分` : ''}
+                  {repeatLabel(a.repeatDays, lang, t, t('sep.middot'))}
+                  {a.snoozeEnabled
+                    ? t('alarm.snoozeMeta', { min: a.snoozeMinutes })
+                    : ''}
                 </div>
               </button>
               <Toggle
                 on={a.enabled}
                 onChange={(enabled) => void saveAlarm({ ...a, enabled })}
-                label={`${a.time} を有効化`}
+                label={t('alarm.enableAria', { time: a.time })}
               />
             </div>
           ))}
@@ -121,7 +132,7 @@ export function AlarmScreen() {
       )}
 
       <Button block large onClick={() => void openNew()}>
-        ＋ アラームを追加
+        {t('alarm.add')}
       </Button>
 
       {editing && (

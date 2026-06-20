@@ -5,10 +5,15 @@ import { Button } from '../../components/Button';
 import { EyeMark } from '../../components/EyeMark';
 import { MoodPicker } from '../../components/MoodPicker';
 import type { Mood } from '../../domain/types';
-import { formatDurationJa, isoToHm } from '../../domain/format';
+import { isoToHm } from '../../domain/format';
 import { notifySuccess } from '../../lib/haptics';
+import { useT } from '../../i18n/useT';
+import { useLang } from '../../i18n/useT';
+import { formatDuration } from '../../i18n/catalog';
 
 export function MorningScreen() {
+  const t = useT();
+  const lang = useLang();
   const pending = useStore((s) => s.pendingMorning);
   const saveMorningCheck = useStore((s) => s.saveMorningCheck);
   const dismissMorning = useStore((s) => s.dismissMorning);
@@ -39,28 +44,28 @@ export function MorningScreen() {
         <EyeMark size={72} color="var(--primary)" open={eyeOpen} />
         <div style={{ textAlign: 'center' }}>
           <h1 className="display" style={{ fontSize: 26, letterSpacing: '0.04em' }}>
-            おはようございます
+            {t('morning.greeting')}
           </h1>
           <p className="muted" style={{ marginTop: 6 }}>
             {isoToHm(pending.startedAt)} → {isoToHm(pending.endedAt)}
           </p>
           <div className="morning-dur num">
-            {formatDurationJa(pending.durationMin)}
+            {formatDuration(pending.durationMin, lang)}
           </div>
           {pending.movements && (
             <p className="muted" style={{ marginTop: 4 }}>
-              寝返り <span className="num">{pending.movements.length}</span> 回
+              {t('morning.movements', { count: pending.movements.length })}
             </p>
           )}
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span className="stat-label">今朝のコンディション</span>
+          <span className="stat-label">{t('morning.condition')}</span>
           <MoodPicker value={mood} onChange={setMood} />
         </div>
 
         <div className="field" style={{ width: '100%' }}>
-          <label>主観的な眠りの質（1〜5）</label>
+          <label>{t('morning.subjective')}</label>
           <input
             className="input"
             type="range"
@@ -75,32 +80,32 @@ export function MorningScreen() {
         </div>
 
         <div className="field" style={{ width: '100%' }}>
-          <label>今日、考えたいこと（任意）</label>
+          <label>{t('morning.theme')}</label>
           <input
             className="input"
             value={theme}
-            placeholder="例：企画の骨子をまとめる"
+            placeholder={t('morning.themePlaceholder')}
             maxLength={60}
             onChange={(e) => setTheme(e.target.value)}
           />
         </div>
 
         <div className="field" style={{ width: '100%' }}>
-          <label>ひとことメモ（任意）</label>
+          <label>{t('morning.note')}</label>
           <textarea
             className="textarea"
             value={note}
-            placeholder="夢を見た / 途中で目が覚めた など"
+            placeholder={t('morning.notePlaceholder')}
             onChange={(e) => setNote(e.target.value)}
           />
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Button block large disabled={!mood} onClick={() => void save()}>
-            保存する
+            {t('morning.save')}
           </Button>
           <Button variant="ghost" block onClick={dismissMorning}>
-            あとで（時間だけ記録）
+            {t('morning.later')}
           </Button>
         </div>
       </div>

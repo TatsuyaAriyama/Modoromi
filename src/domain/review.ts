@@ -15,9 +15,21 @@ export interface WeeklyReview {
   qualityDeltaVsPrev: number | null;
   /** Sleep regularity 0–1, or null. */
   consistency: number | null;
-  /** A quiet one-line summary (a 目安, not advice). */
-  headline: string;
+  /**
+   * Catalog token ids for a quiet one-line summary (a 目安, not advice). The UI
+   * translates each via `review.<token>` and joins them. Empty = no records.
+   */
+  headlineParts: ReviewHeadlineToken[];
 }
+
+export type ReviewHeadlineToken =
+  | 'none'
+  | 'onTarget'
+  | 'slightlyShort'
+  | 'wellShort'
+  | 'qualityUp'
+  | 'qualityFlat'
+  | 'qualityDown';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -53,7 +65,7 @@ export function weeklyReview(
     avgQuality,
     qualityDeltaVsPrev,
     consistency,
-    headline: buildHeadline({
+    headlineParts: buildHeadlineParts({
       loggedNights,
       durationVsTargetMin,
       qualityDeltaVsPrev,
@@ -61,30 +73,26 @@ export function weeklyReview(
   };
 }
 
-function buildHeadline(o: {
+function buildHeadlineParts(o: {
   loggedNights: number;
   durationVsTargetMin: number;
   qualityDeltaVsPrev: number | null;
-}): string {
-  if (o.loggedNights === 0) return '今週の記録はまだありません';
+}): ReviewHeadlineToken[] {
+  if (o.loggedNights === 0) return ['none'];
 
-  const parts: string[] = [];
+  const parts: ReviewHeadlineToken[] = [];
 
   // Duration vs target (within 20 min counts as on-target).
-  if (o.durationVsTargetMin >= -20) {
-    parts.push('目標どおりの睡眠を保てています');
-  } else if (o.durationVsTargetMin >= -60) {
-    parts.push('目標にやや届かない夜が続いています');
-  } else {
-    parts.push('睡眠が目標を大きく下回っています');
-  }
+  if (o.durationVsTargetMin >= -20) parts.push('onTarget');
+  else if (o.durationVsTargetMin >= -60) parts.push('slightlyShort');
+  else parts.push('wellShort');
 
   // Quality trend vs last week.
   if (o.qualityDeltaVsPrev != null) {
-    if (o.qualityDeltaVsPrev >= 5) parts.push('質は先週より上向き');
-    else if (o.qualityDeltaVsPrev <= -5) parts.push('質は先週より下降');
-    else parts.push('質は先週と同程度');
+    if (o.qualityDeltaVsPrev >= 5) parts.push('qualityUp');
+    else if (o.qualityDeltaVsPrev <= -5) parts.push('qualityDown');
+    else parts.push('qualityFlat');
   }
 
-  return parts.join('・');
+  return parts;
 }

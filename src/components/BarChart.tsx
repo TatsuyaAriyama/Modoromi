@@ -1,3 +1,5 @@
+import { useT } from '../i18n/useT';
+
 export interface BarDatum {
   label: string;
   value: number; // minutes
@@ -18,6 +20,7 @@ export function BarChart({
   height?: number;
   unitMax?: number;
 }) {
+  const t = useT();
   const W = 320;
   const H = height;
   const padB = 22;
@@ -39,7 +42,7 @@ export function BarChart({
       width="100%"
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label="日別の睡眠時間"
+      aria-label={t('chart.duration')}
     >
       {target != null && (
         <g>

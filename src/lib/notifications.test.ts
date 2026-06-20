@@ -22,6 +22,7 @@ function alarm(over: Partial<AlarmConfig> = {}): AlarmConfig {
 }
 
 const SETTINGS: UserSettings = {
+  lang: 'en',
   theme: 'auto',
   targetDurationMin: 450,
   defaultWakeTime: '07:00',

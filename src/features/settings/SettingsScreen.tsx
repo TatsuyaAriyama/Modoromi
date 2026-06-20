@@ -5,21 +5,18 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TimeDial } from '../../components/TimeDial';
 import { Toggle } from '../../components/Toggle';
-import type { ThemePref } from '../../domain/types';
-import { formatDurationJa } from '../../domain/format';
+import type { Lang, ThemePref } from '../../domain/types';
 import { exportAll, importAll, wipeAll } from '../../data/repositories';
 import { parseBackup } from '../../domain/backup';
 import { isNative } from '../../lib/platform';
-
-const THEME_LABEL: Record<ThemePref, string> = {
-  auto: '自動',
-  day: 'デイ',
-  night: 'ナイト',
-};
+import { LANGS, formatDuration, translate } from '../../i18n/catalog';
+import { useT, useLang } from '../../i18n/useT';
 
 const DURATION_OPTIONS = [360, 390, 420, 450, 480, 510, 540];
 
 export function SettingsScreen({ onClose }: { onClose: () => void }) {
+  const t = useT();
+  const lang = useLang();
   const settings = useStore((s) => s.settings);
   const saveSettings = useStore((s) => s.saveSettings);
   const init = useStore((s) => s.init);
@@ -73,30 +70,47 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
     <div className="screen">
       <div className="spread">
         <button className="back-btn" onClick={onClose}>
-          ← 戻る
+          ← {t('common.back')}
         </button>
-        <h1 style={{ fontSize: 18 }}>設定</h1>
+        <h1 style={{ fontSize: 18 }}>{t('settings.title')}</h1>
         <span style={{ width: 48 }} />
       </div>
 
       <Card>
         <div className="set-row">
-          <span className="set-label">テーマ</span>
+          <span className="set-label">{t('lang.title')}</span>
           <div className="seg">
-            {(['auto', 'day', 'night'] as ThemePref[]).map((t) => (
+            {LANGS.map((l) => (
               <button
-                key={t}
-                data-on={settings.theme === t}
-                onClick={() => void saveSettings({ ...settings, theme: t })}
+                key={l.id}
+                data-on={settings.lang === l.id}
+                onClick={() =>
+                  void saveSettings({ ...settings, lang: l.id as Lang })
+                }
               >
-                {THEME_LABEL[t]}
+                {l.label}
               </button>
             ))}
           </div>
         </div>
 
         <div className="set-row">
-          <span className="set-label">目標睡眠時間</span>
+          <span className="set-label">{t('settings.theme')}</span>
+          <div className="seg">
+            {(['auto', 'day', 'night'] as ThemePref[]).map((tp) => (
+              <button
+                key={tp}
+                data-on={settings.theme === tp}
+                onClick={() => void saveSettings({ ...settings, theme: tp })}
+              >
+                {t(`theme.${tp}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="set-row">
+          <span className="set-label">{t('settings.targetDuration')}</span>
           <select
             className="select"
             style={{ width: 130 }}
@@ -110,7 +124,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           >
             {DURATION_OPTIONS.map((m) => (
               <option key={m} value={m}>
-                {formatDurationJa(m)}
+                {formatDuration(m, lang)}
               </option>
             ))}
           </select>
@@ -120,7 +134,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           className="set-row"
           style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}
         >
-          <span className="set-label">既定の起床時刻</span>
+          <span className="set-label">{t('settings.defaultWake')}</span>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             <TimeDial
               value={settings.defaultWakeTime}
@@ -133,13 +147,13 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="set-row">
-          <span className="set-label">就寝リマインダー</span>
+          <span className="set-label">{t('settings.bedtimeReminder')}</span>
           <Toggle
             on={settings.bedtimeReminder}
             onChange={(bedtimeReminder) =>
               void saveSettings({ ...settings, bedtimeReminder })
             }
-            label="就寝リマインダー"
+            label={t('settings.bedtimeReminder')}
           />
         </div>
 
@@ -148,31 +162,30 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}
         >
           <div className="spread">
-            <span className="set-label">スマート起床</span>
+            <span className="set-label">{t('settings.smartAlarm')}</span>
             <Toggle
               on={settings.smartAlarm}
               onChange={(smartAlarm) =>
                 void saveSettings({ ...settings, smartAlarm })
               }
-              label="スマート起床"
+              label={t('settings.smartAlarm')}
             />
           </div>
           <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-            アラーム前30分以内に体動から浅い眠りを検知すると、少し早めに起こします。
-            画面を点けたままのセッション中のみ動作します。
+            {t('settings.smartAlarmHint')}
           </span>
         </div>
       </Card>
 
       <Card>
         <div className="set-row">
-          <span className="set-label">データをエクスポート（JSON）</span>
+          <span className="set-label">{t('settings.exportData')}</span>
           <Button variant="ghost" onClick={() => void onExport()}>
-            書き出す
+            {t('settings.export')}
           </Button>
         </div>
         <div className="set-row">
-          <span className="set-label">バックアップから読み込み</span>
+          <span className="set-label">{t('settings.importData')}</span>
           <Button
             variant="ghost"
             onClick={() => {
@@ -181,27 +194,25 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
               setImportOpen(true);
             }}
           >
-            読み込む
+            {t('settings.import')}
           </Button>
         </div>
         <div className="set-row">
           <span className="set-label" style={{ color: '#d9748a' }}>
-            すべてのデータを削除
+            {t('settings.wipeData')}
           </span>
           <Button variant="danger" onClick={() => setConfirmWipe(true)}>
-            削除
+            {t('common.delete')}
           </Button>
         </div>
       </Card>
 
-      <p className="banner">
-        睡眠負債やスコアは健康・医療上の助言ではなく、あくまで目安です。
-      </p>
+      <p className="banner">{t('settings.disclaimer')}</p>
 
       {exported && (
         <div className="sheet-backdrop" onClick={() => setExported(null)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>エクスポート</h2>
+            <h2 style={{ fontSize: 18 }}>{t('settings.exportTitle')}</h2>
             <textarea
               className="textarea"
               style={{ minHeight: 220 }}
@@ -209,7 +220,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
               value={exported}
             />
             <Button block onClick={() => setExported(null)}>
-              閉じる
+              {t('common.close')}
             </Button>
           </div>
         </div>
@@ -218,10 +229,9 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       {importOpen && (
         <div className="sheet-backdrop" onClick={() => setImportOpen(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>バックアップから読み込み</h2>
+            <h2 style={{ fontSize: 18 }}>{t('settings.importTitle')}</h2>
             <p className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-              書き出したJSONを貼り付けてください。現在の記録・アラームは
-              上書きされます。
+              {t('settings.importHint')}
             </p>
             <textarea
               className="textarea"
@@ -235,7 +245,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             />
             {importError && (
               <span style={{ color: '#d9748a', fontSize: 13 }}>
-                {importError}
+                {translate(lang, `backup.${importError}`)}
               </span>
             )}
             <Button
@@ -245,10 +255,10 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
               disabled={importText.trim() === ''}
               onClick={() => void onImport()}
             >
-              上書きして読み込む
+              {t('settings.importConfirm')}
             </Button>
             <Button variant="ghost" block onClick={() => setImportOpen(false)}>
-              やめる
+              {t('common.cancel.soft')}
             </Button>
           </div>
         </div>
@@ -257,15 +267,13 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       {confirmWipe && (
         <div className="sheet-backdrop" onClick={() => setConfirmWipe(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>すべて削除しますか？</h2>
-            <p className="muted">
-              履歴・アラーム・設定がすべて消えます。この操作は取り消せません。
-            </p>
+            <h2 style={{ fontSize: 18 }}>{t('settings.wipeTitle')}</h2>
+            <p className="muted">{t('settings.wipeHint')}</p>
             <Button variant="danger" block large onClick={() => void onWipe()}>
-              すべて削除する
+              {t('settings.wipeConfirm')}
             </Button>
             <Button variant="ghost" block onClick={() => setConfirmWipe(false)}>
-              やめる
+              {t('common.cancel.soft')}
             </Button>
           </div>
         </div>

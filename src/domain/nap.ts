@@ -6,12 +6,19 @@
 
 export type NapWindow = 'ideal' | 'caution' | 'discouraged';
 
+export type NapHeadline =
+  | 'idealRecover'
+  | 'idealRefresh'
+  | 'caution'
+  | 'nightFirst'
+  | 'morningLight';
+
 export interface NapAdvice {
   /** Suggested nap length (minutes); 0 when napping is discouraged now. */
   recommendedMin: number;
   window: NapWindow;
-  /** A quiet one-line note. */
-  headline: string;
+  /** Catalog token id for a quiet one-line note (translated via `nap.<id>`). */
+  headline: NapHeadline;
 }
 
 /** A power nap stays short to avoid deep-sleep grogginess. */
@@ -35,10 +42,7 @@ export function napAdvice(o: { now?: Date; debtMin?: number } = {}): NapAdvice {
     return {
       recommendedMin: POWER_NAP_MIN,
       window: 'ideal',
-      headline:
-        debtMin > 60
-          ? '午後の仮眠で軽く回復できる時間帯です'
-          : '短い仮眠で頭がすっきりしやすい時間帯です',
+      headline: debtMin > 60 ? 'idealRecover' : 'idealRefresh',
     };
   }
 
@@ -47,7 +51,7 @@ export function napAdvice(o: { now?: Date; debtMin?: number } = {}): NapAdvice {
     return {
       recommendedMin: SHORT_NAP_MIN,
       window: 'caution',
-      headline: '夜の睡眠に響かないよう、短めに',
+      headline: 'caution',
     };
   }
 
@@ -55,9 +59,6 @@ export function napAdvice(o: { now?: Date; debtMin?: number } = {}): NapAdvice {
   return {
     recommendedMin: 0,
     window: 'discouraged',
-    headline:
-      hour >= 17 || hour < 4
-        ? '今は夜の睡眠を優先するのがおすすめです'
-        : '仮眠よりも、朝の光を浴びるのがおすすめです',
+    headline: hour >= 17 || hour < 4 ? 'nightFirst' : 'morningLight',
   };
 }

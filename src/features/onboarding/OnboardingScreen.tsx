@@ -3,7 +3,10 @@ import '../screens.css';
 import { useStore } from '../../app/store';
 import { EyeMark } from '../../components/EyeMark';
 import { TimeDial } from '../../components/TimeDial';
-import { formatDurationJa, subtractMinutesHm } from '../../domain/format';
+import { subtractMinutesHm } from '../../domain/format';
+import type { Lang } from '../../domain/types';
+import { LANGS, formatDuration } from '../../i18n/catalog';
+import { useT, useLang } from '../../i18n/useT';
 import { ensurePermission } from '../../lib/notifications';
 import { isNative } from '../../lib/platform';
 import { tapMedium } from '../../lib/haptics';
@@ -12,6 +15,8 @@ const DURATION_OPTIONS = [360, 390, 420, 450, 480, 510, 540];
 const STEPS = 3;
 
 export function OnboardingScreen() {
+  const t = useT();
+  const lang = useLang();
   const settings = useStore((s) => s.settings);
   const saveSettings = useStore((s) => s.saveSettings);
 
@@ -47,23 +52,38 @@ export function OnboardingScreen() {
             <>
               <EyeMark size={84} color="var(--mist)" />
               <h1 className="onb-title">Madoromi</h1>
-              <p className="onb-sub">思考のための睡眠を設計する</p>
-              <p className="onb-copy">
-                睡眠を記録するだけでなく、設計する。
-                就寝・起床・質を可視化し、目標とのズレを翌日の思考コンディションとして静かに見せます。
-              </p>
+              <p className="onb-sub">{t('onb.tagline')}</p>
+              <p className="onb-copy">{t('onb.intro')}</p>
+              <div
+                className="seg"
+                style={{ marginTop: 18, alignSelf: 'center' }}
+                role="group"
+                aria-label={t('lang.title')}
+              >
+                {LANGS.map((l) => (
+                  <button
+                    key={l.id}
+                    data-on={lang === l.id}
+                    onClick={() =>
+                      void saveSettings({ ...settings, lang: l.id as Lang })
+                    }
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
             </>
           )}
 
           {step === 1 && (
             <>
               <h1 className="onb-title" style={{ fontSize: 24 }}>
-                目標を決めましょう
+                {t('onb.goalTitle')}
               </h1>
               <div className="onb-card">
                 <div className="field">
                   <label style={{ color: 'var(--mist)', opacity: 0.85 }}>
-                    目標睡眠時間
+                    {t('onb.targetLabel')}
                   </label>
                   <select
                     className="select"
@@ -77,14 +97,14 @@ export function OnboardingScreen() {
                   >
                     {DURATION_OPTIONS.map((m) => (
                       <option key={m} value={m} style={{ color: '#211c2e' }}>
-                        {formatDurationJa(m)}
+                        {formatDuration(m, lang)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="field">
                   <label style={{ color: 'var(--mist)', opacity: 0.85 }}>
-                    起床時刻
+                    {t('onb.wakeLabel')}
                   </label>
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
                     <TimeDial value={wake} onChange={setWake} minuteStep={5} />
@@ -92,7 +112,7 @@ export function OnboardingScreen() {
                 </div>
               </div>
               <p className="onb-copy">
-                逆算した就寝の目安は <strong className="num">{bedtime}</strong> 頃です。
+                {t('onb.bedtimeHint', { time: bedtime })}
               </p>
             </>
           )}
@@ -100,26 +120,23 @@ export function OnboardingScreen() {
           {step === 2 && (
             <>
               <h1 className="onb-title" style={{ fontSize: 24 }}>
-                通知の許可
+                {t('onb.permTitle')}
               </h1>
               <p className="onb-copy">
-                起床アラームと就寝リマインダーをお届けするために通知を使います。
-                {isNative()
-                  ? ''
-                  : '（ブラウザでは通知は発火しません。実機でご確認ください）'}
+                {t('onb.permBody')}
+                {isNative() ? '' : t('onb.permWeb')}
               </p>
               <p className="onb-copy" style={{ opacity: 0.7, fontSize: 12.5 }}>
-                ※ iOS ではロック中・サイレント・集中モードの影響を受けるため、
-                確実に大音量で鳴る目覚ましは保証されません。あくまで通知ベースの目安です。
+                {t('onb.permDisclaimer')}
               </p>
               {permState === 'granted' && (
                 <span className="pill" style={{ background: 'rgba(255,255,255,0.2)', color: 'var(--mist)' }}>
-                  通知を許可しました
+                  {t('onb.permGranted')}
                 </span>
               )}
               {permState === 'denied' && (
                 <span className="pill" style={{ background: 'rgba(255,255,255,0.2)', color: 'var(--mist)' }}>
-                  あとで設定から変更できます
+                  {t('onb.permDenied')}
                 </span>
               )}
             </>
@@ -141,7 +158,7 @@ export function OnboardingScreen() {
                 setStep((s) => s + 1);
               }}
             >
-              {step === 0 ? 'はじめる' : '次へ'}
+              {step === 0 ? t('common.start') : t('common.next')}
             </button>
           ) : (
             <>
@@ -152,13 +169,15 @@ export function OnboardingScreen() {
                   else void finish(true);
                 }}
               >
-                {permState === 'idle' ? '通知を許可' : '就寝リマインダーをON にして始める'}
+                {permState === 'idle'
+                  ? t('onb.allowNotif')
+                  : t('onb.finishWithReminder')}
               </button>
               <button
                 className="btn btn-onb-ghost btn-block"
                 onClick={() => void finish(false)}
               >
-                あとで・通知なしで始める
+                {t('onb.skipNotif')}
               </button>
             </>
           )}

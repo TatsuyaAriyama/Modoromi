@@ -3,12 +3,12 @@ import '../screens.css';
 import { Button } from '../../components/Button';
 import { EyeMark } from '../../components/EyeMark';
 import {
-  PHASE_LABEL,
   WIND_DOWN_BREATHS,
   breathAt,
   type BreathState,
 } from '../../domain/breath';
 import { tapMedium } from '../../lib/haptics';
+import { useT } from '../../i18n/useT';
 
 /**
  * A short paced-breathing ritual before a sleep session. Optional and
@@ -21,6 +21,7 @@ export function WindDownScreen({
   onStart: () => void;
   onClose: () => void;
 }) {
+  const t = useT();
   const [state, setState] = useState<BreathState>(() => breathAt(0));
   const startTs = useRef<number | null>(null);
 
@@ -49,11 +50,9 @@ export function WindDownScreen({
       <div className="wind-wrap">
         <div className="wind-head">
           <EyeMark size={40} color="var(--text)" />
-          <h1 className="wind-title">深呼吸して、頭をほどく</h1>
+          <h1 className="wind-title">{t('wind.title')}</h1>
           <p className="wind-note">
-            {done
-              ? '準備ができました。おやすみなさい'
-              : '円に合わせて、ゆっくり呼吸しましょう'}
+            {done ? t('wind.ready') : t('wind.guide')}
           </p>
         </div>
 
@@ -62,7 +61,7 @@ export function WindDownScreen({
             className="wind-orb"
             style={{ transform: `scale(${state.scale})` }}
           />
-          <div className="wind-cue">{PHASE_LABEL[state.phase]}</div>
+          <div className="wind-cue">{t(`breath.${state.phase}`)}</div>
         </div>
 
         <div className="wind-dots" aria-hidden="true">
@@ -77,10 +76,10 @@ export function WindDownScreen({
 
         <div className="wind-foot">
           <Button variant="primary" block large onClick={start}>
-            眠りにつく
+            {t('wind.start')}
           </Button>
           <button className="back-btn" onClick={onClose}>
-            戻る
+            {t('common.back')}
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { parseHm } from '../domain/format';
 import './ui.css';
 import { tapLight } from '../lib/haptics';
+import { useT } from '../i18n/useT';
 
 /** Large stepper-based "HH:mm" input. */
 export function TimeDial({
@@ -12,6 +13,7 @@ export function TimeDial({
   onChange: (hm: string) => void;
   minuteStep?: number;
 }) {
+  const t = useT();
   const { hour, minute } = parseHm(value);
 
   const set = (h: number, m: number) => {
@@ -29,7 +31,7 @@ export function TimeDial({
         <button
           type="button"
           className="dial-step"
-          aria-label="時を増やす"
+          aria-label={t('dial.hourUp')}
           onClick={() => set(hour + 1, minute)}
         >
           ▲
@@ -38,7 +40,7 @@ export function TimeDial({
         <button
           type="button"
           className="dial-step"
-          aria-label="時を減らす"
+          aria-label={t('dial.hourDown')}
           onClick={() => set(hour - 1, minute)}
         >
           ▼
@@ -49,7 +51,7 @@ export function TimeDial({
         <button
           type="button"
           className="dial-step"
-          aria-label="分を増やす"
+          aria-label={t('dial.minUp')}
           onClick={() => set(hour, minute + minuteStep)}
         >
           ▲
@@ -58,7 +60,7 @@ export function TimeDial({
         <button
           type="button"
           className="dial-step"
-          aria-label="分を減らす"
+          aria-label={t('dial.minDown')}
           onClick={() => set(hour, minute - minuteStep)}
         >
           ▼

@@ -39,14 +39,6 @@ export const MIN_SCALE = 0.4;
 /** A short ritual: this many calm breaths is a gentle, achievable target. */
 export const WIND_DOWN_BREATHS = 6;
 
-/** Short Japanese cue for each phase. */
-export const PHASE_LABEL: Record<BreathPhase, string> = {
-  inhale: '吸って',
-  'hold-in': '止めて',
-  exhale: '吐いて',
-  'hold-out': '止めて',
-};
-
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }

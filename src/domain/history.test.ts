@@ -49,7 +49,8 @@ describe('buildDaySeries', () => {
   });
 
   it('labels short windows by weekday and long windows by date', () => {
-    expect(buildDaySeries([], 7, NOW)[6].label).toBe('土'); // 06-20 = Saturday
+    expect(buildDaySeries([], 7, NOW)[6].label).toBe('Sat'); // 06-20 = Saturday
+    expect(buildDaySeries([], 7, NOW, 'ja')[6].label).toBe('土');
     expect(buildDaySeries([], 30, NOW)[29].label).toBe('20');
   });
 

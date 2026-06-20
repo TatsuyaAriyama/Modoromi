@@ -8,6 +8,7 @@ const KEYS = {
 } as const;
 
 export const DEFAULT_SETTINGS: UserSettings = {
+  lang: 'en',
   theme: 'auto',
   targetDurationMin: 450, // 7.5h
   defaultWakeTime: '07:00',

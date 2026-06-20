@@ -2,10 +2,11 @@ import {
   LocalNotifications,
   type ScheduleOptions,
 } from '@capacitor/local-notifications';
-import type { AlarmConfig, SleepSession, UserSettings } from '../domain/types';
+import type { AlarmConfig, Lang, SleepSession, UserSettings } from '../domain/types';
 import { parseHm } from '../domain/format';
 import { bedtimeReminderContent } from '../domain/bedtime';
 import { sleepDebtMin } from '../domain/debt';
+import { translate as tr, formatDuration } from '../i18n/catalog';
 import { isNative } from './platform';
 
 /**
@@ -92,7 +93,10 @@ function occurrence(
  * rings rather than pinging once. Stops at {@link MAX_PENDING} to respect the
  * OS ceiling. No I/O — `syncSchedules` consumes the result.
  */
-export function buildAlarmNotifications(alarms: AlarmConfig[]): Built[] {
+export function buildAlarmNotifications(
+  alarms: AlarmConfig[],
+  lang: Lang = 'en',
+): Built[] {
   const out: Built[] = [];
   for (const a of alarms) {
     if (!a.enabled) continue;
@@ -105,8 +109,8 @@ export function buildAlarmNotifications(alarms: AlarmConfig[]): Built[] {
         const on = occurrence(a.time, wd, m);
         out.push({
           id: notifId(a.id, slotBase + m),
-          title: '起床時刻です',
-          body: 'Madoromi — おはようございます',
+          title: tr(lang, 'notif.wakeTitle'),
+          body: tr(lang, 'notif.wakeBody'),
           sound: ALARM_SOUND,
           schedule: { on, allowWhileIdle: true },
         });
@@ -127,11 +131,16 @@ export function buildBedtimeNotification(
     targetMin: settings.targetDurationMin,
     debtMin: sleepDebtMin(sessions, settings.targetDurationMin),
   });
+  const lang = settings.lang;
   const { hour, minute } = parseHm(reminder.bedtimeHm);
   return {
     id: BEDTIME_ID,
-    title: reminder.title,
-    body: reminder.body,
+    title: tr(lang, reminder.recovering ? 'bedtime.titleEarly' : 'bedtime.title'),
+    body: reminder.recovering
+      ? tr(lang, 'bedtime.bodyEarly', {
+          amount: formatDuration(reminder.recoveryMin, lang),
+        })
+      : tr(lang, 'bedtime.body'),
     schedule: { on: { hour, minute }, allowWhileIdle: true },
   };
 }
@@ -151,7 +160,7 @@ export async function syncSchedules(
       });
     }
 
-    const toSchedule = buildAlarmNotifications(alarms);
+    const toSchedule = buildAlarmNotifications(alarms, settings.lang);
     const bedtime = buildBedtimeNotification(settings, sessions);
     if (bedtime && toSchedule.length < MAX_PENDING) toSchedule.push(bedtime);
 
@@ -164,7 +173,10 @@ export async function syncSchedules(
 }
 
 /** Schedule a one-off snooze notification `minutes` from now. */
-export async function scheduleSnooze(minutes: number): Promise<void> {
+export async function scheduleSnooze(
+  minutes: number,
+  lang: Lang = 'en',
+): Promise<void> {
   if (!isNative()) return;
   try {
     const at = new Date(Date.now() + minutes * 60000);
@@ -172,8 +184,8 @@ export async function scheduleSnooze(minutes: number): Promise<void> {
       notifications: [
         {
           id: SNOOZE_ID,
-          title: '起床時刻です（スヌーズ）',
-          body: 'Madoromi',
+          title: tr(lang, 'notif.snoozeTitle'),
+          body: tr(lang, 'notif.snoozeBody'),
           sound: ALARM_SOUND,
           schedule: { at, allowWhileIdle: true },
         },

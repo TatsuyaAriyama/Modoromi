@@ -23,6 +23,7 @@ const alarm: AlarmConfig = {
 };
 
 const settings: UserSettings = {
+  lang: 'en',
   theme: 'auto',
   targetDurationMin: 450,
   defaultWakeTime: '07:00',
@@ -61,7 +62,7 @@ describe('parseBackup', () => {
   it('rejects a backup from another app', () => {
     const r = parseBackup(JSON.stringify({ app: 'Other', sessions: [] }));
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toContain('Madoromi');
+    if (!r.ok) expect(r.error).toBe('not-madoromi');
   });
 
   it('rejects a malformed session entry', () => {

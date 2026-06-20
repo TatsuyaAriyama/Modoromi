@@ -13,26 +13,19 @@ import {
 import {
   consistencyScore,
   regularityLevel,
-  type RegularityLevel,
 } from '../../domain/consistency';
 import { weeklyReview } from '../../domain/review';
 import { deriveInsights } from '../../domain/insights';
-import {
-  formatDateJa,
-  formatDurationJa,
-  isoToHm,
-} from '../../domain/format';
+import { isoToHm } from '../../domain/format';
+import { formatDate, formatDuration } from '../../i18n/catalog';
 import type { SleepSession } from '../../domain/types';
+import { useT, useLang } from '../../i18n/useT';
 
 type Range = 'week' | 'month';
 
-const REGULARITY_LABEL: Record<RegularityLevel, string> = {
-  high: '高い',
-  medium: 'ふつう',
-  low: 'ばらつき',
-};
-
 export function HistoryScreen() {
+  const t = useT();
+  const lang = useLang();
   const sessions = useStore((s) => s.sessions);
   const targetMin = useStore((s) => s.settings.targetDurationMin);
   const [range, setRange] = useState<Range>('week');
@@ -40,8 +33,8 @@ export function HistoryScreen() {
 
   const days = range === 'week' ? 7 : 30;
   const series = useMemo(
-    () => buildDaySeries(sessions, days),
-    [sessions, days],
+    () => buildDaySeries(sessions, days, new Date(), lang),
+    [sessions, days, lang],
   );
   const avgDur = averageDuration(series);
   const avgQ = averageQuality(series);
@@ -70,30 +63,34 @@ export function HistoryScreen() {
   return (
     <div className="screen">
       <div className="spread">
-        <h1 className="screen-title">記録</h1>
+        <h1 className="screen-title">{t('tab.history')}</h1>
         <div className="seg">
           <button data-on={range === 'week'} onClick={() => setRange('week')}>
-            週
+            {t('history.week')}
           </button>
           <button
             data-on={range === 'month'}
             onClick={() => setRange('month')}
           >
-            月
+            {t('history.month')}
           </button>
         </div>
       </div>
 
       <Card tight>
         <div className="stat-label" style={{ marginBottom: 6 }}>
-          今週の振り返り
+          {t('history.weeklyReview')}
         </div>
-        <p className="review-headline">{review.headline}</p>
+        <p className="review-headline">
+          {review.headlineParts.map((p) => t(`review.${p}`)).join(t('sep.middot'))}
+        </p>
         {review.loggedNights > 0 && (
           <span className="muted" style={{ fontSize: 12.5 }}>
-            記録 {review.loggedNights}日
+            {t('history.logged', { nights: review.loggedNights })}
             {review.qualityDeltaVsPrev != null &&
-              ` ・ 先週比 ${review.qualityDeltaVsPrev > 0 ? '+' : ''}${review.qualityDeltaVsPrev}`}
+              t('history.vsPrev', {
+                delta: `${review.qualityDeltaVsPrev > 0 ? '+' : ''}${review.qualityDeltaVsPrev}`,
+              })}
           </span>
         )}
       </Card>
@@ -101,12 +98,12 @@ export function HistoryScreen() {
       {insights.length > 0 && (
         <Card tight>
           <div className="stat-label" style={{ marginBottom: 6 }}>
-            気づき
+            {t('history.insights')}
           </div>
           <ul className="insight-list">
             {insights.map((i) => (
               <li key={i.id} className="insight-item">
-                {i.text}
+                {t(`insight.${i.id}`, i.params)}
               </li>
             ))}
           </ul>
@@ -116,21 +113,21 @@ export function HistoryScreen() {
       <Card tight>
         <div className="summary-row">
           <div className="stat">
-            <span className="stat-label">平均睡眠時間</span>
+            <span className="stat-label">{t('history.avgDuration')}</span>
             <span className="stat-val num">
-              {avgDur > 0 ? formatDurationJa(avgDur) : '—'}
+              {avgDur > 0 ? formatDuration(avgDur, lang) : '—'}
             </span>
           </div>
           <div className="stat">
-            <span className="stat-label">平均質スコア</span>
+            <span className="stat-label">{t('history.avgQuality')}</span>
             <span className="stat-val num">{avgQ ?? '—'}</span>
           </div>
           <div className="stat">
-            <span className="stat-label">規則性</span>
+            <span className="stat-label">{t('stat.regularity')}</span>
             <span className="stat-val">
               {consistency == null
                 ? '—'
-                : REGULARITY_LABEL[regularityLevel(consistency)]}
+                : t(`reg.${regularityLevel(consistency)}`)}
             </span>
           </div>
         </div>
@@ -138,7 +135,7 @@ export function HistoryScreen() {
 
       <Card tight>
         <div className="stat-label" style={{ marginBottom: 8 }}>
-          睡眠時間（点線 = 目標）
+          {t('chart.durationTarget')}
         </div>
         <BarChart
           data={series.map((s) => ({
@@ -151,7 +148,7 @@ export function HistoryScreen() {
 
       <Card tight>
         <div className="stat-label" style={{ marginBottom: 8 }}>
-          質スコアの推移
+          {t('chart.qualityTrend')}
         </div>
         <LineChart
           data={series.map((s) => ({
@@ -163,10 +160,10 @@ export function HistoryScreen() {
 
       <Card>
         <div className="stat-label" style={{ marginBottom: 4 }}>
-          セッション
+          {t('history.sessions')}
         </div>
         {sorted.length === 0 ? (
-          <p className="empty">まだ記録がありません</p>
+          <p className="empty">{t('history.empty')}</p>
         ) : (
           sorted.map((s) => (
             <button
@@ -183,15 +180,15 @@ export function HistoryScreen() {
               onClick={() => setSelected(s)}
             >
               <div className="spread">
-                <span>{formatDateJa(new Date(s.endedAt))}</span>
+                <span>{formatDate(new Date(s.endedAt), lang)}</span>
                 <span className="score-badge num">
                   {s.qualityScore ?? '—'}
                 </span>
               </div>
               <span className="muted num" style={{ fontSize: 13 }}>
-                {formatDurationJa(s.durationMin)} ・ {isoToHm(s.startedAt)}–
-                {isoToHm(s.endedAt)}
-                {s.note ? ` ・ ${s.note}` : ''}
+                {formatDuration(s.durationMin, lang)} {t('sep.middot')}
+                {isoToHm(s.startedAt)}–{isoToHm(s.endedAt)}
+                {s.note ? ` ${t('sep.middot')}${s.note}` : ''}
               </span>
             </button>
           ))

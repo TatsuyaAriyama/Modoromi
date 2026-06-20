@@ -7,6 +7,7 @@ import { sleepDebtMin } from '../../domain/debt';
 import { NAP_LENGTHS_MIN, napAdvice } from '../../domain/nap';
 import { notifySuccess, tapMedium } from '../../lib/haptics';
 import { disableKeepAwake, enableKeepAwake } from '../../lib/keepAwake';
+import { useT } from '../../i18n/useT';
 
 type Phase = 'setup' | 'running' | 'done';
 
@@ -22,6 +23,7 @@ const R = 84;
 const CIRC = 2 * Math.PI * R;
 
 export function NapScreen({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const sessions = useStore((s) => s.sessions);
   const targetMin = useStore((s) => s.settings.targetDurationMin);
 
@@ -75,12 +77,12 @@ export function NapScreen({ onClose }: { onClose: () => void }) {
         <div className="nap-head">
           <EyeMark size={44} color="var(--text)" open={phase === 'done'} />
           <h1 className="nap-title">
-            {phase === 'done' ? 'おはよう' : '仮眠'}
+            {phase === 'done' ? t('nap.doneTitle') : t('nap.title')}
           </h1>
           <p className="nap-note">
             {phase === 'done'
-              ? '少し頭が軽くなりましたか'
-              : advice.headline}
+              ? t('nap.doneNote')
+              : t(`nap.${advice.headline}`)}
           </p>
         </div>
 
@@ -94,16 +96,16 @@ export function NapScreen({ onClose }: { onClose: () => void }) {
                   data-on={chosenMin === m}
                   onClick={() => setChosenMin(m)}
                 >
-                  {m}分
+                  {t('unit.min', { n: m })}
                 </button>
               ))}
             </div>
             <div className="nap-foot">
               <Button variant="primary" block large onClick={begin}>
-                はじめる
+                {t('common.start')}
               </Button>
               <button className="back-btn" onClick={onClose}>
-                戻る
+                {t('common.back')}
               </button>
             </div>
           </>
@@ -140,7 +142,7 @@ export function NapScreen({ onClose }: { onClose: () => void }) {
                   setPhase('done');
                 }}
               >
-                起きる
+                {t('nap.wake')}
               </Button>
             </div>
           </>
@@ -149,7 +151,7 @@ export function NapScreen({ onClose }: { onClose: () => void }) {
         {phase === 'done' && (
           <div className="nap-foot">
             <Button variant="primary" block large onClick={onClose}>
-              戻る
+              {t('common.back')}
             </Button>
           </div>
         )}

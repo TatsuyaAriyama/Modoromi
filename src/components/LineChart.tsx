@@ -1,3 +1,5 @@
+import { useT } from '../i18n/useT';
+
 export interface LinePoint {
   label: string;
   value: number | null; // 0–100 quality score, null = no data
@@ -11,6 +13,7 @@ export function LineChart({
   data: LinePoint[];
   height?: number;
 }) {
+  const t = useT();
   const W = 320;
   const H = height;
   const padB = 22;
@@ -43,7 +46,7 @@ export function LineChart({
       width="100%"
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label="質スコアの推移"
+      aria-label={t('chart.quality')}
     >
       {[0, 50, 100].map((g) => (
         <line

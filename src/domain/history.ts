@@ -1,6 +1,6 @@
-import type { SleepSession } from './types';
+import type { Lang, SleepSession } from './types';
 import { dayKey, sessionsByWakeDay } from './debt';
-import { weekdayJa } from './format';
+import { weekdayName } from './format';
 
 export interface DaySeries {
   key: string;
@@ -17,6 +17,7 @@ export function buildDaySeries(
   sessions: SleepSession[],
   days: number,
   now: Date = new Date(),
+  lang: Lang = 'en',
 ): DaySeries[] {
   const byDayDuration = sessionsByWakeDay(sessions);
 
@@ -40,7 +41,7 @@ export function buildDaySeries(
     out.push({
       key,
       label:
-        days <= 7 ? weekdayJa(d.getDay()) : String(d.getDate()),
+        days <= 7 ? weekdayName(d.getDay(), lang) : String(d.getDate()),
       durationMin: byDayDuration.get(key) ?? 0,
       qualityScore: q ? Math.round(q.sum / q.n) : null,
     });

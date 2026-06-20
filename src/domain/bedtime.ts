@@ -1,4 +1,4 @@
-import { formatDurationJa, subtractMinutesHm } from './format';
+import { subtractMinutesHm } from './format';
 
 export interface BedtimePlan {
   /** Tonight's suggested bedtime as "HH:mm" (local). */
@@ -44,21 +44,20 @@ export function recommendedBedtime(o: {
   return { bedtimeHm, recoveryMin, targetTonightMin, debtMin };
 }
 
-/** Title + body + time for the scheduled bedtime reminder notification. */
+/** Time + recovery signals for the scheduled bedtime reminder notification. */
 export interface BedtimeReminderContent {
   /** When to fire the reminder, "HH:mm" — the recovery-aware bedtime. */
   bedtimeHm: string;
-  title: string;
-  body: string;
   /** Minutes earlier than plain target; 0 when no debt to recover. */
   recoveryMin: number;
+  /** True when firing earlier than target to recover debt. */
+  recovering: boolean;
 }
 
 /**
- * Build the bedtime-reminder notification so its time and copy match the
- * debt-aware bedtime shown on Home. When there is debt to recover, the
- * reminder fires earlier and says by how much; otherwise it's the plain
- * target-based reminder. Pure — the scheduler just consumes the result.
+ * Compute the bedtime-reminder timing so it matches the debt-aware bedtime
+ * shown on Home. When there is debt to recover, the reminder fires earlier.
+ * Pure and language-agnostic — the scheduler localizes the copy.
  */
 export function bedtimeReminderContent(o: {
   wakeTime: string;
@@ -66,15 +65,9 @@ export function bedtimeReminderContent(o: {
   debtMin: number;
 }): BedtimeReminderContent {
   const plan = recommendedBedtime(o);
-  const recovering = plan.recoveryMin > 0;
   return {
     bedtimeHm: plan.bedtimeHm,
     recoveryMin: plan.recoveryMin,
-    title: recovering
-      ? 'そろそろおやすみの時間です（回復のため少し早め）'
-      : 'そろそろおやすみの時間です',
-    body: recovering
-      ? `睡眠負債のぶん、いつもより${formatDurationJa(plan.recoveryMin)}早めが目安です`
-      : '目標の睡眠時間を確保するための目安です',
+    recovering: plan.recoveryMin > 0,
   };
 }

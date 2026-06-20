@@ -42,7 +42,7 @@ describe('deriveInsights', () => {
     const ins = deriveInsights(sessions, TARGET);
     const dq = ins.find((i) => i.id === 'duration-quality');
     expect(dq).toBeTruthy();
-    expect(dq?.text).toContain('質スコアが高め');
+    expect(dq?.params?.diff).toBeGreaterThanOrEqual(8);
   });
 
   it('does not flag a duration link when scores are similar', () => {
@@ -70,6 +70,6 @@ describe('deriveInsights', () => {
     const ins = deriveInsights(sessions, TARGET);
     const wd = ins.find((i) => i.id === 'weekend-drift');
     expect(wd).toBeTruthy();
-    expect(wd?.text).toContain('週末');
+    expect(wd?.params?.diff).toBeGreaterThanOrEqual(45);
   });
 });

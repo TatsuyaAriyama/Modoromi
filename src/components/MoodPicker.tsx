@@ -1,11 +1,12 @@
 import type { Mood } from '../domain/types';
 import './ui.css';
 import { tapLight } from '../lib/haptics';
+import { useT } from '../i18n/useT';
 
-const OPTIONS: { value: Mood; label: string; emoji: string }[] = [
-  { value: 'fresh', label: 'すっきり', emoji: '🌤' },
-  { value: 'normal', label: 'ふつう', emoji: '🌥' },
-  { value: 'groggy', label: 'だるい', emoji: '🌫' },
+const OPTIONS: { value: Mood; emoji: string }[] = [
+  { value: 'fresh', emoji: '🌤' },
+  { value: 'normal', emoji: '🌥' },
+  { value: 'groggy', emoji: '🌫' },
 ];
 
 export function MoodPicker({
@@ -15,8 +16,9 @@ export function MoodPicker({
   value?: Mood;
   onChange: (m: Mood) => void;
 }) {
+  const t = useT();
   return (
-    <div className="mood" role="radiogroup" aria-label="今朝のコンディション">
+    <div className="mood" role="radiogroup" aria-label={t('mood.aria')}>
       {OPTIONS.map((o) => (
         <button
           key={o.value}
@@ -33,7 +35,7 @@ export function MoodPicker({
           <span className="mood-emoji" aria-hidden="true">
             {o.emoji}
           </span>
-          <span className="mood-label">{o.label}</span>
+          <span className="mood-label">{t(`mood.${o.value}`)}</span>
         </button>
       ))}
     </div>

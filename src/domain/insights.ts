@@ -9,8 +9,10 @@ import { isQualityConfirmed } from './score';
  * observation — never a directive.
  */
 export interface Insight {
+  /** Catalog token id (translated in the UI via `insight.<id>`). */
   id: string;
-  text: string;
+  /** Interpolation values for the translated template. */
+  params?: Record<string, number>;
 }
 
 /** No pattern is trustworthy below this many sessions. */
@@ -62,10 +64,7 @@ function durationQualityInsight(
 
   const diff = Math.round(mean(met) - mean(short));
   if (diff >= 8) {
-    return {
-      id: 'duration-quality',
-      text: `目標どおり眠れた日は、質スコアが高めです（平均 +${diff}）`,
-    };
+    return { id: 'duration-quality', params: { diff } };
   }
   return null;
 }
@@ -84,10 +83,7 @@ function weekendDriftInsight(sessions: SleepSession[]): Insight | null {
 
   const diff = Math.round(mean(weekend) - mean(weekday));
   if (diff >= 45) {
-    return {
-      id: 'weekend-drift',
-      text: `週末は就寝が ${diff}分ほど遅くなりがちです`,
-    };
+    return { id: 'weekend-drift', params: { diff } };
   }
   return null;
 }

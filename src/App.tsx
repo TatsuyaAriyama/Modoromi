@@ -12,14 +12,16 @@ import { MorningScreen } from './features/morning/MorningScreen';
 import { NapScreen } from './features/nap/NapScreen';
 import { WindDownScreen } from './features/winddown/WindDownScreen';
 import { OnboardingScreen } from './features/onboarding/OnboardingScreen';
+import { useT } from './i18n/useT';
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'home', label: '今日' },
-  { key: 'alarm', label: 'アラーム' },
-  { key: 'history', label: '記録' },
+const TABS: { key: TabKey; labelKey: string }[] = [
+  { key: 'home', labelKey: 'tab.home' },
+  { key: 'alarm', labelKey: 'tab.alarm' },
+  { key: 'history', labelKey: 'tab.history' },
 ];
 
 export default function App() {
+  const t = useT();
   useTheme();
   const init = useStore((s) => s.init);
   const loaded = useStore((s) => s.loaded);
@@ -81,15 +83,15 @@ export default function App() {
 
       {!settingsOpen && (
         <nav className="tabbar">
-          {TABS.map((t) => (
+          {TABS.map((tab2) => (
             <button
-              key={t.key}
+              key={tab2.key}
               className="tab"
-              data-active={tab === t.key}
-              onClick={() => setTab(t.key)}
+              data-active={tab === tab2.key}
+              onClick={() => setTab(tab2.key)}
             >
-              <TabIcon tab={t.key} />
-              {t.label}
+              <TabIcon tab={tab2.key} />
+              {t(tab2.labelKey)}
             </button>
           ))}
         </nav>

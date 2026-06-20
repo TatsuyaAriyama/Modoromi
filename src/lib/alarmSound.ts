@@ -6,15 +6,15 @@
  */
 
 export interface AlarmSound {
+  /** Stable id; the display label is resolved in the UI via `sound.<id>`. */
   id: string;
-  label: string;
 }
 
 export const ALARM_SOUNDS: AlarmSound[] = [
-  { id: 'chime', label: 'チャイム' },
-  { id: 'bell', label: 'ベル' },
-  { id: 'marimba', label: 'マリンバ' },
-  { id: 'dawn', label: '夜明け' },
+  { id: 'chime' },
+  { id: 'bell' },
+  { id: 'marimba' },
+  { id: 'dawn' },
 ];
 
 export const DEFAULT_ALARM_SOUND = 'chime';

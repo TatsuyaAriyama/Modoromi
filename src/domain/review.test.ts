@@ -27,7 +27,7 @@ describe('weeklyReview', () => {
     expect(r.durationVsTargetMin).toBe(0);
     expect(r.avgQuality).toBeNull();
     expect(r.qualityDeltaVsPrev).toBeNull();
-    expect(r.headline).toBe('今週の記録はまだありません');
+    expect(r.headlineParts).toEqual(['none']);
   });
 
   it('counts logged nights and averages duration in the trailing week', () => {
@@ -54,7 +54,7 @@ describe('weeklyReview', () => {
     ];
     const r = weeklyReview(sessions, TARGET, NOW);
     expect(r.qualityDeltaVsPrev).toBe(20);
-    expect(r.headline).toContain('上向き');
+    expect(r.headlineParts).toContain('qualityUp');
   });
 
   it('flags a week well below target', () => {
@@ -64,7 +64,7 @@ describe('weeklyReview', () => {
     ];
     const r = weeklyReview(sessions, TARGET, NOW);
     expect(r.durationVsTargetMin).toBeLessThan(-60);
-    expect(r.headline).toContain('大きく下回');
+    expect(r.headlineParts).toContain('wellShort');
   });
 
   it('treats near-target as on-target in the headline', () => {
@@ -73,6 +73,6 @@ describe('weeklyReview', () => {
       session(new Date(2026, 5, 19, 7, 0), 450),
     ];
     const r = weeklyReview(sessions, TARGET, NOW);
-    expect(r.headline).toContain('目標どおり');
+    expect(r.headlineParts).toContain('onTarget');
   });
 });

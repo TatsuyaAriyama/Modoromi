@@ -60,8 +60,7 @@ describe('bedtimeReminderContent', () => {
     });
     expect(r.bedtimeHm).toBe('23:30');
     expect(r.recoveryMin).toBe(0);
-    expect(r.title).toBe('そろそろおやすみの時間です');
-    expect(r.body).not.toContain('早め');
+    expect(r.recovering).toBe(false);
   });
 
   it('fires earlier and explains the recovery when debt exists', () => {
@@ -72,9 +71,7 @@ describe('bedtimeReminderContent', () => {
     });
     expect(r.bedtimeHm).toBe('23:00');
     expect(r.recoveryMin).toBe(30);
-    expect(r.title).toContain('早め');
-    expect(r.body).toContain('30分');
-    expect(r.body).toContain('睡眠負債');
+    expect(r.recovering).toBe(true);
   });
 
   it('matches recommendedBedtime so the notification and Home agree', () => {

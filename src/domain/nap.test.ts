@@ -16,7 +16,7 @@ describe('napAdvice', () => {
     const low = napAdvice({ now: at(13), debtMin: 0 });
     const high = napAdvice({ now: at(13), debtMin: 120 });
     expect(high.headline).not.toBe(low.headline);
-    expect(high.headline).toContain('回復');
+    expect(high.headline).toBe('idealRecover');
   });
 
   it('keeps the nap short in the late-afternoon caution window', () => {
@@ -29,17 +29,17 @@ describe('napAdvice', () => {
     const a = napAdvice({ now: at(20) });
     expect(a.window).toBe('discouraged');
     expect(a.recommendedMin).toBe(0);
-    expect(a.headline).toContain('夜の睡眠');
+    expect(a.headline).toBe('nightFirst');
   });
 
   it('discourages morning naps in favour of light', () => {
     const a = napAdvice({ now: at(8) });
     expect(a.window).toBe('discouraged');
-    expect(a.headline).toContain('朝の光');
+    expect(a.headline).toBe('morningLight');
   });
 
   it('treats a negative debt as zero', () => {
     const a = napAdvice({ now: at(13), debtMin: -200 });
-    expect(a.headline).not.toContain('回復');
+    expect(a.headline).not.toBe('idealRecover');
   });
 });

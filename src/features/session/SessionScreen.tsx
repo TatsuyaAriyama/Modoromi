@@ -11,6 +11,7 @@ import { AlarmPlayer, DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
 import { shouldSmartWake } from '../../domain/motion';
 import { isAlarmDue } from '../../domain/alarmFire';
 import type { AlarmConfig } from '../../domain/types';
+import { useT } from '../../i18n/useT';
 
 const HOLD_MS = 1200;
 /** Smart-wake looks for light sleep within this many minutes before the alarm. */
@@ -27,6 +28,7 @@ function minutesUntil(hhmm: string, now: Date): number {
 }
 
 export function SessionScreen() {
+  const t = useT();
   const active = useStore((s) => s.active);
   const endSession = useStore((s) => s.endSession);
   const cancelSession = useStore((s) => s.cancelSession);
@@ -207,19 +209,20 @@ export function SessionScreen() {
           </div>
           {nextAlarm && (
             <div className="session-alarm num">
-              アラーム {nextAlarm}
-              {smartAlarm && ' ・ スマート起床'}
+              {t('session.alarm', { time: nextAlarm })}
+              {smartAlarm && ` ${t('sep.middot')}${t('session.smartWake')}`}
             </div>
           )}
           <div className="session-alarm" style={{ opacity: 0.55 }}>
-            体動を記録中{moveCount > 0 ? ` ・ ${moveCount}回` : ''}
+            {t('session.recording')}
+            {moveCount > 0 ? ` ${t('sep.middot')}${moveCount}` : ''}
           </div>
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>
           <div className="keep-awake-row">
-            <span>画面を点けたままにする</span>
-            <Toggle on={keepAwake} onChange={setKeepAwake} label="画面を点けたままにする" />
+            <span>{t('session.keepAwake')}</span>
+            <Toggle on={keepAwake} onChange={setKeepAwake} label={t('session.keepAwake')} />
           </div>
 
           <button
@@ -234,11 +237,11 @@ export function SessionScreen() {
               className="wake-fill"
               style={{ transform: `scaleX(${holdProgress})` }}
             />
-            <span style={{ position: 'relative' }}>長押しで「起きた」</span>
+            <span style={{ position: 'relative' }}>{t('session.holdToWake')}</span>
           </button>
 
           <button className="back-btn" onClick={cancelSession}>
-            キャンセル
+            {t('common.cancel')}
           </button>
         </div>
       </div>
@@ -249,14 +252,14 @@ export function SessionScreen() {
           <div className="alarm-ring-time num">
             {hh}:{mm}
           </div>
-          <div className="alarm-ring-title">起きる時間です</div>
+          <div className="alarm-ring-title">{t('session.wakeTime')}</div>
           <div className="alarm-ring-actions">
             <Button block large onClick={dismiss}>
-              止めて起きる
+              {t('session.dismiss')}
             </Button>
             {nextAlarmObj?.snoozeEnabled && (
               <button className="back-btn alarm-ring-snooze" onClick={snooze}>
-                スヌーズ {nextAlarmObj.snoozeMinutes}分
+                {t('session.snooze', { min: nextAlarmObj.snoozeMinutes })}
               </button>
             )}
           </div>

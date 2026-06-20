@@ -5,7 +5,8 @@ import { Button } from '../../components/Button';
 import { MoodPicker } from '../../components/MoodPicker';
 import { useStore } from '../../app/store';
 import { computeQualityScore } from '../../domain/score';
-import { formatDateJa, formatDurationJa, isoToHm } from '../../domain/format';
+import { formatDate, formatDuration, isoToHm } from '../../domain/format';
+import { useT, useLang } from '../../i18n/useT';
 
 export function SessionDetail({
   session,
@@ -14,6 +15,8 @@ export function SessionDetail({
   session: SleepSession;
   onClose: () => void;
 }) {
+  const t = useT();
+  const lang = useLang();
   const updateSession = useStore((s) => s.updateSession);
   const deleteSession = useStore((s) => s.deleteSession);
   const targetMin = useStore((s) => s.settings.targetDurationMin);
@@ -40,22 +43,22 @@ export function SessionDetail({
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="spread">
           <h2 style={{ fontSize: 18 }}>
-            {formatDateJa(new Date(session.endedAt))}
+            {formatDate(new Date(session.endedAt), lang)}
           </h2>
           <button className="back-btn" onClick={onClose}>
-            閉じる
+            {t('common.close')}
           </button>
         </div>
 
         <div className="summary-row">
           <div className="stat">
-            <span className="stat-label">睡眠時間</span>
+            <span className="stat-label">{t('detail.duration')}</span>
             <span className="stat-val num">
-              {formatDurationJa(session.durationMin)}
+              {formatDuration(session.durationMin, lang)}
             </span>
           </div>
           <div className="stat">
-            <span className="stat-label">時間帯</span>
+            <span className="stat-label">{t('detail.timeRange')}</span>
             <span className="stat-val num">
               {isoToHm(session.startedAt)}–{isoToHm(session.endedAt)}
             </span>
@@ -63,12 +66,12 @@ export function SessionDetail({
         </div>
 
         <div className="field">
-          <label>コンディション</label>
+          <label>{t('detail.condition')}</label>
           <MoodPicker value={mood} onChange={setMood} />
         </div>
 
         <div className="field">
-          <label>メモ</label>
+          <label>{t('detail.note')}</label>
           <textarea
             className="textarea"
             value={note}
@@ -77,13 +80,13 @@ export function SessionDetail({
         </div>
 
         <Button block large onClick={() => void save()}>
-          保存
+          {t('common.save')}
         </Button>
 
         {confirmDelete ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <span className="muted" style={{ fontSize: 13, textAlign: 'center' }}>
-              この記録を削除しますか？
+              {t('detail.confirmDelete')}
             </span>
             <div className="row" style={{ gap: 8 }}>
               <Button
@@ -91,7 +94,7 @@ export function SessionDetail({
                 block
                 onClick={() => setConfirmDelete(false)}
               >
-                やめる
+                {t('common.cancel.soft')}
               </Button>
               <Button
                 variant="danger"
@@ -101,7 +104,7 @@ export function SessionDetail({
                   onClose();
                 }}
               >
-                削除する
+                {t('detail.deleteConfirm')}
               </Button>
             </div>
           </div>
@@ -111,7 +114,7 @@ export function SessionDetail({
             block
             onClick={() => setConfirmDelete(true)}
           >
-            この記録を削除
+            {t('detail.delete')}
           </Button>
         )}
       </div>

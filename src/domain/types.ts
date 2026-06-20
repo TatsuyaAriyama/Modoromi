@@ -44,7 +44,12 @@ export interface AlarmConfig {
 
 export type ThemePref = 'auto' | 'day' | 'night';
 
+/** UI language. English is the default; Japanese is selectable. */
+export type Lang = 'en' | 'ja';
+
 export interface UserSettings {
+  /** UI language (defaults to English). */
+  lang: Lang;
   theme: ThemePref;
   targetDurationMin: number; // e.g. 450 (7.5h)
   defaultWakeTime: string; // "HH:mm"

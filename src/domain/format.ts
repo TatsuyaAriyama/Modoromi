@@ -1,15 +1,12 @@
-/** Format a minute count as "7時間30分" / "30分". */
-export function formatDurationJa(min: number): string {
-  const sign = min < 0 ? '-' : '';
-  const abs = Math.abs(Math.round(min));
-  const h = Math.floor(abs / 60);
-  const m = abs % 60;
-  if (h === 0) return `${sign}${m}分`;
-  if (m === 0) return `${sign}${h}時間`;
-  return `${sign}${h}時間${m}分`;
-}
+// Locale-aware text formatters live in the i18n catalog so domain and UI share
+// one implementation. Re-exported here for ergonomic imports from domain code.
+export {
+  formatDuration,
+  weekdayName,
+  formatDate,
+} from '../i18n/catalog';
 
-/** Format a minute count as compact "7h30m" for charts. */
+/** Format a minute count as compact "7h30m" for charts (language-neutral). */
 export function formatDurationShort(min: number): string {
   const abs = Math.abs(Math.round(min));
   const h = Math.floor(abs / 60);
@@ -39,14 +36,4 @@ export function subtractMinutesHm(hm: string, min: number): string {
   const h = Math.floor(total / 60);
   const m = total % 60;
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-}
-
-const WEEKDAYS_JA = ['日', '月', '火', '水', '木', '金', '土'];
-export function weekdayJa(i: number): string {
-  return WEEKDAYS_JA[i] ?? '';
-}
-
-/** "6月20日(金)" style label. */
-export function formatDateJa(d: Date): string {
-  return `${d.getMonth() + 1}月${d.getDate()}日(${weekdayJa(d.getDay())})`;
 }

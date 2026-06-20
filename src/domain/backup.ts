@@ -1,5 +1,6 @@
 import type {
   AlarmConfig,
+  Lang,
   Mood,
   Movement,
   SleepSession,
@@ -18,12 +19,23 @@ export interface BackupData {
   settings: UserSettings | null;
 }
 
+/** Stable, language-agnostic reasons a backup file was rejected. */
+export type BackupError =
+  | 'invalid-json'
+  | 'not-object'
+  | 'not-madoromi'
+  | 'sessions-corrupt'
+  | 'sessions-invalid'
+  | 'alarms-corrupt'
+  | 'alarms-invalid';
+
 export type BackupParseResult =
   | { ok: true; data: BackupData }
-  | { ok: false; error: string };
+  | { ok: false; error: BackupError };
 
 const MOODS: Mood[] = ['fresh', 'normal', 'groggy'];
 const THEMES: ThemePref[] = ['auto', 'day', 'night'];
+const LANGS: Lang[] = ['en', 'ja'];
 
 function isObject(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -84,6 +96,7 @@ function parseSettings(x: unknown): UserSettings | null {
   if (!isNum(x.targetDurationMin)) return null;
   if (!isStr(x.defaultWakeTime)) return null;
   return {
+    lang: LANGS.includes(x.lang as Lang) ? (x.lang as Lang) : 'en',
     theme: x.theme as ThemePref,
     targetDurationMin: x.targetDurationMin,
     defaultWakeTime: x.defaultWakeTime,
@@ -102,29 +115,29 @@ export function parseBackup(text: string): BackupParseResult {
   try {
     raw = JSON.parse(text);
   } catch {
-    return { ok: false, error: 'JSONとして読み取れませんでした' };
+    return { ok: false, error: 'invalid-json' };
   }
   if (!isObject(raw)) {
-    return { ok: false, error: 'バックアップの形式ではありません' };
+    return { ok: false, error: 'not-object' };
   }
   if (raw.app !== undefined && raw.app !== 'Madoromi') {
-    return { ok: false, error: 'Madoromiのバックアップではありません' };
+    return { ok: false, error: 'not-madoromi' };
   }
 
   if (raw.sessions !== undefined && !Array.isArray(raw.sessions)) {
-    return { ok: false, error: '記録データが壊れています' };
+    return { ok: false, error: 'sessions-corrupt' };
   }
   const sessionsRaw = (raw.sessions ?? []) as unknown[];
   if (!sessionsRaw.every(isSleepSession)) {
-    return { ok: false, error: '記録データに不正な項目があります' };
+    return { ok: false, error: 'sessions-invalid' };
   }
 
   if (raw.alarms !== undefined && !Array.isArray(raw.alarms)) {
-    return { ok: false, error: 'アラームデータが壊れています' };
+    return { ok: false, error: 'alarms-corrupt' };
   }
   const alarmsRaw = (raw.alarms ?? []) as unknown[];
   if (!alarmsRaw.every(isAlarm)) {
-    return { ok: false, error: 'アラームデータに不正な項目があります' };
+    return { ok: false, error: 'alarms-invalid' };
   }
 
   return {

@@ -7,37 +7,14 @@ import { recommendedBedtime } from '../../domain/bedtime';
 import {
   consistencyScore,
   regularityLevel,
-  type RegularityLevel,
 } from '../../domain/consistency';
-import { thinkingCondition, type ThinkingTier } from '../../domain/condition';
+import { thinkingCondition } from '../../domain/condition';
 import { todaysTheme } from '../../domain/theme';
-import {
-  formatDateJa,
-  formatDurationJa,
-  isoToHm,
-} from '../../domain/format';
+import { isoToHm } from '../../domain/format';
+import { formatDate, formatDuration } from '../../i18n/catalog';
 import { isQualityConfirmed } from '../../domain/score';
 import { tapMedium } from '../../lib/haptics';
-
-const TIER_LABEL: Record<ThinkingTier, string> = {
-  sharp: '冴えている',
-  steady: 'おだやか',
-  foggy: 'ややぼんやり',
-  depleted: '要回復',
-};
-
-const TIER_COPY: Record<ThinkingTier, string> = {
-  sharp: '思考がよく回りそうな一日です',
-  steady: '安定したコンディションです',
-  foggy: '無理せず、軽めの集中から始めましょう',
-  depleted: '回復を優先して。今夜は早めの就寝を',
-};
-
-const REGULARITY_LABEL: Record<RegularityLevel, string> = {
-  high: '高い',
-  medium: 'ふつう',
-  low: 'ばらつき',
-};
+import { useT, useLang } from '../../i18n/useT';
 
 export function HomeScreen({
   onOpenSettings,
@@ -50,6 +27,8 @@ export function HomeScreen({
   onStartNap: () => void;
   onWindDown: () => void;
 }) {
+  const t = useT();
+  const lang = useLang();
   const sessions = useStore((s) => s.sessions);
   const settings = useStore((s) => s.settings);
   const alarms = useStore((s) => s.alarms);
@@ -82,12 +61,12 @@ export function HomeScreen({
     <div className="screen">
       <div className="home-head">
         <div>
-          <div className="home-date">{formatDateJa(new Date())}</div>
-          <h1 className="home-greeting">おやすみの準備を</h1>
+          <div className="home-date">{formatDate(new Date(), lang)}</div>
+          <h1 className="home-greeting">{t('home.greeting')}</h1>
         </div>
         <button
           className="icon-btn"
-          aria-label="設定"
+          aria-label={t('settings.title')}
           onClick={onOpenSettings}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -99,30 +78,31 @@ export function HomeScreen({
 
       {theme && (
         <div className="theme-banner">
-          <span className="theme-label">今日の思考テーマ</span>
+          <span className="theme-label">{t('home.theme')}</span>
           <span className="theme-text">{theme}</span>
         </div>
       )}
 
       {/* Last night summary */}
       <Card>
-        <div className="stat-label">昨夜のサマリー</div>
+        <div className="stat-label">{t('home.lastNight')}</div>
         {last ? (
           <>
             <div className="summary-big num">
-              {formatDurationJa(last.durationMin)}
+              {formatDuration(last.durationMin, lang)}
             </div>
             <div className="summary-row">
               <div className="stat">
-                <span className="stat-label">目標との差</span>
+                <span className="stat-label">{t('home.vsTarget')}</span>
                 <span className="stat-val num">
-                  {formatDurationJa(
+                  {formatDuration(
                     last.durationMin - settings.targetDurationMin,
+                    lang,
                   )}
                 </span>
               </div>
               <div className="stat">
-                <span className="stat-label">質スコア</span>
+                <span className="stat-label">{t('home.quality')}</span>
                 <span className="stat-val num">
                   {isQualityConfirmed(last) ? last.qualityScore : '—'}
                 </span>
@@ -131,7 +111,7 @@ export function HomeScreen({
           </>
         ) : (
           <p className="muted" style={{ marginTop: 8 }}>
-            まだ記録がありません
+            {t('home.noRecords')}
           </p>
         )}
       </Card>
@@ -139,29 +119,31 @@ export function HomeScreen({
       {/* Thinking condition (synthesises quality, debt, regularity) */}
       <Card tight>
         <div className="spread">
-          <div className="stat-label">今日の思考コンディション</div>
+          <div className="stat-label">{t('home.condition')}</div>
           <EyeMark size={36} color="var(--text-mute)" />
         </div>
         <div className={`cond-headline cond-${condition.tier}`}>
-          {TIER_LABEL[condition.tier]}
+          {t(`cond.${condition.tier}`)}
           <span className="cond-index num">{condition.index}</span>
         </div>
         <p className={`muted cond-${condition.tier}`} style={{ fontSize: 13 }}>
-          {TIER_COPY[condition.tier]}
+          {t(`cond.${condition.tier}Copy`)}
         </p>
         <div className="summary-row" style={{ marginTop: 10 }}>
           <div className="stat">
-            <span className="stat-label">睡眠負債（7日）</span>
+            <span className="stat-label">{t('home.debt7')}</span>
             <span className="stat-val num">
-              {debt > 0 ? `-${formatDurationJa(debt)}` : formatDurationJa(0)}
+              {debt > 0
+                ? `-${formatDuration(debt, lang)}`
+                : formatDuration(0, lang)}
             </span>
           </div>
           <div className="stat">
-            <span className="stat-label">規則性</span>
+            <span className="stat-label">{t('stat.regularity')}</span>
             <span className="stat-val">
               {consistency == null
                 ? '—'
-                : REGULARITY_LABEL[regularityLevel(consistency)]}
+                : t(`reg.${regularityLevel(consistency)}`)}
             </span>
           </div>
         </div>
@@ -171,18 +153,22 @@ export function HomeScreen({
       <div className="cta-wrap">
         {reminderTime && (
           <span className="pill">
-            {plan.recoveryMin > 0 ? 'おすすめ就寝' : '就寝リマインダー'}{' '}
+            {plan.recoveryMin > 0
+              ? t('home.suggestedBedtime')
+              : t('home.bedtimeReminder')}{' '}
             {reminderTime}
           </span>
         )}
         {reminderTime && plan.recoveryMin > 0 && (
           <span className="muted" style={{ fontSize: 12.5 }}>
-            睡眠負債のぶん、いつもより{formatDurationJa(plan.recoveryMin)}早めに
+            {t('home.earlierBy', {
+              amount: formatDuration(plan.recoveryMin, lang),
+            })}
           </span>
         )}
         {last && !isQualityConfirmed(last) && (
           <span className="muted" style={{ fontSize: 13 }}>
-            起床 {isoToHm(last.endedAt)} ・ 朝のチェック未入力
+            {t('home.morningCheckPending', { time: isoToHm(last.endedAt) })}
           </span>
         )}
         <button
@@ -193,15 +179,15 @@ export function HomeScreen({
           }}
         >
           <EyeMark size={40} color="var(--mist)" />
-          おやすみ
+          {t('home.cta')}
         </button>
         {!nextAlarm && (
           <button className="back-btn" onClick={onGoAlarm}>
-            アラームを設定する →
+            {t('home.setAlarm')}
           </button>
         )}
         <button className="back-btn" onClick={onStartNap}>
-          仮眠する →
+          {t('home.nap')}
         </button>
       </div>
     </div>
