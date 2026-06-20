@@ -30,7 +30,18 @@
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
     "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
+  /* Mincho (serif) for brand & display moments — quiet, literary, on-brand
+     for "思考のための睡眠". iOS/macOS ship Hiragino Mincho; YuMincho is the
+     Windows fallback, then a generic serif. */
+  --font-display: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "YuMincho",
+    "Yu Mincho", "Noto Serif JP", serif;
   --font-num: "SF Mono", "SFMono-Regular", ui-monospace, "Menlo", monospace;
+
+  /* Letter-spacing scale */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.14em;
 
   --shadow-soft: 0 8px 30px rgba(20, 14, 40, 0.18);
 }

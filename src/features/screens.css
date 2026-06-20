@@ -6,12 +6,16 @@
   justify-content: space-between;
 }
 .home-date {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-mute);
+  letter-spacing: var(--tracking-wide);
 }
 .home-greeting {
-  font-size: 24px;
-  margin-top: 2px;
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-top: 6px;
 }
 .icon-btn {
   background: var(--surface);
@@ -39,13 +43,15 @@
   box-shadow: var(--shadow-soft);
 }
 .theme-label {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.85;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--tracking-wider);
 }
 .theme-text {
-  font-size: 18px;
-  line-height: 1.5;
+  font-family: var(--font-display);
+  font-size: 19px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
 }
 
 .summary-big {
@@ -85,9 +91,11 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
-  font-size: 30px;
+  font-family: var(--font-display);
+  font-size: 31px;
+  letter-spacing: 0.02em;
   line-height: 1.1;
-  margin: 2px 0;
+  margin: 4px 0;
 }
 .cond-index {
   font-size: 16px;
@@ -396,8 +404,10 @@
   gap: var(--space-4);
 }
 .onb-title {
-  font-size: 30px;
-  letter-spacing: 0.04em;
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
 }
 .onb-sub {
   font-size: 16px;
@@ -472,7 +482,9 @@
   padding-top: var(--space-5);
 }
 .nap-title {
-  font-size: 26px;
+  font-family: var(--font-display);
+  font-size: 27px;
+  letter-spacing: 0.03em;
 }
 .nap-note {
   font-size: 14px;
@@ -567,9 +579,10 @@
   letter-spacing: 0.02em;
 }
 .alarm-ring-title {
-  font-size: 20px;
+  font-family: var(--font-display);
+  font-size: 21px;
   opacity: 0.92;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 .alarm-ring-actions {
   width: 100%;
@@ -609,7 +622,9 @@
   padding-top: var(--space-4);
 }
 .wind-title {
-  font-size: 24px;
+  font-family: var(--font-display);
+  font-size: 25px;
+  letter-spacing: 0.03em;
 }
 .wind-note {
   font-size: 14px;
