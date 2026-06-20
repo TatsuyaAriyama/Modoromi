@@ -43,15 +43,16 @@ export function HomeScreen({
   onOpenSettings,
   onGoAlarm,
   onStartNap,
+  onWindDown,
 }: {
   onOpenSettings: () => void;
   onGoAlarm: () => void;
   onStartNap: () => void;
+  onWindDown: () => void;
 }) {
   const sessions = useStore((s) => s.sessions);
   const settings = useStore((s) => s.settings);
   const alarms = useStore((s) => s.alarms);
-  const startSession = useStore((s) => s.startSession);
 
   const last = lastSession(sessions);
   const debt = sleepDebtMin(sessions, settings.targetDurationMin);
@@ -188,7 +189,7 @@ export function HomeScreen({
           className="cta-hero"
           onClick={() => {
             void tapMedium();
-            startSession();
+            onWindDown();
           }}
         >
           <EyeMark size={40} color="var(--mist)" />

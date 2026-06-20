@@ -10,6 +10,7 @@ import { SettingsScreen } from './features/settings/SettingsScreen';
 import { SessionScreen } from './features/session/SessionScreen';
 import { MorningScreen } from './features/morning/MorningScreen';
 import { NapScreen } from './features/nap/NapScreen';
+import { WindDownScreen } from './features/winddown/WindDownScreen';
 import { OnboardingScreen } from './features/onboarding/OnboardingScreen';
 
 const TABS: { key: TabKey; label: string }[] = [
@@ -25,10 +26,12 @@ export default function App() {
   const onboarded = useStore((s) => s.settings.onboarded);
   const active = useStore((s) => s.active);
   const pendingMorning = useStore((s) => s.pendingMorning);
+  const startSession = useStore((s) => s.startSession);
 
   const [tab, setTab] = useState<TabKey>('home');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [napOpen, setNapOpen] = useState(false);
+  const [windDownOpen, setWindDownOpen] = useState(false);
 
   useEffect(() => {
     void init();
@@ -45,6 +48,17 @@ export default function App() {
   if (active) return <SessionScreen />;
   if (pendingMorning) return <MorningScreen />;
   if (napOpen) return <NapScreen onClose={() => setNapOpen(false)} />;
+  if (windDownOpen) {
+    return (
+      <WindDownScreen
+        onStart={() => {
+          setWindDownOpen(false);
+          startSession();
+        }}
+        onClose={() => setWindDownOpen(false)}
+      />
+    );
+  }
 
   return (
     <div className="app-frame">
@@ -57,6 +71,7 @@ export default function App() {
               onOpenSettings={() => setSettingsOpen(true)}
               onGoAlarm={() => setTab('alarm')}
               onStartNap={() => setNapOpen(true)}
+              onWindDown={() => setWindDownOpen(true)}
             />
           )}
           {tab === 'alarm' && <AlarmScreen />}

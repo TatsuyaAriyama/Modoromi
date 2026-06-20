@@ -538,6 +538,79 @@
   align-items: center;
 }
 
+/* Wind-down (pre-sleep breathing) */
+.wind-wrap {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-7) var(--space-5);
+  color: var(--text);
+}
+.wind-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  padding-top: var(--space-4);
+}
+.wind-title {
+  font-size: 24px;
+}
+.wind-note {
+  font-size: 14px;
+  color: var(--text-mute);
+  max-width: 280px;
+  line-height: 1.7;
+}
+.wind-orb-wrap {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  display: grid;
+  place-items: center;
+}
+.wind-orb {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: var(--gradient-twilight);
+  box-shadow: var(--shadow-soft);
+  opacity: 0.92;
+  will-change: transform;
+}
+.wind-cue {
+  position: absolute;
+  font-size: 20px;
+  letter-spacing: 0.18em;
+  color: var(--mist);
+  pointer-events: none;
+}
+.wind-dots {
+  display: flex;
+  gap: 9px;
+}
+.wind-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  transition: background 0.4s ease;
+}
+.wind-dot[data-on='true'] {
+  background: var(--primary);
+}
+.wind-foot {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+}
+
 .empty {
   text-align: center;
   color: var(--text-mute);
