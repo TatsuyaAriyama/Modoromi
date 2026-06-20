@@ -1,6 +1,7 @@
 import type { SleepSession } from './types';
 import { minuteOfDay } from './consistency';
 import { isQualityConfirmed } from './score';
+import { movementsPerHour, RESTLESS_LEVELS } from './motion';
 
 /**
  * Quiet, honest observations mined from accumulated history. Unlike the weekly
@@ -24,6 +25,13 @@ function mean(xs: number[]): number {
   return xs.reduce((a, b) => a + b, 0) / xs.length;
 }
 
+/** Robust centre — unlike the mean it isn't dragged into a bimodal gap. */
+function median(xs: number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
 /**
  * Minutes into the evening, measured from 18:00, so bedtimes that straddle
  * midnight (23:40 vs 00:20) stay close together on a single linear axis.
@@ -44,6 +52,12 @@ export function deriveInsights(
 
   const wd = weekendDriftInsight(sessions);
   if (wd) out.push(wd);
+
+  const st = stillnessQualityInsight(sessions);
+  if (st) out.push(st);
+
+  const rh = rhythmQualityInsight(sessions);
+  if (rh) out.push(rh);
 
   return out;
 }
@@ -84,6 +98,54 @@ function weekendDriftInsight(sessions: SleepSession[]): Insight | null {
   const diff = Math.round(mean(weekend) - mean(weekday));
   if (diff >= 45) {
     return { id: 'weekend-drift', params: { diff } };
+  }
+  return null;
+}
+
+/** Do calmer (less restless) nights tend to score better? */
+function stillnessQualityInsight(sessions: SleepSession[]): Insight | null {
+  // Only nights where motion was actually tracked carry a movement signal.
+  const tracked = sessions.filter(
+    (s) => isQualityConfirmed(s) && s.movements != null,
+  );
+  const calm: number[] = [];
+  const restless: number[] = [];
+  for (const s of tracked) {
+    const perHour = movementsPerHour(
+      (s.movements as { t: number }[]).length,
+      s.durationMin,
+    );
+    const q = s.qualityScore as number;
+    (perHour <= RESTLESS_LEVELS.calm ? calm : restless).push(q);
+  }
+  if (calm.length < MIN_GROUP || restless.length < MIN_GROUP) return null;
+
+  const diff = Math.round(mean(calm) - mean(restless));
+  if (diff >= 8) {
+    return { id: 'stillness-quality', params: { diff } };
+  }
+  return null;
+}
+
+/** Do nights close to your usual bedtime score better than off-rhythm ones? */
+function rhythmQualityInsight(sessions: SleepSession[]): Insight | null {
+  const scored = sessions
+    .filter(isQualityConfirmed)
+    .map((s) => ({ em: eveningMinute(s.startedAt), q: s.qualityScore as number }))
+    .filter((x) => x.em <= 600); // within the ~18:00–04:00 bedtime band
+  if (scored.length < MIN_GROUP * 2) return null;
+
+  const typical = median(scored.map((x) => x.em));
+  const near: number[] = [];
+  const off: number[] = [];
+  for (const x of scored) {
+    (Math.abs(x.em - typical) <= 45 ? near : off).push(x.q);
+  }
+  if (near.length < MIN_GROUP || off.length < MIN_GROUP) return null;
+
+  const diff = Math.round(mean(near) - mean(off));
+  if (diff >= 8) {
+    return { id: 'rhythm-quality', params: { diff } };
   }
   return null;
 }

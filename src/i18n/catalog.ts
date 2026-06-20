@@ -104,6 +104,14 @@ export const messages: Record<string, Msg> = {
     en: (p) => `On weekends, bedtime tends to slip about ${p.diff} min later`,
     ja: (p) => `週末は就寝が ${p.diff}分ほど遅くなりがちです`,
   },
+  'insight.stillness-quality': {
+    en: (p) => `Calmer, stiller nights tend to score higher (avg +${p.diff})`,
+    ja: (p) => `静かに眠れた夜は、質スコアが高めです（平均 +${p.diff}）`,
+  },
+  'insight.rhythm-quality': {
+    en: (p) => `Nights near your usual bedtime tend to score higher (avg +${p.diff})`,
+    ja: (p) => `いつもの就寝時刻に近い夜は、質スコアが高めです（平均 +${p.diff}）`,
+  },
 
   // ── nap advice ──────────────────────────────────────────
   'nap.idealRecover': {
