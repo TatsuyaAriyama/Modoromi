@@ -44,7 +44,7 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSMotionUsageDescription</key>
-	<string>睡眠中の体の動きを記録して、眠りの深さの目安と最適な起床タイミングの判定に使います。</string>
+	<string>Madoromi uses motion to estimate how deeply you slept and to find a gentle moment to wake you. This is optional and stays on your device.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>
