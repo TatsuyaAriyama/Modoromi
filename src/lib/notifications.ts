@@ -89,32 +89,65 @@ function occurrence(
 
 /**
  * Pure: build the notification burst for the enabled alarms, attaching the
- * bundled alarm sound and chaining {@link ALARM_RING_MINUTES} chimes so it
- * rings rather than pinging once. Stops at {@link MAX_PENDING} to respect the
- * OS ceiling. No I/O — `syncSchedules` consumes the result.
+ * bundled alarm sound and chaining up to {@link ALARM_RING_MINUTES} chimes so
+ * each fire rings rather than pinging once.
+ *
+ * Budgeting under the iOS 64-pending ceiling is *fair*, not first-come. Naively
+ * filling alarm-by-alarm lets the earliest alarms eat the whole budget, leaving
+ * later enabled alarms with zero notifications — they would silently never ring.
+ * Instead we list one occurrence per fire-day, interleaved across alarms, then
+ * hand out chimes in round-robin layers: every occurrence gets its first chime
+ * before any gets a second. So when demand exceeds `budget` the burst degrades
+ * by *shortening* rings, and every alarm still fires, rather than dropping whole
+ * alarms off the end. No I/O — `syncSchedules` consumes the result.
  */
 export function buildAlarmNotifications(
   alarms: AlarmConfig[],
   lang: Lang = 'en',
+  budget: number = MAX_PENDING,
 ): Built[] {
+  const enabled = alarms.filter((a) => a.enabled);
+  if (enabled.length === 0 || budget <= 0) return [];
+
+  // empty repeatDays = one-shot (next occurrence)
+  const perAlarm = enabled.map((a) => ({
+    alarm: a,
+    days: (a.repeatDays.length ? a.repeatDays : [null]) as (number | null)[],
+  }));
+
+  // One occurrence per fire-day, interleaved across alarms (all alarms' first
+  // day, then all alarms' second day, …) so a tight budget reaches every alarm.
+  const occ: { alarm: AlarmConfig; wd: number | null }[] = [];
+  const maxDays = Math.max(...perAlarm.map((p) => p.days.length));
+  for (let d = 0; d < maxDays; d++) {
+    for (const p of perAlarm) {
+      if (d < p.days.length) occ.push({ alarm: p.alarm, wd: p.days[d] });
+    }
+  }
+
+  // Round-robin chime layers across all occurrences, capped at the budget.
+  const ring = new Array<number>(occ.length).fill(0);
+  let remaining = budget;
+  for (let m = 0; m < ALARM_RING_MINUTES && remaining > 0; m++) {
+    for (let i = 0; i < occ.length && remaining > 0; i++) {
+      ring[i]++;
+      remaining--;
+    }
+  }
+
   const out: Built[] = [];
-  for (const a of alarms) {
-    if (!a.enabled) continue;
-    // empty repeatDays = one-shot (next occurrence)
-    const days: (number | null)[] = a.repeatDays.length ? a.repeatDays : [null];
-    for (const wd of days) {
-      const slotBase = (wd === null ? 0 : wd + 1) * ALARM_RING_MINUTES;
-      for (let m = 0; m < ALARM_RING_MINUTES; m++) {
-        if (out.length >= MAX_PENDING) return out;
-        const on = occurrence(a.time, wd, m);
-        out.push({
-          id: notifId(a.id, slotBase + m),
-          title: tr(lang, 'notif.wakeTitle'),
-          body: tr(lang, 'notif.wakeBody'),
-          sound: ALARM_SOUND,
-          schedule: { on, allowWhileIdle: true },
-        });
-      }
+  for (let i = 0; i < occ.length; i++) {
+    const { alarm: a, wd } = occ[i];
+    const slotBase = (wd === null ? 0 : wd + 1) * ALARM_RING_MINUTES;
+    for (let m = 0; m < ring[i]; m++) {
+      const on = occurrence(a.time, wd, m);
+      out.push({
+        id: notifId(a.id, slotBase + m),
+        title: tr(lang, 'notif.wakeTitle'),
+        body: tr(lang, 'notif.wakeBody'),
+        sound: ALARM_SOUND,
+        schedule: { on, allowWhileIdle: true },
+      });
     }
   }
   return out;
@@ -160,9 +193,12 @@ export async function syncSchedules(
       });
     }
 
-    const toSchedule = buildAlarmNotifications(alarms, settings.lang);
+    // Reserve one pending slot for the bedtime reminder so a full set of
+    // alarms can't starve it out of the budget.
     const bedtime = buildBedtimeNotification(settings, sessions);
-    if (bedtime && toSchedule.length < MAX_PENDING) toSchedule.push(bedtime);
+    const budget = bedtime ? MAX_PENDING - 1 : MAX_PENDING;
+    const toSchedule = buildAlarmNotifications(alarms, settings.lang, budget);
+    if (bedtime) toSchedule.push(bedtime);
 
     if (toSchedule.length) {
       await LocalNotifications.schedule({ notifications: toSchedule });

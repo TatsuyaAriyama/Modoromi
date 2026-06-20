@@ -82,6 +82,45 @@ describe('buildAlarmNotifications', () => {
       MAX_PENDING,
     );
   });
+
+  it('honours an explicit budget below the ceiling', () => {
+    const many = Array.from({ length: 10 }, (_, i) =>
+      alarm({ id: 'x' + i, repeatDays: [0, 1, 2, 3, 4, 5, 6] }),
+    );
+    expect(buildAlarmNotifications(many, 'en', 10).length).toBe(10);
+  });
+
+  it('still reaches every alarm when the budget is tight', () => {
+    // 50 one-shot alarms, budget 60: every alarm must fire at least once
+    // instead of the first few eating the whole budget.
+    const many = Array.from({ length: 50 }, (_, i) =>
+      alarm({ id: 'x' + i, repeatDays: [] }),
+    );
+    const n = buildAlarmNotifications(many, 'en', 60);
+    const ids = new Set(many.map((a) => a.id));
+    // Each one-shot alarm owns a distinct notifId slot-0; count alarms covered.
+    const covered = new Set(
+      n
+        .filter((x) => x.schedule?.on?.minute === 0)
+        .map((x) => x.id),
+    );
+    expect(covered.size).toBe(ids.size);
+    expect(n.length).toBeLessThanOrEqual(60);
+  });
+
+  it('degrades by shortening rings, not dropping alarms, at the limit', () => {
+    // 60 one-shot alarms, budget 60: each gets exactly one chime (minute 0).
+    const many = Array.from({ length: 60 }, (_, i) =>
+      alarm({ id: 'x' + i, repeatDays: [] }),
+    );
+    const n = buildAlarmNotifications(many, 'en', 60);
+    expect(n).toHaveLength(60);
+    expect(n.every((x) => x.schedule?.on?.minute === 0)).toBe(true);
+  });
+
+  it('returns nothing when the budget is exhausted', () => {
+    expect(buildAlarmNotifications([alarm()], 'en', 0)).toHaveLength(0);
+  });
 });
 
 describe('buildBedtimeNotification', () => {
