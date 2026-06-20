@@ -14,6 +14,7 @@ import {
   consistencyScore,
   regularityLevel,
 } from '../../domain/consistency';
+import { buildConditionSeries } from '../../domain/conditionSeries';
 import { weeklyReview } from '../../domain/review';
 import { deriveInsights } from '../../domain/insights';
 import { isoToHm } from '../../domain/format';
@@ -35,6 +36,10 @@ export function HistoryScreen() {
   const series = useMemo(
     () => buildDaySeries(sessions, days, new Date(), lang),
     [sessions, days, lang],
+  );
+  const conditionSeries = useMemo(
+    () => buildConditionSeries(sessions, targetMin, days, new Date(), lang),
+    [sessions, targetMin, days, lang],
   );
   const avgDur = averageDuration(series);
   const avgQ = averageQuality(series);
@@ -155,6 +160,19 @@ export function HistoryScreen() {
             label: s.label,
             value: s.qualityScore,
           }))}
+        />
+      </Card>
+
+      <Card tight>
+        <div className="stat-label" style={{ marginBottom: 8 }}>
+          {t('chart.conditionTrend')}
+        </div>
+        <LineChart
+          data={conditionSeries.map((p) => ({
+            label: p.label,
+            value: p.index,
+          }))}
+          ariaLabel={t('chart.condition')}
         />
       </Card>
 

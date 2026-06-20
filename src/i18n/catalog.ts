@@ -259,6 +259,8 @@ export const messages: Record<string, Msg> = {
   'history.avgQuality': { en: 'Avg. quality', ja: '平均質スコア' },
   'chart.durationTarget': { en: 'Sleep duration (dotted = goal)', ja: '睡眠時間（点線 = 目標）' },
   'chart.qualityTrend': { en: 'Quality-score trend', ja: '質スコアの推移' },
+  'chart.conditionTrend': { en: 'Thinking-condition trend', ja: '思考コンディションの推移' },
+  'chart.condition': { en: 'Thinking-condition trend over time', ja: '思考コンディションの推移' },
   'history.sessions': { en: 'Sessions', ja: 'セッション' },
   'history.empty': { en: 'No records yet', ja: 'まだ記録がありません' },
 

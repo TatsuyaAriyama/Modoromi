@@ -5,13 +5,15 @@ export interface LinePoint {
   value: number | null; // 0–100 quality score, null = no data
 }
 
-/** Hand-drawn SVG line chart for the quality-score trend (0–100). */
+/** Hand-drawn SVG line chart for a 0–100 trend (quality, condition, …). */
 export function LineChart({
   data,
   height = 160,
+  ariaLabel,
 }: {
   data: LinePoint[];
   height?: number;
+  ariaLabel?: string;
 }) {
   const t = useT();
   const W = 320;
@@ -46,7 +48,7 @@ export function LineChart({
       width="100%"
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label={t('chart.quality')}
+      aria-label={ariaLabel ?? t('chart.quality')}
     >
       {[0, 50, 100].map((g) => (
         <line
