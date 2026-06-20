@@ -43,8 +43,33 @@ npx cap open ios   # Xcode で App.xcworkspace を開く
 - 実機を接続して Run。`NSMotionUsageDescription`（体動記録）の許可ダイアログ、
   通知許可、設定時刻のアラーム発火（画面オフ・アプリ終了状態）を確認
 
-## 6. App Store Connect へ提出
+## 6. アイコン / スプラッシュ / プライバシー（同梱済み）
+
+- **App アイコン**: `Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png`
+  をブランド版（トワイライト＋閉じた目、1024×1024・アルファなし）へ差し替え済み。
+- **スプラッシュ**: `Assets.xcassets/Splash.imageset/` の3枚を、深いトワイライト背景に
+  eyemark を中央配置した静かなデザインへ差し替え済み（`scaleAspectFill`）。
+- **プライバシーマニフェスト**: `App/PrivacyInfo.xcprivacy` を作成し Xcode のリソースに
+  登録済み。UserDefaults（理由コード CA92.1）のみ宣言、トラッキング/データ収集なし。
+- アイコン/スプラッシュを作り直す場合:
+  ```bash
+  qlmanage -t -s 1024 -o /tmp resources/icon.svg        # SVG→PNG
+  python3 -c "from PIL import Image; im=Image.open('/tmp/icon.svg.png').convert('RGBA'); \
+    bg=Image.new('RGB',im.size,(106,86,168)); bg.paste(im,mask=im.split()[3]); \
+    bg.save('ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png')"
+  python3 resources/make_splash.py   # （/tmp/make_splash.py を resources/ に保存した場合）
+  ```
+
+## 7. 書き出しコンプライアンス / バージョン（設定済み）
+
+- `Info.plist` に `ITSAppUsesNonExemptEncryption=false` を設定済み（追加申告不要）。
+- `MARKETING_VERSION=1.0` / `CURRENT_PROJECT_VERSION=1`。向きは iPhone/iPad とも縦固定。
+
+## 8. App Store Connect へ提出
 
 - *Product → Archive* → Distribute App
 - App Store Connect でアプリ作成（名称・説明・スクショ・プライバシー）
+  - メタデータは `ios/AppStore/metadata.md`、プライバシーポリシーは
+    `ios/AppStore/privacy-policy.md` の内容をそのまま使用
+  - App プライバシーは「データを収集していません」を選択（マニフェストと整合）
 - レビュー提出
