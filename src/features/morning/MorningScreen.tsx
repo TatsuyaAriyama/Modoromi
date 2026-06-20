@@ -17,6 +17,7 @@ export function MorningScreen() {
   const [mood, setMood] = useState<Mood | undefined>(undefined);
   const [subjective, setSubjective] = useState(3);
   const [note, setNote] = useState('');
+  const [theme, setTheme] = useState('');
 
   // Closed → open micro-interaction on mount.
   useEffect(() => {
@@ -28,7 +29,7 @@ export function MorningScreen() {
 
   const save = async () => {
     if (!mood) return;
-    await saveMorningCheck({ mood, subjective, note });
+    await saveMorningCheck({ mood, subjective, note, theme });
     void notifySuccess();
   };
 
@@ -69,6 +70,17 @@ export function MorningScreen() {
           <span className="muted num" style={{ alignSelf: 'center' }}>
             {subjective}
           </span>
+        </div>
+
+        <div className="field" style={{ width: '100%' }}>
+          <label>今日、考えたいこと（任意）</label>
+          <input
+            className="input"
+            value={theme}
+            placeholder="例：企画の骨子をまとめる"
+            maxLength={60}
+            onChange={(e) => setTheme(e.target.value)}
+          />
         </div>
 
         <div className="field" style={{ width: '100%' }}>

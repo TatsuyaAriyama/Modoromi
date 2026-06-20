@@ -42,6 +42,7 @@ interface AppState {
     mood: Mood;
     subjective?: number;
     note?: string;
+    theme?: string;
   }): Promise<void>;
   dismissMorning(): void;
 
@@ -102,7 +103,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({ active: null });
   },
 
-  async saveMorningCheck({ mood, subjective, note }) {
+  async saveMorningCheck({ mood, subjective, note, theme }) {
     const { pendingMorning, settings } = get();
     if (!pendingMorning) return;
     const qualityScore = computeQualityScore(
@@ -116,6 +117,7 @@ export const useStore = create<AppState>((set, get) => ({
       mood,
       subjective,
       note: note?.trim() ? note.trim() : undefined,
+      theme: theme?.trim() ? theme.trim() : undefined,
       qualityScore,
     };
     await sleepRepo.save(session);

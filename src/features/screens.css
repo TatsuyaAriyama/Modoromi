@@ -28,6 +28,26 @@
   height: 20px;
 }
 
+.theme-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--gradient-twilight);
+  color: var(--mist);
+  box-shadow: var(--shadow-soft);
+}
+.theme-label {
+  font-size: 12px;
+  opacity: 0.85;
+  letter-spacing: 0.04em;
+}
+.theme-text {
+  font-size: 18px;
+  line-height: 1.5;
+}
+
 .summary-big {
   font-size: 48px;
   line-height: 1;

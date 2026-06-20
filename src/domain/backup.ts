@@ -49,6 +49,7 @@ function isSleepSession(x: unknown): x is SleepSession {
   if (x.mood !== undefined && !MOODS.includes(x.mood as Mood)) return false;
   if (x.subjective !== undefined && !isNum(x.subjective)) return false;
   if (x.note !== undefined && !isStr(x.note)) return false;
+  if (x.theme !== undefined && !isStr(x.theme)) return false;
   if (x.qualityScore !== undefined && !isNum(x.qualityScore)) return false;
   if (
     x.movements !== undefined &&

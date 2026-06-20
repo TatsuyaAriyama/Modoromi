@@ -10,6 +10,7 @@ import {
   type RegularityLevel,
 } from '../../domain/consistency';
 import { thinkingCondition, type ThinkingTier } from '../../domain/condition';
+import { todaysTheme } from '../../domain/theme';
 import {
   formatDateJa,
   formatDurationJa,
@@ -63,6 +64,8 @@ export function HomeScreen({
     consistency,
   });
 
+  const theme = todaysTheme(sessions);
+
   const nextAlarm = alarms
     .filter((a) => a.enabled)
     .map((a) => a.time)
@@ -92,6 +95,13 @@ export function HomeScreen({
           </svg>
         </button>
       </div>
+
+      {theme && (
+        <div className="theme-banner">
+          <span className="theme-label">今日の思考テーマ</span>
+          <span className="theme-text">{theme}</span>
+        </div>
+      )}
 
       {/* Last night summary */}
       <Card>

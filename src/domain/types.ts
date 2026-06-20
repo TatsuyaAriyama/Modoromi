@@ -20,6 +20,11 @@ export interface SleepSession {
   note?: string;
   qualityScore?: number; // 0–100, confirmed after morning check
   /**
+   * An optional one-line "thing to think about today", set at the morning
+   * check. Surfaced on Home through the day — sleep in service of thinking.
+   */
+  theme?: string;
+  /**
    * Body movements recorded via the accelerometer. Presence of the array
    * (even when empty) means motion was tracked — empty = perfectly still.
    * Absent means motion was unavailable (e.g. browser, permission denied).
