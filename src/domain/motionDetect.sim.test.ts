@@ -55,7 +55,7 @@ function simulateNight(o: NightOpts): RawSample[] {
     const t = i * dtMs;
     let x = (rand() - 0.5) * 2 * noise;
     let y = (rand() - 0.5) * 2 * noise;
-    let z = G + (rand() - 0.5) * 2 * noise;
+    const z = G + (rand() - 0.5) * 2 * noise;
     for (const m of o.eventMins) {
       const start = m * 60000;
       if (t >= start && t < start + burstMs) {
@@ -176,5 +176,12 @@ describe('screen-off detection — failure modes (negative controls)', () => {
     // …and nothing after (this is the residual Android risk a battery-
     // optimization exemption is meant to remove).
     expect(score(detected, after).recall).toBe(0);
+  });
+
+  it('the battery-optimization exemption closes the gap (no kill → full night)', () => {
+    // With the exemption granted, the service is not killed, so delivery is the
+    // normal batched stream and recall is restored to the full-night level.
+    const exempt = run((x) => deliverBatched(x), 10);
+    expect(exempt.recall).toBeGreaterThanOrEqual(0.9);
   });
 });

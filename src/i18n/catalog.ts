@@ -433,6 +433,12 @@ export const messages: Record<string, Msg> = {
     en: 'No new sleep to import',
     ja: '新しく取り込む睡眠はありませんでした',
   },
+  'settings.bgTracking': { en: 'Background sleep tracking', ja: 'バックグラウンド計測' },
+  'settings.bgTrackingFix': { en: 'Allow', ja: '許可する' },
+  'settings.bgTrackingHint': {
+    en: 'Battery optimization can stop sleep tracking partway through the night. Allow it to run unrestricted so the whole night is recorded.',
+    ja: '電池の最適化により、夜の途中で睡眠計測が止まることがあります。制限なしで動けるよう許可すると、一晩を通して記録できます。',
+  },
   'settings.widget': { en: 'Home Screen widget', ja: 'ホーム画面ウィジェット' },
   'settings.widgetHint': {
     en: 'Add the Madoromi widget from your Home Screen to see today’s thinking condition and sleep debt at a glance. It refreshes after each morning check.',

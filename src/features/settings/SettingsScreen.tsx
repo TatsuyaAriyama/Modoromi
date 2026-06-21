@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
@@ -9,8 +9,12 @@ import type { Lang, ThemePref } from '../../domain/types';
 import { exportAll, importAll, wipeAll } from '../../data/repositories';
 import { parseBackup } from '../../domain/backup';
 import { sessionsToCsv } from '../../domain/csv';
-import { isNative } from '../../lib/platform';
+import { isAndroid, isNative } from '../../lib/platform';
 import { requestHealthAccess } from '../../lib/health';
+import {
+  requestSleepMotionUnrestricted,
+  sleepMotionUnrestricted,
+} from '../../lib/sleepMotion';
 import { LANGS, formatDuration, translate } from '../../i18n/catalog';
 import { useT, useLang } from '../../i18n/useT';
 
@@ -29,6 +33,20 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
+
+  // Android: reflect whether background sleep tracking is free from battery
+  // optimization (so the recording service survives the night).
+  const [unrestricted, setUnrestricted] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!isAndroid()) return;
+    let alive = true;
+    void sleepMotionUnrestricted().then((u) => {
+      if (alive) setUnrestricted(u);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [exported, setExported] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
@@ -97,6 +115,12 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
         ? t('settings.healthImportResult', { count })
         : t('settings.healthImportNone'),
     );
+  };
+
+  const onRequestUnrestricted = async () => {
+    await requestSleepMotionUnrestricted();
+    // The system prompt opens in another screen; re-check on return.
+    setUnrestricted(await sleepMotionUnrestricted());
   };
 
   const onWipe = async () => {
@@ -256,6 +280,26 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             </div>
             <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
               {importMsg ?? t('settings.healthImportHint')}
+            </span>
+          </div>
+        )}
+
+        {isAndroid() && unrestricted === false && (
+          <div
+            className="set-row"
+            style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}
+          >
+            <div className="spread">
+              <span className="set-label">{t('settings.bgTracking')}</span>
+              <Button
+                variant="ghost"
+                onClick={() => void onRequestUnrestricted()}
+              >
+                {t('settings.bgTrackingFix')}
+              </Button>
+            </div>
+            <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+              {t('settings.bgTrackingHint')}
             </span>
           </div>
         )}

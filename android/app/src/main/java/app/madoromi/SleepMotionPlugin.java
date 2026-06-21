@@ -4,7 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
+import android.provider.Settings;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -47,6 +50,25 @@ public class SleepMotionPlugin extends Plugin {
         } else {
             getContext().startService(intent);
         }
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void isUnrestricted(PluginCall call) {
+        PowerManager pm = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        boolean ok = pm == null
+            || pm.isIgnoringBatteryOptimizations(getContext().getPackageName());
+        JSObject ret = new JSObject();
+        ret.put("unrestricted", ok);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void requestUnrestricted(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+        intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(intent);
         call.resolve();
     }
 

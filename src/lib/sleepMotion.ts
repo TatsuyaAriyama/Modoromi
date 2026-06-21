@@ -25,6 +25,13 @@ export interface SleepMotionPlugin {
   start(): Promise<void>;
   /** Stop and return movements detected across the whole session. */
   stop(): Promise<{ movements: Movement[] }>;
+  /**
+   * Android: whether the app is exempt from battery optimization (so the OS /
+   * OEM won't kill the recording service mid-night). Always true off Android.
+   */
+  isUnrestricted(): Promise<{ unrestricted: boolean }>;
+  /** Android: open the system prompt to grant the battery-optimization exemption. */
+  requestUnrestricted(): Promise<void>;
 }
 
 export const SleepMotion = registerPlugin<SleepMotionPlugin>('SleepMotion');
@@ -36,5 +43,30 @@ export async function sleepMotionAvailable(): Promise<boolean> {
     return (await SleepMotion.isAvailable()).available;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Is background recording free to run through the night? On Android this
+ * reflects the battery-optimization exemption — without it, aggressive OEM
+ * power managers kill the foreground service and the night is cut short (the
+ * exact gap the verification harness flags). Resolves true off Android.
+ */
+export async function sleepMotionUnrestricted(): Promise<boolean> {
+  if (!isNative()) return true;
+  try {
+    return (await SleepMotion.isUnrestricted()).unrestricted;
+  } catch {
+    return true;
+  }
+}
+
+/** Open the OS prompt to exempt the app from battery optimization (Android). */
+export async function requestSleepMotionUnrestricted(): Promise<void> {
+  if (!isNative()) return;
+  try {
+    await SleepMotion.requestUnrestricted();
+  } catch {
+    /* best-effort */
   }
 }

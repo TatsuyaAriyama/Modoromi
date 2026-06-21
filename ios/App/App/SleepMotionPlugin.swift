@@ -27,6 +27,8 @@ public class SleepMotionPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "isAvailable", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "start", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isUnrestricted", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "requestUnrestricted", returnType: CAPPluginReturnPromise),
     ]
 
     private let recorder = CMSensorRecorder()
@@ -41,6 +43,16 @@ public class SleepMotionPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func isAvailable(_ call: CAPPluginCall) {
         call.resolve(["available": CMSensorRecorder.isAccelerometerRecordingAvailable()])
+    }
+
+    // iOS has no battery-optimization exemption concept — CMSensorRecorder runs
+    // in the coprocessor regardless — so recording is always "unrestricted".
+    @objc func isUnrestricted(_ call: CAPPluginCall) {
+        call.resolve(["unrestricted": true])
+    }
+
+    @objc func requestUnrestricted(_ call: CAPPluginCall) {
+        call.resolve()
     }
 
     @objc func start(_ call: CAPPluginCall) {
