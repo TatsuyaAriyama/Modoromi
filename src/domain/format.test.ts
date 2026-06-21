@@ -64,6 +64,13 @@ describe('parseHm', () => {
   it('defaults missing pieces to zero', () => {
     expect(parseHm('')).toEqual({ hour: 0, minute: 0 });
   });
+  it('clamps an out-of-range time to a real clock', () => {
+    expect(parseHm('25:90')).toEqual({ hour: 23, minute: 59 });
+    expect(parseHm('-1:-5')).toEqual({ hour: 0, minute: 0 });
+  });
+  it('ignores non-numeric pieces', () => {
+    expect(parseHm('aa:bb')).toEqual({ hour: 0, minute: 0 });
+  });
 });
 
 describe('subtractMinutesHm', () => {

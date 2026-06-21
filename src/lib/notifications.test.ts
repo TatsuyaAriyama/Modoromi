@@ -81,6 +81,16 @@ describe('buildAlarmNotifications', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it('keeps ids unique and collision-free across many alarms', () => {
+    // The previous hash-bucket scheme could collide well before this many
+    // alarms; the index scheme cannot. uuid-ish ids, all weekdays each.
+    const many = Array.from({ length: 50 }, (_, i) =>
+      alarm({ id: `alarm-${i}-${(i * 2654435761) >>> 0}`, repeatDays: [0, 1, 2, 3, 4, 5, 6] }),
+    );
+    const ids = buildAlarmNotifications(many, 'en', 1000).map((x) => x.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
   it('carries past midnight, advancing the weekday', () => {
     // 23:58 +2min → 00:00 next day; domain Sat(6) → Sun(0) → Capacitor 1
     const n = buildAlarmNotifications([

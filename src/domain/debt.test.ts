@@ -67,6 +67,17 @@ describe('sleepDebtMin', () => {
       -50,
     );
   });
+  it('counts imported nights — they are real sleep, just from Health', () => {
+    const today = new Date(now);
+    today.setHours(6, 30, 0, 0);
+    const imported: SleepSession = {
+      ...session(today.toISOString(), 480),
+      imported: true,
+    };
+    // 480 of 450 target on the one logged day → −30 (a surplus), proving the
+    // imported night is included in the duration-based debt.
+    expect(sleepDebtMin([imported], 450, 7, now)).toBe(-30);
+  });
 });
 
 describe('lastSession', () => {

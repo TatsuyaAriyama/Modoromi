@@ -22,10 +22,16 @@ export function isoToHm(iso: string): string {
   ).padStart(2, '0')}`;
 }
 
-/** Parse "HH:mm" to {hour, minute}. */
+/**
+ * Parse "HH:mm" to {hour, minute}, clamped to a real clock (0–23, 0–59) so a
+ * malformed stored/imported value can't produce an out-of-range time. Missing
+ * or non-numeric pieces default to 0.
+ */
 export function parseHm(hm: string): { hour: number; minute: number } {
   const [h, m] = hm.split(':').map(Number);
-  return { hour: h || 0, minute: m || 0 };
+  const clamp = (n: number, hi: number) =>
+    Number.isFinite(n) ? Math.min(hi, Math.max(0, Math.trunc(n))) : 0;
+  return { hour: clamp(h, 23), minute: clamp(m, 59) };
 }
 
 /** Subtract `min` minutes from "HH:mm", wrapping within 24h. */

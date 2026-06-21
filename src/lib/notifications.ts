@@ -59,14 +59,16 @@ export async function ensurePermission(): Promise<boolean> {
   }
 }
 
-/** Deterministic small integer id from an alarm uuid + per-fire slot. */
-function notifId(alarmId: string, slot: number): number {
-  let h = 0;
-  for (let i = 0; i < alarmId.length; i++) {
-    h = (h * 31 + alarmId.charCodeAt(i)) | 0;
-  }
-  // 100 slots per alarm leaves room for 8 weekday-slots × ring-minutes.
-  return (Math.abs(h) % 4000) * 100 + slot;
+/**
+ * Notification id from an alarm's index in the enabled set + a per-fire slot.
+ * Using the index (rather than hashing the uuid) makes ids collision-free for
+ * any number of alarms — a hash mod N collides well before N alarms. Stability
+ * across rebuilds isn't needed: `syncSchedules` cancels every pending one first.
+ * 100 slots per alarm fit 8 weekday-slots × ring-minutes; bands stay far below
+ * the reserved bedtime/snooze ids.
+ */
+function notifId(alarmIndex: number, slot: number): number {
+  return alarmIndex * 100 + slot;
 }
 
 type Built = ScheduleOptions['notifications'][number];
@@ -114,6 +116,7 @@ export function buildAlarmNotifications(
 ): Built[] {
   const enabled = alarms.filter((a) => a.enabled);
   if (enabled.length === 0 || budget <= 0) return [];
+  const indexOf = new Map(enabled.map((a, i) => [a.id, i]));
 
   // empty repeatDays = one-shot (next occurrence)
   const perAlarm = enabled.map((a) => ({
@@ -148,7 +151,7 @@ export function buildAlarmNotifications(
     for (let m = 0; m < ring[i]; m++) {
       const on = occurrence(a.time, wd, m);
       out.push({
-        id: notifId(a.id, slotBase + m),
+        id: notifId(indexOf.get(a.id) ?? 0, slotBase + m),
         title: tr(lang, 'notif.wakeTitle'),
         body: tr(lang, 'notif.wakeBody'),
         sound: ALARM_SOUND,
