@@ -8,6 +8,7 @@ import { Toggle } from '../../components/Toggle';
 import type { Lang, ThemePref } from '../../domain/types';
 import { exportAll, importAll, wipeAll } from '../../data/repositories';
 import { parseBackup } from '../../domain/backup';
+import { sessionsToCsv } from '../../domain/csv';
 import { isNative } from '../../lib/platform';
 import { LANGS, formatDuration, translate } from '../../i18n/catalog';
 import { useT, useLang } from '../../i18n/useT';
@@ -18,6 +19,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const t = useT();
   const lang = useLang();
   const settings = useStore((s) => s.settings);
+  const sessions = useStore((s) => s.sessions);
   const saveSettings = useStore((s) => s.saveSettings);
   const init = useStore((s) => s.init);
 
@@ -27,22 +29,31 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
 
-  const onExport = async () => {
-    const json = await exportAll();
+  // Web: trigger a file download. Native: show the text in a copyable sheet
+  // (no Files entitlement assumed); the user can copy or AirDrop from there.
+  const deliver = (filename: string, mime: string, text: string) => {
     if (isNative()) {
-      setExported(json);
+      setExported(text);
       return;
     }
-    // Web: trigger a file download.
-    const blob = new Blob([json], { type: 'application/json' });
+    const blob = new Blob([text], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `madoromi-export-${new Date()
-      .toISOString()
-      .slice(0, 10)}.json`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const stamp = () => new Date().toISOString().slice(0, 10);
+
+  const onExport = async () => {
+    const json = await exportAll();
+    deliver(`madoromi-export-${stamp()}.json`, 'application/json', json);
+  };
+
+  const onExportCsv = () => {
+    deliver(`madoromi-sleep-${stamp()}.csv`, 'text/csv', sessionsToCsv(sessions));
   };
 
   const onImport = async () => {
@@ -182,6 +193,12 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           <span className="set-label">{t('settings.exportData')}</span>
           <Button variant="ghost" onClick={() => void onExport()}>
             {t('settings.export')}
+          </Button>
+        </div>
+        <div className="set-row">
+          <span className="set-label">{t('settings.exportCsvData')}</span>
+          <Button variant="ghost" onClick={onExportCsv}>
+            {t('settings.exportCsv')}
           </Button>
         </div>
         <div className="set-row">
