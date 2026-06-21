@@ -4,6 +4,7 @@ import { Card } from '../../components/Card';
 import { EyeMark } from '../../components/EyeMark';
 import { lastSession, sleepDebtMin } from '../../domain/debt';
 import { recommendedBedtime } from '../../domain/bedtime';
+import { hygieneCues } from '../../domain/hygiene';
 import {
   consistencyScore,
   regularityLevel,
@@ -56,6 +57,7 @@ export function HomeScreen({
     debtMin: debt,
   });
   const reminderTime = settings.bedtimeReminder ? plan.bedtimeHm : undefined;
+  const cues = hygieneCues(plan.bedtimeHm);
 
   return (
     <div className="screen">
@@ -146,6 +148,21 @@ export function HomeScreen({
                 : t(`reg.${regularityLevel(consistency)}`)}
             </span>
           </div>
+        </div>
+      </Card>
+
+      {/* Tonight's gentle hygiene cues — a quiet 目安, derived from bedtime */}
+      <Card tight>
+        <div className="stat-label" style={{ marginBottom: 8 }}>
+          {t('home.tonightCues')}
+        </div>
+        <div className="cue-row">
+          <span className="cue-text">{t('home.caffeineCue')}</span>
+          <span className="cue-time num">{`–${cues.caffeineCutoffHm}`}</span>
+        </div>
+        <div className="cue-row">
+          <span className="cue-text">{t('home.screenWarmCue')}</span>
+          <span className="cue-time num">{`${cues.screenWarmHm}–`}</span>
         </div>
       </Card>
 

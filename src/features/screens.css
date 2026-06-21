@@ -152,6 +152,24 @@
   background: var(--primary);
 }
 
+/* Tonight's hygiene cues (Home) — quiet, scannable label + time rows. */
+.cue-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 5px 0;
+}
+.cue-text {
+  font-size: 14px;
+  color: var(--text);
+}
+.cue-time {
+  font-size: 15px;
+  color: var(--text-mute);
+  letter-spacing: 0.02em;
+}
+
 /* Thinking-theme reflection log (History). A quiet journal of past themes. */
 .theme-log {
   list-style: none;

@@ -212,6 +212,9 @@ export const messages: Record<string, Msg> = {
   // ── Home screen ─────────────────────────────────────────
   'home.greeting': { en: 'Getting ready for sleep', ja: 'おやすみの準備を' },
   'home.theme': { en: 'Today’s thinking theme', ja: '今日の思考テーマ' },
+  'home.tonightCues': { en: 'Tonight’s cues', ja: '今夜の目安' },
+  'home.caffeineCue': { en: 'Last caffeine', ja: 'カフェインは控えめに' },
+  'home.screenWarmCue': { en: 'Warm your screen', ja: '画面を暖色に' },
   'home.lastNight': { en: 'Last night', ja: '昨夜のサマリー' },
   'home.vsTarget': { en: 'vs. goal', ja: '目標との差' },
   'home.quality': { en: 'Quality score', ja: '質スコア' },
