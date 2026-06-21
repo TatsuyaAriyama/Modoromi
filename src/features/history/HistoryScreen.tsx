@@ -18,6 +18,12 @@ import { buildConditionSeries } from '../../domain/conditionSeries';
 import { weeklyReview } from '../../domain/review';
 import { deriveInsights } from '../../domain/insights';
 import { themeLog } from '../../domain/themeLog';
+import {
+  buildSharpnessSeries,
+  latestResult,
+  sharpnessAgreement,
+  sharpnessTier,
+} from '../../domain/sharpness';
 import { isoToHm } from '../../domain/format';
 import { formatDate, formatDuration } from '../../i18n/catalog';
 import type { SleepSession } from '../../domain/types';
@@ -29,6 +35,7 @@ export function HistoryScreen() {
   const t = useT();
   const lang = useLang();
   const sessions = useStore((s) => s.sessions);
+  const sharpness = useStore((s) => s.sharpness);
   const targetMin = useStore((s) => s.settings.targetDurationMin);
   const [range, setRange] = useState<Range>('week');
   const [selected, setSelected] = useState<SleepSession | null>(null);
@@ -57,6 +64,15 @@ export function HistoryScreen() {
     [sessions, targetMin],
   );
   const themes = useMemo(() => themeLog(sessions), [sessions]);
+  const sharpSeries = useMemo(
+    () => buildSharpnessSeries(sharpness, days, new Date(), lang),
+    [sharpness, days, lang],
+  );
+  const latestSharp = useMemo(() => latestResult(sharpness), [sharpness]);
+  const agreement = useMemo(
+    () => sharpnessAgreement(sharpness, conditionSeries),
+    [sharpness, conditionSeries],
+  );
 
   const sorted = useMemo(
     () =>
@@ -205,6 +221,37 @@ export function HistoryScreen() {
           ariaLabel={t('chart.condition')}
         />
       </Card>
+
+      {latestSharp && (
+        <Card tight>
+          <div className="spread" style={{ marginBottom: 8 }}>
+            <span className="stat-label">{t('sharp.cardTitle')}</span>
+            <span
+              className={`score-badge num cond-${sharpnessTier(latestSharp.score)}`}
+            >
+              {latestSharp.score}
+            </span>
+          </div>
+          <LineChart
+            data={sharpSeries.map((p) => ({ label: p.label, value: p.score }))}
+            ariaLabel={t('sharp.cardTitle')}
+          />
+          <div className="summary-row" style={{ marginTop: 8 }}>
+            <div className="stat">
+              <span className="stat-label">{t('sharp.medianShort')}</span>
+              <span className="stat-val num">
+                {t('sharp.ms', { ms: latestSharp.medianMs })}
+              </span>
+            </div>
+            <div className="stat">
+              <span className="stat-label">{t('sharp.agreement')}</span>
+              <span className="stat-val">
+                {agreement ? t(`sharp.agree.${agreement.level}`) : '—'}
+              </span>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card>
         <div className="stat-label" style={{ marginBottom: 4 }}>

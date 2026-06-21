@@ -11,8 +11,10 @@ import {
   DEFAULT_SETTINGS,
   alarmRepo,
   settingsRepo,
+  sharpnessRepo,
   sleepRepo,
 } from '../data/repositories';
+import type { SharpnessResult } from '../domain/sharpness';
 import { uid } from '../lib/id';
 import { syncSchedules } from '../lib/notifications';
 import {
@@ -42,6 +44,7 @@ interface AppState {
   sessions: SleepSession[];
   alarms: AlarmConfig[];
   settings: UserSettings;
+  sharpness: SharpnessResult[];
 
   /** In-progress sleep session (null when awake). */
   active: ActiveSession;
@@ -76,6 +79,9 @@ interface AppState {
    * nights that don't overlap existing sessions. Returns how many were added.
    */
   importFromHealth(days: number): Promise<number>;
+
+  /** Record a completed sharpness-check result. */
+  saveSharpness(result: SharpnessResult): Promise<void>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -83,16 +89,18 @@ export const useStore = create<AppState>((set, get) => ({
   sessions: [],
   alarms: [],
   settings: DEFAULT_SETTINGS,
+  sharpness: [],
   active: null,
   pendingMorning: null,
 
   async init() {
-    const [sessions, alarms, settings] = await Promise.all([
+    const [sessions, alarms, settings, sharpness] = await Promise.all([
       sleepRepo.all(),
       alarmRepo.all(),
       settingsRepo.get(),
+      sharpnessRepo.all(),
     ]);
-    set({ sessions, alarms, settings, loaded: true });
+    set({ sessions, alarms, settings, sharpness, loaded: true });
     void syncSchedules(alarms, settings, sessions);
     refreshWidget(sessions, settings);
   },
@@ -229,5 +237,10 @@ export const useStore = create<AppState>((set, get) => ({
     void syncSchedules(get().alarms, get().settings, merged);
     refreshWidget(merged, get().settings);
     return fresh.length;
+  },
+
+  async saveSharpness(result) {
+    await sharpnessRepo.add(result);
+    set((s) => ({ sharpness: [...s.sharpness, result] }));
   },
 }));

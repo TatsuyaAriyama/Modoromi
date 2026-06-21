@@ -235,6 +235,7 @@ export const messages: Record<string, Msg> = {
   'home.cta': { en: 'Good night', ja: 'おやすみ' },
   'home.setAlarm': { en: 'Set an alarm →', ja: 'アラームを設定する →' },
   'home.nap': { en: 'Take a nap →', ja: '仮眠する →' },
+  'home.sharpness': { en: 'Sharpness check →', ja: '冴えチェック →' },
 
   // ── Morning check ───────────────────────────────────────
   'morning.greeting': { en: 'Good morning', ja: 'おはようございます' },
@@ -264,6 +265,42 @@ export const messages: Record<string, Msg> = {
   'nap.doneTitle': { en: 'Good morning', ja: 'おはよう' },
   'nap.doneNote': { en: 'Feeling a little clearer?', ja: '少し頭が軽くなりましたか' },
   'nap.wake': { en: 'Wake up', ja: '起きる' },
+
+  // ── sharpness check ─────────────────────────────────────
+  'sharp.title': { en: 'Sharpness check', ja: '冴えチェック' },
+  'sharp.intro': {
+    en: 'When the circle lights up, tap as fast as you can. Five quick rounds.',
+    ja: '円が明るくなったら、できるだけ速くタップ。5回くり返します。',
+  },
+  'sharp.guide': { en: 'Wait for the light…', ja: '光るまで待って…' },
+  'sharp.resultNote': {
+    en: 'Saved — see it against your condition in the Log',
+    ja: '記録しました。記録タブで思考コンディションと比べられます',
+  },
+  'sharp.start': { en: 'Start', ja: 'はじめる' },
+  'sharp.wait': { en: 'wait', ja: '待って' },
+  'sharp.now': { en: 'TAP', ja: '今！' },
+  'sharp.tooSoon': { en: 'too soon', ja: '早すぎ' },
+  'sharp.tapHint': { en: 'Tap the circle the instant it lights', ja: '光った瞬間に円をタップ' },
+  'sharp.again': { en: 'Again', ja: 'もう一度' },
+  'sharp.invalid': {
+    en: 'Let’s try that again — wait for the light first',
+    ja: 'もう一度試しましょう（光ってからタップ）',
+  },
+  'sharp.tier.sharp': { en: 'Razor sharp', ja: '冴えている' },
+  'sharp.tier.steady': { en: 'Steady', ja: 'まずまず' },
+  'sharp.tier.foggy': { en: 'A bit foggy', ja: 'ぼんやり' },
+  'sharp.median': { en: (p) => `median ${p.ms}ms`, ja: (p) => `中央値 ${p.ms}ms` },
+  'sharp.best': { en: (p) => `best ${p.ms}ms`, ja: (p) => `最速 ${p.ms}ms` },
+  'sharp.ms': { en: (p) => `${p.ms}ms`, ja: (p) => `${p.ms}ms` },
+
+  // sharpness — History card
+  'sharp.cardTitle': { en: 'Measured sharpness', ja: '冴え（実測）' },
+  'sharp.medianShort': { en: 'Reaction', ja: '反応速度' },
+  'sharp.agreement': { en: 'vs. estimate', ja: '推定との一致' },
+  'sharp.agree.aligned': { en: 'Closely matches', ja: 'よく一致' },
+  'sharp.agree.loose': { en: 'Loosely matches', ja: 'ゆるく一致' },
+  'sharp.agree.diverging': { en: 'Often differs', ja: 'ずれがち' },
 
   // ── Session (asleep) ────────────────────────────────────
   'session.alarm': { en: (p) => `Alarm ${p.time}`, ja: (p) => `アラーム ${p.time}` },

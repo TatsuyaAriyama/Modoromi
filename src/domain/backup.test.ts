@@ -141,4 +141,28 @@ describe('parseBackup', () => {
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.data.settings).toBeNull();
   });
+
+  it('carries sharpness results through, dropping malformed entries', () => {
+    const r = parseBackup(
+      JSON.stringify({
+        app: 'Madoromi',
+        sessions: [],
+        sharpness: [
+          { id: 'a', takenAt: '2026-06-21T07:00:00.000Z', medianMs: 250, bestMs: 230, trials: 5, score: 90 },
+          { id: 'bad' }, // missing fields → dropped
+        ],
+      }),
+    );
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.data.sharpness).toHaveLength(1);
+      expect(r.data.sharpness[0].score).toBe(90);
+    }
+  });
+
+  it('defaults sharpness to empty when absent', () => {
+    const r = parseBackup(JSON.stringify({ app: 'Madoromi', sessions: [] }));
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.data.sharpness).toEqual([]);
+  });
 });

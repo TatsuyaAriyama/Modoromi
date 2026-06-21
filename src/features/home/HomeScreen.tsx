@@ -22,11 +22,13 @@ export function HomeScreen({
   onGoAlarm,
   onStartNap,
   onWindDown,
+  onSharpness,
 }: {
   onOpenSettings: () => void;
   onGoAlarm: () => void;
   onStartNap: () => void;
   onWindDown: () => void;
+  onSharpness: () => void;
 }) {
   const t = useT();
   const lang = useLang();
@@ -206,6 +208,9 @@ export function HomeScreen({
           )}
           <button className="back-btn" onClick={onStartNap}>
             {t('home.nap')}
+          </button>
+          <button className="back-btn" onClick={onSharpness}>
+            {t('home.sharpness')}
           </button>
         </div>
       </div>

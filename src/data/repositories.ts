@@ -1,10 +1,12 @@
 import type { AlarmConfig, SleepSession, UserSettings } from '../domain/types';
+import type { SharpnessResult } from '../domain/sharpness';
 import { getJSON, removeKey, setJSON } from './storage';
 
 const KEYS = {
   sessions: 'madoromi.sessions',
   alarms: 'madoromi.alarms',
   settings: 'madoromi.settings',
+  sharpness: 'madoromi.sharpness',
 } as const;
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -41,6 +43,12 @@ export interface AlarmRepository {
 export interface SettingsRepository {
   get(): Promise<UserSettings>;
   set(settings: UserSettings): Promise<void>;
+}
+
+export interface SharpnessRepository {
+  all(): Promise<SharpnessResult[]>;
+  add(result: SharpnessResult): Promise<void>;
+  replaceAll(results: SharpnessResult[]): Promise<void>;
 }
 
 class LocalSleepRepository implements SleepRepository {
@@ -89,19 +97,43 @@ class LocalSettingsRepository implements SettingsRepository {
   }
 }
 
+class LocalSharpnessRepository implements SharpnessRepository {
+  async all(): Promise<SharpnessResult[]> {
+    return getJSON<SharpnessResult[]>(KEYS.sharpness, []);
+  }
+  async add(result: SharpnessResult): Promise<void> {
+    const list = await this.all();
+    list.push(result);
+    await setJSON(KEYS.sharpness, list);
+  }
+  async replaceAll(results: SharpnessResult[]): Promise<void> {
+    await setJSON(KEYS.sharpness, results);
+  }
+}
+
 export const sleepRepo: SleepRepository = new LocalSleepRepository();
 export const alarmRepo: AlarmRepository = new LocalAlarmRepository();
 export const settingsRepo: SettingsRepository = new LocalSettingsRepository();
+export const sharpnessRepo: SharpnessRepository = new LocalSharpnessRepository();
 
 /** Full export blob for Settings → Export. */
 export async function exportAll(): Promise<string> {
-  const [sessions, alarms, settings] = await Promise.all([
+  const [sessions, alarms, settings, sharpness] = await Promise.all([
     sleepRepo.all(),
     alarmRepo.all(),
     settingsRepo.get(),
+    sharpnessRepo.all(),
   ]);
   return JSON.stringify(
-    { app: 'Madoromi', version: 1, exportedAt: new Date().toISOString(), sessions, alarms, settings },
+    {
+      app: 'Madoromi',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      sessions,
+      alarms,
+      settings,
+      sharpness,
+    },
     null,
     2,
   );
@@ -109,7 +141,12 @@ export async function exportAll(): Promise<string> {
 
 /** Wipe every Madoromi key (used by Settings → delete all). */
 export async function wipeAll(): Promise<void> {
-  await Promise.all([removeKey(KEYS.sessions), removeKey(KEYS.alarms), removeKey(KEYS.settings)]);
+  await Promise.all([
+    removeKey(KEYS.sessions),
+    removeKey(KEYS.alarms),
+    removeKey(KEYS.settings),
+    removeKey(KEYS.sharpness),
+  ]);
 }
 
 /**
@@ -120,10 +157,12 @@ export async function importAll(data: {
   sessions: SleepSession[];
   alarms: AlarmConfig[];
   settings: UserSettings | null;
+  sharpness?: SharpnessResult[];
 }): Promise<void> {
   const tasks: Promise<void>[] = [
     setJSON(KEYS.sessions, data.sessions),
     setJSON(KEYS.alarms, data.alarms),
+    setJSON(KEYS.sharpness, data.sharpness ?? []),
   ];
   // Only touch settings when the backup carried a valid set; a missing or
   // corrupt settings block leaves the user's current preferences intact.

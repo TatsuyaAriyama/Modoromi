@@ -7,6 +7,7 @@ import type {
   ThemePref,
   UserSettings,
 } from './types';
+import type { SharpnessResult } from './sharpness';
 
 /**
  * Validated payload from a backup file. Restoring months of sleep records is
@@ -19,6 +20,8 @@ export interface BackupData {
   sessions: SleepSession[];
   alarms: AlarmConfig[];
   settings: UserSettings | null;
+  /** Sharpness-check results; empty when the backup predates the feature. */
+  sharpness: SharpnessResult[];
 }
 
 /**
@@ -81,6 +84,18 @@ function isSleepSession(x: unknown): x is SleepSession {
     return false;
   }
   return true;
+}
+
+function isSharpnessResult(x: unknown): x is SharpnessResult {
+  return (
+    isObject(x) &&
+    isStr(x.id) &&
+    isStr(x.takenAt) &&
+    isNum(x.medianMs) &&
+    isNum(x.bestMs) &&
+    isNum(x.trials) &&
+    isNum(x.score)
+  );
 }
 
 function isAlarm(x: unknown): x is AlarmConfig {
@@ -195,6 +210,12 @@ export function parseBackup(text: string): BackupParseResult {
     return { ok: false, error: 'alarms-invalid' };
   }
 
+  // Sharpness is a newer, lower-stakes collection: tolerate it being absent and
+  // keep only well-formed entries rather than rejecting the whole restore.
+  const sharpness = Array.isArray(raw.sharpness)
+    ? (raw.sharpness as unknown[]).filter(isSharpnessResult)
+    : [];
+
   return {
     ok: true,
     data: {
@@ -202,6 +223,7 @@ export function parseBackup(text: string): BackupParseResult {
       sessions: sessionsRaw as SleepSession[],
       alarms: alarmsRaw as AlarmConfig[],
       settings: parseSettings(raw.settings),
+      sharpness,
     },
   };
 }

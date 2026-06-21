@@ -12,6 +12,7 @@ import { SessionScreen } from './features/session/SessionScreen';
 import { MorningScreen } from './features/morning/MorningScreen';
 import { NapScreen } from './features/nap/NapScreen';
 import { WindDownScreen } from './features/winddown/WindDownScreen';
+import { SharpnessScreen } from './features/sharpness/SharpnessScreen';
 import { OnboardingScreen } from './features/onboarding/OnboardingScreen';
 import { useT, useLang } from './i18n/useT';
 
@@ -37,6 +38,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [napOpen, setNapOpen] = useState(false);
   const [windDownOpen, setWindDownOpen] = useState(false);
+  const [sharpnessOpen, setSharpnessOpen] = useState(false);
 
   useEffect(() => {
     void init();
@@ -59,6 +61,9 @@ export default function App() {
   if (active) return <SessionScreen />;
   if (pendingMorning) return <MorningScreen />;
   if (napOpen) return <NapScreen onClose={() => setNapOpen(false)} />;
+  if (sharpnessOpen) {
+    return <SharpnessScreen onClose={() => setSharpnessOpen(false)} />;
+  }
   if (windDownOpen) {
     return (
       <WindDownScreen
@@ -83,6 +88,7 @@ export default function App() {
               onGoAlarm={() => setTab('alarm')}
               onStartNap={() => setNapOpen(true)}
               onWindDown={() => setWindDownOpen(true)}
+              onSharpness={() => setSharpnessOpen(true)}
             />
           )}
           {tab === 'alarm' && <AlarmScreen />}
