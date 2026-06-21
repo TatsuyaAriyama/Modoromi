@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  The widget extension reads the snapshot the app writes into this shared
+	  App Group container. It MUST match the App target's group exactly.
+	-->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.madoromi</string>
+	</array>
+</dict>
+</plist>

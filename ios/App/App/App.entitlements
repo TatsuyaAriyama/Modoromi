@@ -19,5 +19,14 @@
 	-->
 	<key>com.apple.developer.healthkit</key>
 	<true/>
+	<!--
+	  App Group shared with the MadoromiWidget extension: the app writes the
+	  widget snapshot here, the widget reads it. Enable the "App Groups"
+	  capability and add this exact group to BOTH targets in Xcode.
+	-->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.madoromi</string>
+	</array>
 </dict>
 </plist>
