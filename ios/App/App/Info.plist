@@ -46,9 +46,9 @@
 	<key>NSMotionUsageDescription</key>
 	<string>Madoromi uses motion to estimate how deeply you slept and to find a gentle moment to wake you. This is optional and stays on your device.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Madoromi can mirror the nights you log into Apple Health as in-bed sleep, so your sleep data lives alongside your other health metrics. This is optional and one-way — Madoromi only writes, it never reads your Health data.</string>
+	<string>Madoromi can mirror the nights you log into Apple Health as in-bed sleep, so your sleep data lives alongside your other health metrics. This is optional and write-only.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Madoromi does not read your Health data. This permission is requested only so iOS can present the sleep-writing prompt.</string>
+	<string>Madoromi can import sleep you tracked elsewhere (a watch or another app) so it appears in your log. This is optional, runs only when you tap Import, and never changes or deletes your Health data.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

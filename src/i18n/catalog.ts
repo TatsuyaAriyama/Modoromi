@@ -340,10 +340,25 @@ export const messages: Record<string, Msg> = {
       `アラーム前${p.min}分以内に体動から浅い眠りを検知すると、少し早めに起こします。画面を点けたままのセッション中のみ動作します。`,
   },
   'settings.smartWindow': { en: 'Smart-wake window', ja: 'スマート起床の検知時間' },
-  'settings.healthSync': { en: 'Apple Health', ja: 'ヘルスケア連携' },
+  'settings.healthSync': { en: 'Sync to Health', ja: 'ヘルスケアへ書き出し' },
   'settings.healthSyncHint': {
-    en: 'Mirror confirmed nights to the Health app as in-bed sleep. One-way; Madoromi never reads your Health data.',
-    ja: '記録した睡眠をヘルスケアアプリに「ベッドにいる時間」として書き出します。書き込みのみで、ヘルスケアのデータを読み取ることはありません。',
+    en: 'Mirror confirmed nights to the Health app as in-bed sleep. Write-only — this never reads your Health data back.',
+    ja: '記録した睡眠をヘルスケアアプリに「ベッドにいる時間」として書き出します。これは書き込み専用で、データを読み取ることはありません。',
+  },
+  'settings.healthImport': { en: 'Import from Health', ja: 'ヘルスケアから取り込み' },
+  'settings.healthImportHint': {
+    en: 'Pull the last 30 days of sleep tracked elsewhere (a watch, another app). Nights you already have are skipped, so it’s safe to run again.',
+    ja: '他のデバイスやアプリで記録した直近30日の睡眠を取り込みます。すでにある夜は重複しないので、何度実行しても安全です。',
+  },
+  'settings.healthImportRun': { en: 'Import', ja: '取り込む' },
+  'settings.healthImporting': { en: 'Importing…', ja: '取り込み中…' },
+  'settings.healthImportResult': {
+    en: (p) => `Imported ${p.count} night${p.count === 1 ? '' : 's'}`,
+    ja: (p) => `${p.count}件の睡眠を取り込みました`,
+  },
+  'settings.healthImportNone': {
+    en: 'No new sleep to import',
+    ja: '新しく取り込む睡眠はありませんでした',
   },
   'settings.widget': { en: 'Home Screen widget', ja: 'ホーム画面ウィジェット' },
   'settings.widgetHint': {

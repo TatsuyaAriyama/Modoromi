@@ -23,8 +23,11 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const settings = useStore((s) => s.settings);
   const sessions = useStore((s) => s.sessions);
   const saveSettings = useStore((s) => s.saveSettings);
+  const importFromHealth = useStore((s) => s.importFromHealth);
   const init = useStore((s) => s.init);
 
+  const [importing, setImporting] = useState(false);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
   const [exported, setExported] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -82,6 +85,18 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
     }
     const granted = await requestHealthAccess();
     await saveSettings({ ...settings, healthSync: granted });
+  };
+
+  const onImportHealth = async () => {
+    setImporting(true);
+    setImportMsg(null);
+    const count = await importFromHealth(30);
+    setImporting(false);
+    setImportMsg(
+      count > 0
+        ? t('settings.healthImportResult', { count })
+        : t('settings.healthImportNone'),
+    );
   };
 
   const onWipe = async () => {
@@ -218,6 +233,29 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             </div>
             <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
               {t('settings.healthSyncHint')}
+            </span>
+          </div>
+        )}
+
+        {isNative() && (
+          <div
+            className="set-row"
+            style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}
+          >
+            <div className="spread">
+              <span className="set-label">{t('settings.healthImport')}</span>
+              <Button
+                variant="ghost"
+                disabled={importing}
+                onClick={() => void onImportHealth()}
+              >
+                {importing
+                  ? t('settings.healthImporting')
+                  : t('settings.healthImportRun')}
+              </Button>
+            </div>
+            <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+              {importMsg ?? t('settings.healthImportHint')}
             </span>
           </div>
         )}

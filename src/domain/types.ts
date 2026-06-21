@@ -35,6 +35,12 @@ export interface SleepSession {
    * detected inside the pre-alarm window). Absent for a normal wake.
    */
   smartWoke?: boolean;
+  /**
+   * True when this night was imported from Apple Health rather than tracked in
+   * Madoromi. Imported nights carry only timing (no mood/quality) and are never
+   * mirrored back to Health, so import and write-sync can't echo each other.
+   */
+  imported?: boolean;
 }
 
 export interface AlarmConfig {

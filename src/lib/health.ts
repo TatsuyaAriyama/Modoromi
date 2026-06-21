@@ -1,16 +1,21 @@
 import { registerPlugin } from '@capacitor/core';
 import type { SleepSession } from '../domain/types';
+import type { HealthSleepSample } from '../domain/healthImport';
 import { isNative } from './platform';
 
 /**
- * Apple Health (HealthKit) sleep mirroring.
+ * Apple Health (HealthKit) sleep bridge.
  *
- * Madoromi stores its own sleep log locally; this is an *opt-in* one-way mirror
- * so the user's confirmed nights also appear in the Health app's Sleep section
- * (HKCategoryTypeSleepAnalysis, value `inBed`). It never reads back from Health
- * — the local log stays the source of truth — and every call is best-effort:
- * off-device (web/Android) it is a no-op, and a denied/failed write is swallowed
- * so the morning flow never blocks on it.
+ * Madoromi keeps its own local sleep log as the source of truth. Two opt-in,
+ * independent integrations sit on top:
+ *  - Write mirror: confirmed nights also appear in the Health app's Sleep
+ *    section (HKCategoryTypeSleepAnalysis, `inBed`).
+ *  - Read import: nights tracked elsewhere (a watch, another app) can be pulled
+ *    in on demand. Imported nights are clustered and de-duplicated against the
+ *    local log so import is idempotent (see `domain/healthImport`).
+ *
+ * Every call is best-effort: off-device (web/Android) it is a no-op, and a
+ * denied/failed operation is swallowed so app flows never block on Health.
  *
  * The native half is a small custom Capacitor plugin (`Health`, Swift). Until
  * that target is wired in Xcode, `registerPlugin` resolves to a stub whose calls
@@ -24,6 +29,13 @@ export interface HealthPlugin {
   requestAuthorization(): Promise<{ granted: boolean }>;
   /** Write one in-bed sleep sample spanning [startISO, endISO). */
   saveSleep(sample: SleepSample): Promise<void>;
+  /** Prompt for read access to sleep analysis. Resolves to the prompt result. */
+  requestReadAuthorization(): Promise<{ granted: boolean }>;
+  /** Read raw sleep samples overlapping [startISO, endISO). */
+  readSleep(range: {
+    startISO: string;
+    endISO: string;
+  }): Promise<{ samples: HealthSleepSample[] }>;
 }
 
 /** The minimal payload a sleep sample needs: an ISO start and end instant. */
@@ -89,5 +101,36 @@ export async function mirrorSleepToHealth(session: SleepSession): Promise<void> 
     await Health.saveSleep(sample);
   } catch {
     /* ignore — best-effort */
+  }
+}
+
+/** Prompt for HealthKit read access. Resolves false when unavailable/denied. */
+export async function requestHealthReadAccess(): Promise<boolean> {
+  if (!isNative()) return false;
+  try {
+    const { granted } = await Health.requestReadAuthorization();
+    return granted;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Read raw sleep samples from the trailing `days` days. Returns an empty list
+ * off-device or on any error, so the caller can treat "nothing to import" and
+ * "Health unavailable" the same way.
+ */
+export async function readHealthSleep(days: number): Promise<HealthSleepSample[]> {
+  if (!isNative()) return [];
+  const end = new Date();
+  const start = new Date(end.getTime() - days * 86_400_000);
+  try {
+    const { samples } = await Health.readSleep({
+      startISO: start.toISOString(),
+      endISO: end.toISOString(),
+    });
+    return Array.isArray(samples) ? samples : [];
+  } catch {
+    return [];
   }
 }

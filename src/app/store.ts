@@ -15,7 +15,12 @@ import {
 } from '../data/repositories';
 import { uid } from '../lib/id';
 import { syncSchedules } from '../lib/notifications';
-import { mirrorSleepToHealth } from '../lib/health';
+import {
+  mirrorSleepToHealth,
+  readHealthSleep,
+  requestHealthReadAccess,
+} from '../lib/health';
+import { sessionsFromHealth } from '../domain/healthImport';
 import { pushWidgetSnapshot } from '../lib/widget';
 import { widgetSnapshot } from '../domain/widgetSnapshot';
 
@@ -65,6 +70,12 @@ interface AppState {
 
   saveSettings(settings: UserSettings): Promise<void>;
   replaceSessions(sessions: SleepSession[]): Promise<void>;
+
+  /**
+   * Pull sleep from Apple Health over the trailing `days` days, merging only
+   * nights that don't overlap existing sessions. Returns how many were added.
+   */
+  importFromHealth(days: number): Promise<number>;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -204,5 +215,19 @@ export const useStore = create<AppState>((set, get) => ({
     set({ sessions });
     void syncSchedules(get().alarms, get().settings, sessions);
     refreshWidget(sessions, get().settings);
+  },
+
+  async importFromHealth(days) {
+    const granted = await requestHealthReadAccess();
+    if (!granted) return 0;
+    const samples = await readHealthSleep(days);
+    const fresh = sessionsFromHealth(samples, get().sessions);
+    if (fresh.length === 0) return 0;
+    const merged = [...get().sessions, ...fresh];
+    await sleepRepo.replaceAll(merged);
+    set({ sessions: merged });
+    void syncSchedules(get().alarms, get().settings, merged);
+    refreshWidget(merged, get().settings);
+    return fresh.length;
   },
 }));
