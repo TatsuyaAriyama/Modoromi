@@ -181,14 +181,16 @@ export function HomeScreen({
           <EyeMark size={40} color="var(--mist)" />
           {t('home.cta')}
         </button>
-        {!nextAlarm && (
-          <button className="back-btn" onClick={onGoAlarm}>
-            {t('home.setAlarm')}
+        <div className="cta-links">
+          {!nextAlarm && (
+            <button className="back-btn" onClick={onGoAlarm}>
+              {t('home.setAlarm')}
+            </button>
+          )}
+          <button className="back-btn" onClick={onStartNap}>
+            {t('home.nap')}
           </button>
-        )}
-        <button className="back-btn" onClick={onStartNap}>
-          {t('home.nap')}
-        </button>
+        </div>
       </div>
     </div>
   );

@@ -154,10 +154,22 @@
 
 .cta-wrap {
   margin-top: auto;
+  padding-top: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   align-items: center;
+}
+
+/* Secondary actions below the orb — kept as a group with a little extra
+   breathing room above (the orb carries an outer glow ring) and below. */
+.cta-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding-bottom: var(--space-2);
 }
 .cta-hero {
   position: relative;
