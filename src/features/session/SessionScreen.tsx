@@ -220,6 +220,7 @@ export function SessionScreen() {
             {t('session.recording')}
             {moveCount > 0 ? ` ${t('sep.middot')}${moveCount}` : ''}
           </div>
+          <div className="session-hint">{t('session.recordingHint')}</div>
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center' }}>

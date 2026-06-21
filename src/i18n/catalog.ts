@@ -330,6 +330,10 @@ export const messages: Record<string, Msg> = {
   'session.alarm': { en: (p) => `Alarm ${p.time}`, ja: (p) => `アラーム ${p.time}` },
   'session.smartWake': { en: 'Smart wake', ja: 'スマート起床' },
   'session.recording': { en: 'Recording movement', ja: '体動を記録中' },
+  'session.recordingHint': {
+    en: 'Rest the phone on the mattress to sense movement',
+    ja: 'スマホをマットレスの上に置くと体動を拾えます',
+  },
   'session.keepAwake': { en: 'Keep the screen on', ja: '画面を点けたままにする' },
   'session.holdToWake': { en: 'Press and hold — “I’m up”', ja: '長押しで「起きた」' },
   'session.wakeTime': { en: 'Time to wake up', ja: '起きる時間です' },
