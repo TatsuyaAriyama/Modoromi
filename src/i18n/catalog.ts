@@ -316,6 +316,11 @@ export const messages: Record<string, Msg> = {
       `アラーム前${p.min}分以内に体動から浅い眠りを検知すると、少し早めに起こします。画面を点けたままのセッション中のみ動作します。`,
   },
   'settings.smartWindow': { en: 'Smart-wake window', ja: 'スマート起床の検知時間' },
+  'settings.healthSync': { en: 'Apple Health', ja: 'ヘルスケア連携' },
+  'settings.healthSyncHint': {
+    en: 'Mirror confirmed nights to the Health app as in-bed sleep. One-way; Madoromi never reads your Health data.',
+    ja: '記録した睡眠をヘルスケアアプリに「ベッドにいる時間」として書き出します。書き込みのみで、ヘルスケアのデータを読み取ることはありません。',
+  },
   'settings.exportData': { en: 'Export data (JSON)', ja: 'データをエクスポート（JSON）' },
   'settings.export': { en: 'Export', ja: '書き出す' },
   'settings.exportCsvData': { en: 'Export sleep log (CSV)', ja: '睡眠ログを書き出す（CSV）' },

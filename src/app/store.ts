@@ -15,6 +15,7 @@ import {
 } from '../data/repositories';
 import { uid } from '../lib/id';
 import { syncSchedules } from '../lib/notifications';
+import { mirrorSleepToHealth } from '../lib/health';
 
 export type ActiveSession = {
   id: string;
@@ -126,19 +127,21 @@ export const useStore = create<AppState>((set, get) => ({
       sessions: [...s.sessions, session],
       pendingMorning: null,
     }));
+    if (settings.healthSync) void mirrorSleepToHealth(session);
     void syncSchedules(get().alarms, settings, get().sessions);
   },
 
   dismissMorning() {
     // Persist the duration-only session even if the user skips the check.
-    const { pendingMorning } = get();
+    const { pendingMorning, settings } = get();
     if (!pendingMorning) return;
     void sleepRepo.save(pendingMorning);
     set((s) => ({
       sessions: [...s.sessions, pendingMorning],
       pendingMorning: null,
     }));
-    void syncSchedules(get().alarms, get().settings, get().sessions);
+    if (settings.healthSync) void mirrorSleepToHealth(pendingMorning);
+    void syncSchedules(get().alarms, settings, get().sessions);
   },
 
   async updateSession(session) {

@@ -11,5 +11,13 @@
 	-->
 	<key>com.apple.developer.usernotifications.time-sensitive</key>
 	<true/>
+	<!--
+	  HealthKit (write-only sleep mirroring). Enable the "HealthKit" capability
+	  under Signing & Capabilities in Xcode so this matches the provisioning
+	  profile; leave "Clinical Health Records" off (not used). Madoromi requests
+	  only share/write access for sleep analysis — never read access.
+	-->
+	<key>com.apple.developer.healthkit</key>
+	<true/>
 </dict>
 </plist>

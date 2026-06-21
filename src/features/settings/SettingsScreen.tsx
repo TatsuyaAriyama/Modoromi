@@ -10,6 +10,7 @@ import { exportAll, importAll, wipeAll } from '../../data/repositories';
 import { parseBackup } from '../../domain/backup';
 import { sessionsToCsv } from '../../domain/csv';
 import { isNative } from '../../lib/platform';
+import { requestHealthAccess } from '../../lib/health';
 import { LANGS, formatDuration, translate } from '../../i18n/catalog';
 import { useT, useLang } from '../../i18n/useT';
 
@@ -69,6 +70,18 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
     setImportText('');
     setImportError(null);
     onClose();
+  };
+
+  // Enabling Health sync prompts for HealthKit write access first; we only
+  // persist the toggle as "on" if the grant succeeds, so the switch never
+  // claims to be syncing when iOS would silently drop the writes.
+  const onToggleHealth = async (on: boolean) => {
+    if (!on) {
+      await saveSettings({ ...settings, healthSync: false });
+      return;
+    }
+    const granted = await requestHealthAccess();
+    await saveSettings({ ...settings, healthSync: granted });
   };
 
   const onWipe = async () => {
@@ -170,6 +183,25 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             label={t('settings.bedtimeReminder')}
           />
         </div>
+
+        {isNative() && (
+          <div
+            className="set-row"
+            style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}
+          >
+            <div className="spread">
+              <span className="set-label">{t('settings.healthSync')}</span>
+              <Toggle
+                on={settings.healthSync}
+                onChange={(on) => void onToggleHealth(on)}
+                label={t('settings.healthSync')}
+              />
+            </div>
+            <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+              {t('settings.healthSyncHint')}
+            </span>
+          </div>
+        )}
 
         <div
           className="set-row"
