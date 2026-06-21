@@ -149,3 +149,26 @@ p {
     transition-duration: 0.001ms !important;
   }
 }
+
+/*
+ * Wind-down "night shift": a gentle warm dim laid over the whole app from the
+ * screen-warming time until wake, to ease the eyes and cut blue light before
+ * bed. Toggled via <html data-nightshift>. Sits above the tab bar (z 20) but
+ * below modal sheets (z 60) so dialogs stay legible. Never blocks taps.
+ */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(70, 38, 8, 0.1),
+    rgba(48, 22, 6, 0.16)
+  );
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+html[data-nightshift='true'] body::after {
+  opacity: 1;
+}

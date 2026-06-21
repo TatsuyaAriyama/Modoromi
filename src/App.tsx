@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import './app/app.css';
 import { useStore } from './app/store';
 import { useTheme } from './app/useTheme';
+import { useNightShift } from './app/useNightShift';
 import { TabIcon, type TabKey } from './components/TabIcon';
 import { HomeScreen } from './features/home/HomeScreen';
 import { AlarmScreen } from './features/alarm/AlarmScreen';
@@ -24,6 +25,7 @@ export default function App() {
   const t = useT();
   const lang = useLang();
   useTheme();
+  useNightShift();
   const init = useStore((s) => s.init);
   const loaded = useStore((s) => s.loaded);
   const onboarded = useStore((s) => s.settings.onboarded);
