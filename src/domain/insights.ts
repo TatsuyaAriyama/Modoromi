@@ -59,6 +59,9 @@ export function deriveInsights(
   const rh = rhythmQualityInsight(sessions);
   if (rh) out.push(rh);
 
+  const th = themeQualityInsight(sessions);
+  if (th) out.push(th);
+
   return out;
 }
 
@@ -123,6 +126,30 @@ function stillnessQualityInsight(sessions: SleepSession[]): Insight | null {
   const diff = Math.round(mean(calm) - mean(restless));
   if (diff >= 8) {
     return { id: 'stillness-quality', params: { diff } };
+  }
+  return null;
+}
+
+/**
+ * Do mornings where you set a thinking theme tend to score better? A quiet,
+ * honest observation — sleep in service of thinking, reflected back. No claim
+ * of cause; just that themed days and rested days have tended to coincide.
+ */
+function themeQualityInsight(sessions: SleepSession[]): Insight | null {
+  const scored = sessions.filter(isQualityConfirmed);
+  const hasTheme = (s: SleepSession) =>
+    s.theme != null && s.theme.trim() !== '';
+  const themed = scored
+    .filter(hasTheme)
+    .map((s) => s.qualityScore as number);
+  const plain = scored
+    .filter((s) => !hasTheme(s))
+    .map((s) => s.qualityScore as number);
+  if (themed.length < MIN_GROUP || plain.length < MIN_GROUP) return null;
+
+  const diff = Math.round(mean(themed) - mean(plain));
+  if (diff >= 8) {
+    return { id: 'theme-quality', params: { diff } };
   }
   return null;
 }

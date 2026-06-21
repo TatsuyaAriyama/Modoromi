@@ -17,6 +17,7 @@ import {
 import { buildConditionSeries } from '../../domain/conditionSeries';
 import { weeklyReview } from '../../domain/review';
 import { deriveInsights } from '../../domain/insights';
+import { themeLog } from '../../domain/themeLog';
 import { isoToHm } from '../../domain/format';
 import { formatDate, formatDuration } from '../../i18n/catalog';
 import type { SleepSession } from '../../domain/types';
@@ -55,6 +56,7 @@ export function HistoryScreen() {
     () => deriveInsights(sessions, targetMin),
     [sessions, targetMin],
   );
+  const themes = useMemo(() => themeLog(sessions), [sessions]);
 
   const sorted = useMemo(
     () =>
@@ -114,6 +116,29 @@ export function HistoryScreen() {
             {insights.map((i) => (
               <li key={i.id} className="insight-item">
                 {t(`insight.${i.id}`, i.params)}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
+
+      {themes.length > 0 && (
+        <Card tight>
+          <div className="stat-label" style={{ marginBottom: 6 }}>
+            {t('history.themes')}
+          </div>
+          <ul className="theme-log">
+            {themes.map((e) => (
+              <li key={e.id} className="theme-log-item">
+                <div className="theme-log-text">{e.theme}</div>
+                <div className="theme-log-meta">
+                  <span className="muted num" style={{ fontSize: 12.5 }}>
+                    {formatDate(new Date(e.endedAt), lang)}
+                  </span>
+                  {e.qualityScore != null && (
+                    <span className="score-badge num">{e.qualityScore}</span>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

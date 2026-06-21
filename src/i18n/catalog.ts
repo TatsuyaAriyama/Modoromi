@@ -112,6 +112,10 @@ export const messages: Record<string, Msg> = {
     en: (p) => `Nights near your usual bedtime tend to score higher (avg +${p.diff})`,
     ja: (p) => `いつもの就寝時刻に近い夜は、質スコアが高めです（平均 +${p.diff}）`,
   },
+  'insight.theme-quality': {
+    en: (p) => `Mornings you set a thinking theme tend to score higher (avg +${p.diff})`,
+    ja: (p) => `思考テーマを決めた朝は、質スコアが高めです（平均 +${p.diff}）`,
+  },
 
   // ── nap advice ──────────────────────────────────────────
   'nap.idealRecover': {
@@ -272,6 +276,7 @@ export const messages: Record<string, Msg> = {
   'chart.condition': { en: 'Thinking-condition trend over time', ja: '思考コンディションの推移' },
   'history.sessions': { en: 'Sessions', ja: 'セッション' },
   'history.empty': { en: 'No records yet', ja: 'まだ記録がありません' },
+  'history.themes': { en: 'Thinking themes', ja: '思考テーマのふり返り' },
 
   // ── Session detail ──────────────────────────────────────
   'detail.duration': { en: 'Sleep duration', ja: '睡眠時間' },

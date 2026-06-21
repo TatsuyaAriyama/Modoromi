@@ -7,7 +7,7 @@ const TARGET = 450;
 function mk(
   start: Date,
   durationMin: number,
-  opts: { quality?: number; mood?: Mood; moveCount?: number } = {},
+  opts: { quality?: number; mood?: Mood; moveCount?: number; theme?: string } = {},
 ): SleepSession {
   const end = new Date(start.getTime() + durationMin * 60000);
   return {
@@ -16,6 +16,7 @@ function mk(
     endedAt: end.toISOString(),
     durationMin,
     ...(opts.mood ? { mood: opts.mood } : {}),
+    ...(opts.theme !== undefined ? { theme: opts.theme } : {}),
     ...(opts.quality != null ? { qualityScore: opts.quality } : {}),
     ...(opts.moveCount != null
       ? {
@@ -121,5 +122,33 @@ describe('deriveInsights', () => {
     const rh = ins.find((i) => i.id === 'rhythm-quality');
     expect(rh).toBeTruthy();
     expect(rh?.params?.diff).toBeGreaterThanOrEqual(8);
+  });
+
+  it('notices that days with a thinking theme score better', () => {
+    const sessions = [
+      // themed mornings → higher quality
+      mk(new Date(2026, 5, 1, 23, 0), 450, { quality: 85, mood: 'fresh', theme: '構成' }),
+      mk(new Date(2026, 5, 2, 23, 0), 450, { quality: 88, mood: 'fresh', theme: '設計' }),
+      mk(new Date(2026, 5, 3, 23, 0), 450, { quality: 84, mood: 'fresh', theme: '原稿' }),
+      // no theme → lower quality
+      mk(new Date(2026, 5, 4, 23, 0), 450, { quality: 64, mood: 'groggy' }),
+      mk(new Date(2026, 5, 5, 23, 0), 450, { quality: 60, mood: 'groggy' }),
+    ];
+    const ins = deriveInsights(sessions, TARGET);
+    const th = ins.find((i) => i.id === 'theme-quality');
+    expect(th).toBeTruthy();
+    expect(th?.params?.diff).toBeGreaterThanOrEqual(8);
+  });
+
+  it('ignores blank themes for the theme link', () => {
+    const sessions = [
+      mk(new Date(2026, 5, 1, 23, 0), 450, { quality: 85, mood: 'fresh', theme: '  ' }),
+      mk(new Date(2026, 5, 2, 23, 0), 450, { quality: 88, mood: 'fresh', theme: '' }),
+      mk(new Date(2026, 5, 3, 23, 0), 450, { quality: 84, mood: 'fresh' }),
+      mk(new Date(2026, 5, 4, 23, 0), 450, { quality: 64, mood: 'groggy' }),
+      mk(new Date(2026, 5, 5, 23, 0), 450, { quality: 60, mood: 'groggy' }),
+    ];
+    const ins = deriveInsights(sessions, TARGET);
+    expect(ins.find((i) => i.id === 'theme-quality')).toBeUndefined();
   });
 });
