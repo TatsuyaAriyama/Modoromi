@@ -6,6 +6,7 @@ import type { AlarmConfig, Lang, SleepSession, UserSettings } from '../domain/ty
 import { parseHm } from '../domain/format';
 import { bedtimeReminderContent } from '../domain/bedtime';
 import { sleepDebtMin } from '../domain/debt';
+import { weeklyReview } from '../domain/review';
 import { translate as tr, formatDuration } from '../i18n/catalog';
 import { isNative } from './platform';
 
@@ -40,6 +41,11 @@ export const MAX_PENDING = 60;
 
 const BEDTIME_ID = 9_000_000; // reserved, well above the alarm id range
 const SNOOZE_ID = 9_000_001;
+const WEEKLY_REVIEW_ID = 9_000_002;
+
+/** Sunday (Capacitor weekday 1) at 21:00 — a calm hour to look back on the week. */
+export const WEEKLY_REVIEW_WEEKDAY = 1;
+export const WEEKLY_REVIEW_HOUR = 21;
 
 export async function ensurePermission(): Promise<boolean> {
   if (!isNative()) return false;
@@ -178,6 +184,38 @@ export function buildBedtimeNotification(
   };
 }
 
+/**
+ * Pure: the weekly review reminder, or null when disabled. It repeats every
+ * Sunday evening; the body carries this week's quiet one-line summary, the same
+ * headline shown on the History screen. Refreshed whenever schedules are
+ * rebuilt, so an active user always sees the latest week.
+ */
+export function buildWeeklyReviewNotification(
+  settings: UserSettings,
+  sessions: SleepSession[],
+  now: Date = new Date(),
+): Built | null {
+  if (!settings.weeklyReview) return null;
+  const lang = settings.lang;
+  const review = weeklyReview(sessions, settings.targetDurationMin, now);
+  const body = review.headlineParts
+    .map((p) => tr(lang, `review.${p}`))
+    .join(tr(lang, 'sep.middot'));
+  return {
+    id: WEEKLY_REVIEW_ID,
+    title: tr(lang, 'weekly.title'),
+    body,
+    schedule: {
+      on: {
+        weekday: WEEKLY_REVIEW_WEEKDAY,
+        hour: WEEKLY_REVIEW_HOUR,
+        minute: 0,
+      },
+      allowWhileIdle: true,
+    },
+  };
+}
+
 /** Rebuild all scheduled notifications from the current alarms + settings. */
 export async function syncSchedules(
   alarms: AlarmConfig[],
@@ -193,12 +231,15 @@ export async function syncSchedules(
       });
     }
 
-    // Reserve one pending slot for the bedtime reminder so a full set of
-    // alarms can't starve it out of the budget.
+    // Reserve a pending slot for each standalone reminder so a full set of
+    // alarms can't starve them out of the budget.
     const bedtime = buildBedtimeNotification(settings, sessions);
-    const budget = bedtime ? MAX_PENDING - 1 : MAX_PENDING;
+    const weekly = buildWeeklyReviewNotification(settings, sessions);
+    const reserved = (bedtime ? 1 : 0) + (weekly ? 1 : 0);
+    const budget = MAX_PENDING - reserved;
     const toSchedule = buildAlarmNotifications(alarms, settings.lang, budget);
     if (bedtime) toSchedule.push(bedtime);
+    if (weekly) toSchedule.push(weekly);
 
     if (toSchedule.length) {
       await LocalNotifications.schedule({ notifications: toSchedule });

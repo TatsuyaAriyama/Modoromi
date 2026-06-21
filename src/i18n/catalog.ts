@@ -102,6 +102,7 @@ export const messages: Record<string, Msg> = {
   'review.qualityUp': { en: 'quality is up from last week', ja: '質は先週より上向き' },
   'review.qualityDown': { en: 'quality is down from last week', ja: '質は先週より下降' },
   'review.qualityFlat': { en: 'quality is similar to last week', ja: '質は先週と同程度' },
+  'weekly.title': { en: 'Your week in sleep', ja: '今週のふり返り' },
 
   // ── insights ────────────────────────────────────────────
   'insight.duration-quality': {
@@ -326,6 +327,11 @@ export const messages: Record<string, Msg> = {
   'settings.targetDuration': { en: 'Sleep goal', ja: '目標睡眠時間' },
   'settings.defaultWake': { en: 'Default wake time', ja: '既定の起床時刻' },
   'settings.bedtimeReminder': { en: 'Bedtime reminder', ja: '就寝リマインダー' },
+  'settings.weeklyReview': { en: 'Weekly review', ja: '週次のふり返り' },
+  'settings.weeklyReviewHint': {
+    en: 'A gentle Sunday-evening note looking back on your week',
+    ja: '日曜の夜に、今週をそっと振り返る通知を届けます',
+  },
   'settings.smartAlarm': { en: 'Smart wake', ja: 'スマート起床' },
   'settings.smartAlarmHint': {
     en: (p) =>

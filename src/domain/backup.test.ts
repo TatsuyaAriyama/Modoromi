@@ -28,6 +28,7 @@ const settings: UserSettings = {
   targetDurationMin: 450,
   defaultWakeTime: '07:00',
   bedtimeReminder: false,
+  weeklyReview: false,
   onboarded: true,
   smartAlarm: false,
   smartWindowMin: 30,

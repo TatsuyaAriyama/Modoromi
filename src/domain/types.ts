@@ -59,6 +59,11 @@ export interface UserSettings {
   targetDurationMin: number; // e.g. 450 (7.5h)
   defaultWakeTime: string; // "HH:mm"
   bedtimeReminder: boolean;
+  /**
+   * A gentle weekly notification (Sunday evening) summarising the past week,
+   * so the review is noticed without having to go looking for it. Opt-in.
+   */
+  weeklyReview: boolean;
   onboarded: boolean; // first-launch flow completed
   /**
    * Smart wake: end the session a little early when body movement suggests

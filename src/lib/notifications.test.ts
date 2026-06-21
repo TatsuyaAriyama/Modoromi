@@ -4,9 +4,13 @@ import {
   ALARM_RING_MINUTES,
   ALARM_SOUND,
   MAX_PENDING,
+  WEEKLY_REVIEW_HOUR,
+  WEEKLY_REVIEW_WEEKDAY,
   buildAlarmNotifications,
   buildBedtimeNotification,
+  buildWeeklyReviewNotification,
 } from './notifications';
+import type { SleepSession } from '../domain/types';
 
 function alarm(over: Partial<AlarmConfig> = {}): AlarmConfig {
   return {
@@ -27,11 +31,23 @@ const SETTINGS: UserSettings = {
   targetDurationMin: 450,
   defaultWakeTime: '07:00',
   bedtimeReminder: true,
+  weeklyReview: false,
   onboarded: true,
   smartAlarm: false,
   smartWindowMin: 30,
   healthSync: false,
 };
+
+function session(start: Date, durationMin: number, quality?: number): SleepSession {
+  const end = new Date(start.getTime() + durationMin * 60000);
+  return {
+    id: `${start.getTime()}`,
+    startedAt: start.toISOString(),
+    endedAt: end.toISOString(),
+    durationMin,
+    ...(quality != null ? { qualityScore: quality, mood: 'fresh' } : {}),
+  };
+}
 
 describe('buildAlarmNotifications', () => {
   it('skips disabled alarms', () => {
@@ -136,5 +152,38 @@ describe('buildBedtimeNotification', () => {
     const n = buildBedtimeNotification(SETTINGS, []);
     expect(n?.schedule?.on?.hour).toBe(23);
     expect(n?.schedule?.on?.minute).toBe(30);
+  });
+});
+
+describe('buildWeeklyReviewNotification', () => {
+  it('returns null when the weekly review is off', () => {
+    expect(buildWeeklyReviewNotification(SETTINGS, [])).toBeNull();
+  });
+
+  it('repeats Sunday evening with the weekly headline as the body', () => {
+    const now = new Date(2026, 5, 21, 9, 0); // Sun
+    const sessions = [
+      session(new Date(2026, 5, 18, 23, 0), 460, 82),
+      session(new Date(2026, 5, 19, 23, 0), 455, 80),
+    ];
+    const n = buildWeeklyReviewNotification(
+      { ...SETTINGS, weeklyReview: true },
+      sessions,
+      now,
+    );
+    expect(n?.schedule?.on?.weekday).toBe(WEEKLY_REVIEW_WEEKDAY);
+    expect(n?.schedule?.on?.hour).toBe(WEEKLY_REVIEW_HOUR);
+    expect(typeof n?.body).toBe('string');
+    expect((n?.body as string).length).toBeGreaterThan(0);
+  });
+
+  it('falls back to the no-records line when the week is empty', () => {
+    const n = buildWeeklyReviewNotification(
+      { ...SETTINGS, weeklyReview: true },
+      [],
+      new Date(2026, 5, 21, 9, 0),
+    );
+    // review.none in English.
+    expect(n?.body).toBe('No records yet this week');
   });
 });

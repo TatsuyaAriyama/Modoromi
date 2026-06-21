@@ -184,6 +184,25 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           />
         </div>
 
+        <div
+          className="set-row"
+          style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}
+        >
+          <div className="spread">
+            <span className="set-label">{t('settings.weeklyReview')}</span>
+            <Toggle
+              on={settings.weeklyReview}
+              onChange={(weeklyReview) =>
+                void saveSettings({ ...settings, weeklyReview })
+              }
+              label={t('settings.weeklyReview')}
+            />
+          </div>
+          <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+            {t('settings.weeklyReviewHint')}
+          </span>
+        </div>
+
         {isNative() && (
           <div
             className="set-row"
