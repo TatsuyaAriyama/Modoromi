@@ -72,6 +72,7 @@ function isSleepSession(x: unknown): x is SleepSession {
   if (x.note !== undefined && !isStr(x.note)) return false;
   if (x.theme !== undefined && !isStr(x.theme)) return false;
   if (x.qualityScore !== undefined && !isNum(x.qualityScore)) return false;
+  if (x.smartWoke !== undefined && !isBool(x.smartWoke)) return false;
   if (
     x.movements !== undefined &&
     !(Array.isArray(x.movements) && x.movements.every(isMovement))
@@ -112,6 +113,7 @@ function parseSettings(x: unknown): UserSettings | null {
     bedtimeReminder: isBool(x.bedtimeReminder) ? x.bedtimeReminder : false,
     onboarded: isBool(x.onboarded) ? x.onboarded : true,
     smartAlarm: isBool(x.smartAlarm) ? x.smartAlarm : false,
+    smartWindowMin: isNum(x.smartWindowMin) ? x.smartWindowMin : 30,
   };
 }
 

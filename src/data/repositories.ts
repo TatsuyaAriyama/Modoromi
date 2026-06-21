@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   bedtimeReminder: false,
   onboarded: false,
   smartAlarm: false,
+  smartWindowMin: 30,
 };
 
 /**

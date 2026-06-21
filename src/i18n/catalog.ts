@@ -277,6 +277,7 @@ export const messages: Record<string, Msg> = {
   'detail.duration': { en: 'Sleep duration', ja: '睡眠時間' },
   'detail.timeRange': { en: 'Time', ja: '時間帯' },
   'detail.condition': { en: 'Condition', ja: 'コンディション' },
+  'detail.smartWoke': { en: 'Smart wake ended this a little early', ja: 'スマート起床が少し早めに起こしました' },
   'detail.note': { en: 'Note', ja: 'メモ' },
   'detail.confirmDelete': { en: 'Delete this record?', ja: 'この記録を削除しますか？' },
   'detail.deleteConfirm': { en: 'Delete', ja: '削除する' },
@@ -309,9 +310,12 @@ export const messages: Record<string, Msg> = {
   'settings.bedtimeReminder': { en: 'Bedtime reminder', ja: '就寝リマインダー' },
   'settings.smartAlarm': { en: 'Smart wake', ja: 'スマート起床' },
   'settings.smartAlarmHint': {
-    en: 'Within 30 min before the alarm, if movement suggests light sleep, it wakes you a little early. Works only during a foregrounded, screen-on session.',
-    ja: 'アラーム前30分以内に体動から浅い眠りを検知すると、少し早めに起こします。画面を点けたままのセッション中のみ動作します。',
+    en: (p) =>
+      `Within ${p.min} min before the alarm, if movement suggests light sleep, it wakes you a little early. Works only during a foregrounded, screen-on session.`,
+    ja: (p) =>
+      `アラーム前${p.min}分以内に体動から浅い眠りを検知すると、少し早めに起こします。画面を点けたままのセッション中のみ動作します。`,
   },
+  'settings.smartWindow': { en: 'Smart-wake window', ja: 'スマート起床の検知時間' },
   'settings.exportData': { en: 'Export data (JSON)', ja: 'データをエクスポート（JSON）' },
   'settings.export': { en: 'Export', ja: '書き出す' },
   'settings.exportCsvData': { en: 'Export sleep log (CSV)', ja: '睡眠ログを書き出す（CSV）' },

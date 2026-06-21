@@ -14,6 +14,7 @@ import { LANGS, formatDuration, translate } from '../../i18n/catalog';
 import { useT, useLang } from '../../i18n/useT';
 
 const DURATION_OPTIONS = [360, 390, 420, 450, 480, 510, 540];
+const SMART_WINDOW_OPTIONS = [15, 20, 30, 45];
 
 export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const t = useT();
@@ -183,8 +184,30 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             />
           </div>
           <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
-            {t('settings.smartAlarmHint')}
+            {t('settings.smartAlarmHint', { min: settings.smartWindowMin })}
           </span>
+          {settings.smartAlarm && (
+            <div className="set-row" style={{ marginTop: 4 }}>
+              <span className="set-label">{t('settings.smartWindow')}</span>
+              <select
+                className="select"
+                style={{ width: 130 }}
+                value={settings.smartWindowMin}
+                onChange={(e) =>
+                  void saveSettings({
+                    ...settings,
+                    smartWindowMin: Number(e.target.value),
+                  })
+                }
+              >
+                {SMART_WINDOW_OPTIONS.map((m) => (
+                  <option key={m} value={m}>
+                    {formatDuration(m, lang)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </Card>
 

@@ -30,6 +30,11 @@ export interface SleepSession {
    * Absent means motion was unavailable (e.g. browser, permission denied).
    */
   movements?: Movement[];
+  /**
+   * True when smart wake ended this session a little early (light sleep
+   * detected inside the pre-alarm window). Absent for a normal wake.
+   */
+  smartWoke?: boolean;
 }
 
 export interface AlarmConfig {
@@ -61,4 +66,9 @@ export interface UserSettings {
    * session screen is foregrounded.
    */
   smartAlarm: boolean;
+  /**
+   * How many minutes before the alarm smart wake starts watching for light
+   * sleep. Only meaningful when `smartAlarm` is on.
+   */
+  smartWindowMin: number;
 }

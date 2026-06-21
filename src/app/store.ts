@@ -35,7 +35,7 @@ interface AppState {
   init(): Promise<void>;
 
   startSession(): void;
-  endSession(movements?: Movement[]): void;
+  endSession(movements?: Movement[], smartWoke?: boolean): void;
   cancelSession(): void;
 
   saveMorningCheck(input: {
@@ -78,7 +78,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({ active: { id: uid(), startedAt: new Date().toISOString() } });
   },
 
-  endSession(movements) {
+  endSession(movements, smartWoke) {
     const { active } = get();
     if (!active) return;
     const endedAt = new Date().toISOString();
@@ -95,6 +95,7 @@ export const useStore = create<AppState>((set, get) => ({
       endedAt,
       durationMin,
       ...(movements ? { movements } : {}),
+      ...(smartWoke ? { smartWoke: true } : {}),
     };
     set({ active: null, pendingMorning: session });
   },

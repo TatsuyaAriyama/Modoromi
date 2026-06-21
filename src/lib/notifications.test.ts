@@ -29,6 +29,7 @@ const SETTINGS: UserSettings = {
   bedtimeReminder: true,
   onboarded: true,
   smartAlarm: false,
+  smartWindowMin: 30,
 };
 
 describe('buildAlarmNotifications', () => {

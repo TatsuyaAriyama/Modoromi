@@ -72,6 +72,12 @@ export function SessionDetail({
           </div>
         </div>
 
+        {session.smartWoke && (
+          <p className="muted" style={{ fontSize: 12.5, marginTop: -2 }}>
+            {t('sep.middot')}{t('detail.smartWoke')}
+          </p>
+        )}
+
         {session.movements && (
           <div className="field">
             <label>{t('motion.title')}</label>

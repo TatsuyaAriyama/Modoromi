@@ -30,6 +30,7 @@ const settings: UserSettings = {
   bedtimeReminder: false,
   onboarded: true,
   smartAlarm: false,
+  smartWindowMin: 30,
 };
 
 function blob(extra: Record<string, unknown> = {}): string {

@@ -56,6 +56,18 @@ describe('session lifecycle', () => {
     expect(pendingMorning?.durationMin).toBe(480);
   });
 
+  it('marks the pending session when smart wake ends it early', () => {
+    useStore.getState().startSession();
+    useStore.getState().endSession(undefined, true);
+    expect(useStore.getState().pendingMorning?.smartWoke).toBe(true);
+  });
+
+  it('leaves smartWoke unset on a normal wake', () => {
+    useStore.getState().startSession();
+    useStore.getState().endSession();
+    expect(useStore.getState().pendingMorning?.smartWoke).toBeUndefined();
+  });
+
   it('cancelSession discards the session without queuing a morning check', () => {
     useStore.getState().startSession();
     useStore.getState().cancelSession();

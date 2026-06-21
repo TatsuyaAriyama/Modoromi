@@ -14,8 +14,6 @@ import type { AlarmConfig } from '../../domain/types';
 import { useT } from '../../i18n/useT';
 
 const HOLD_MS = 1200;
-/** Smart-wake looks for light sleep within this many minutes before the alarm. */
-const SMART_WINDOW_MIN = 30;
 
 /** Minutes from `now` until the next occurrence of an "HH:mm" alarm. */
 function minutesUntil(hhmm: string, now: Date): number {
@@ -34,6 +32,7 @@ export function SessionScreen() {
   const cancelSession = useStore((s) => s.cancelSession);
   const alarms = useStore((s) => s.alarms);
   const smartAlarm = useStore((s) => s.settings.smartAlarm);
+  const smartWindowMin = useStore((s) => s.settings.smartWindowMin);
 
   const [now, setNow] = useState(() => new Date());
   const [keepAwake, setKeepAwake] = useState(false);
@@ -62,11 +61,15 @@ export function SessionScreen() {
     ringing: boolean;
   } | null>(null);
 
-  // End the session, handing the recorded movements to the store.
-  const wake = useCallback(() => {
-    void notifySuccess();
-    endSession(recorderRef.current?.stop());
-  }, [endSession]);
+  // End the session, handing the recorded movements to the store. `smart`
+  // marks the wake as a smart-wake (light sleep detected before the alarm).
+  const wake = useCallback(
+    (smart = false) => {
+      void notifySuccess();
+      endSession(recorderRef.current?.stop(), smart);
+    },
+    [endSession],
+  );
 
   // Live clock + recorded-movement count + alarm-due check, all off the timer.
   useEffect(() => {
@@ -157,12 +160,12 @@ export function SessionScreen() {
         movements: recorderRef.current?.current ?? [],
         elapsedMin,
         minutesToAlarm,
-        windowMin: SMART_WINDOW_MIN,
+        windowMin: smartWindowMin,
       })
     ) {
-      wake();
+      wake(true);
     }
-  }, [now, active, smartAlarm, nextAlarm, wake]);
+  }, [now, active, smartAlarm, nextAlarm, smartWindowMin, wake]);
 
   if (!active) return null;
 
