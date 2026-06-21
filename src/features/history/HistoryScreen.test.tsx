@@ -53,4 +53,12 @@ describe('HistoryScreen', () => {
     render(<HistoryScreen />);
     expect(screen.getByText('まだ記録がありません')).toBeTruthy();
   });
+
+  it('exposes the range control state via aria-pressed', () => {
+    render(<HistoryScreen />);
+    const week = screen.getByRole('button', { name: 'Week', pressed: true });
+    const month = screen.getByRole('button', { name: 'Month', pressed: false });
+    expect(week).toBeTruthy();
+    expect(month).toBeTruthy();
+  });
 });

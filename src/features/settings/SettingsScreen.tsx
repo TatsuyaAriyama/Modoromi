@@ -91,11 +91,12 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       <Card>
         <div className="set-row">
           <span className="set-label">{t('lang.title')}</span>
-          <div className="seg">
+          <div className="seg" role="group" aria-label={t('lang.title')}>
             {LANGS.map((l) => (
               <button
                 key={l.id}
                 data-on={settings.lang === l.id}
+                aria-pressed={settings.lang === l.id}
                 onClick={() =>
                   void saveSettings({ ...settings, lang: l.id as Lang })
                 }
@@ -108,11 +109,12 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
 
         <div className="set-row">
           <span className="set-label">{t('settings.theme')}</span>
-          <div className="seg">
+          <div className="seg" role="group" aria-label={t('settings.theme')}>
             {(['auto', 'day', 'night'] as ThemePref[]).map((tp) => (
               <button
                 key={tp}
                 data-on={settings.theme === tp}
+                aria-pressed={settings.theme === tp}
                 onClick={() => void saveSettings({ ...settings, theme: tp })}
               >
                 {t(`theme.${tp}`)}

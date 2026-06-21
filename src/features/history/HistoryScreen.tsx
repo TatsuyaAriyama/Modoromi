@@ -69,12 +69,17 @@ export function HistoryScreen() {
     <div className="screen">
       <div className="spread">
         <h1 className="screen-title">{t('tab.history')}</h1>
-        <div className="seg">
-          <button data-on={range === 'week'} onClick={() => setRange('week')}>
+        <div className="seg" role="group" aria-label={t('tab.history')}>
+          <button
+            data-on={range === 'week'}
+            aria-pressed={range === 'week'}
+            onClick={() => setRange('week')}
+          >
             {t('history.week')}
           </button>
           <button
             data-on={range === 'month'}
+            aria-pressed={range === 'month'}
             onClick={() => setRange('month')}
           >
             {t('history.month')}

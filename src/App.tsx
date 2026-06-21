@@ -12,7 +12,7 @@ import { MorningScreen } from './features/morning/MorningScreen';
 import { NapScreen } from './features/nap/NapScreen';
 import { WindDownScreen } from './features/winddown/WindDownScreen';
 import { OnboardingScreen } from './features/onboarding/OnboardingScreen';
-import { useT } from './i18n/useT';
+import { useT, useLang } from './i18n/useT';
 
 const TABS: { key: TabKey; labelKey: string }[] = [
   { key: 'home', labelKey: 'tab.home' },
@@ -22,6 +22,7 @@ const TABS: { key: TabKey; labelKey: string }[] = [
 
 export default function App() {
   const t = useT();
+  const lang = useLang();
   useTheme();
   const init = useStore((s) => s.init);
   const loaded = useStore((s) => s.loaded);
@@ -38,6 +39,12 @@ export default function App() {
   useEffect(() => {
     void init();
   }, [init]);
+
+  // Reflect the UI language on <html lang> so assistive tech pronounces
+  // content (and the right hyphenation/voice) for the chosen language.
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   if (!loaded) {
     return <div className="app-frame" />;
@@ -88,6 +95,7 @@ export default function App() {
               key={tab2.key}
               className="tab"
               data-active={tab === tab2.key}
+              aria-current={tab === tab2.key ? 'page' : undefined}
               onClick={() => setTab(tab2.key)}
             >
               <TabIcon tab={tab2.key} />
