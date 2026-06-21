@@ -58,12 +58,20 @@ export const messages: Record<string, Msg> = {
   'breath.hold-in': { en: 'Hold', ja: '止めて' },
   'breath.exhale': { en: 'Breathe out', ja: '吐いて' },
   'breath.hold-out': { en: 'Hold', ja: '止めて' },
+  'breath.pace.box': { en: 'Box 4-4-4-4', ja: '箱呼吸 4-4-4-4' },
+  'breath.pace.fourSevenEight': { en: '4-7-8', ja: '4-7-8' },
 
   // ── alarm sounds ────────────────────────────────────────
   'sound.chime': { en: 'Chime', ja: 'チャイム' },
   'sound.bell': { en: 'Bell', ja: 'ベル' },
   'sound.marimba': { en: 'Marimba', ja: 'マリンバ' },
   'sound.dawn': { en: 'Dawn', ja: '夜明け' },
+
+  // ── wind-down soundscapes ───────────────────────────────
+  'sound.off': { en: 'Silent', ja: '無音' },
+  'sound.rain': { en: 'Rain', ja: '雨' },
+  'sound.waves': { en: 'Waves', ja: '波' },
+  'sound.hush': { en: 'Hush', ja: 'しずか' },
 
   // ── TimeDial a11y ───────────────────────────────────────
   'dial.hourUp': { en: 'Increase hour', ja: '時を増やす' },
@@ -244,6 +252,8 @@ export const messages: Record<string, Msg> = {
   'wind.ready': { en: 'You’re ready. Good night', ja: '準備ができました。おやすみなさい' },
   'wind.guide': { en: 'Breathe slowly, in time with the circle', ja: '円に合わせて、ゆっくり呼吸しましょう' },
   'wind.start': { en: 'Drift off to sleep', ja: '眠りにつく' },
+  'wind.pace': { en: 'Breathing pace', ja: '呼吸のペース' },
+  'wind.sound': { en: 'Ambient sound', ja: '環境音' },
 
   // ── Nap ─────────────────────────────────────────────────
   'nap.title': { en: 'Nap', ja: '仮眠' },

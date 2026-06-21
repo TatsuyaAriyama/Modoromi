@@ -33,11 +33,47 @@ export const BOX_BREATH: BreathConfig = {
   holdOutMs: 4000,
 };
 
+/**
+ * The 4-7-8 relaxing breath — a longer hold and a long, slow exhale, with no
+ * hold-out. A well-known wind-down for an overactive mind; deeper sedation
+ * than the balanced box pace.
+ */
+export const FOUR_SEVEN_EIGHT: BreathConfig = {
+  inhaleMs: 4000,
+  holdInMs: 7000,
+  exhaleMs: 8000,
+  holdOutMs: 0,
+};
+
 /** How small the orb shrinks at full exhale (1 = full inhale). */
 export const MIN_SCALE = 0.4;
 
 /** A short ritual: this many calm breaths is a gentle, achievable target. */
 export const WIND_DOWN_BREATHS = 6;
+
+/** A selectable wind-down pace. Longer cycles get fewer, so the total stays
+ *  in a similar, achievable couple of minutes. */
+export interface BreathPattern {
+  /** Stable id; the display label is resolved in the UI via `breath.pace.<id>`. */
+  id: string;
+  config: BreathConfig;
+  /** How many cycles make a complete ritual for this pace. */
+  breaths: number;
+}
+
+export const BREATH_PATTERNS: BreathPattern[] = [
+  { id: 'box', config: BOX_BREATH, breaths: WIND_DOWN_BREATHS },
+  { id: 'fourSevenEight', config: FOUR_SEVEN_EIGHT, breaths: 4 },
+];
+
+export const DEFAULT_BREATH_PATTERN = 'box';
+
+/** Resolve a stored pattern id (tolerating unknown ids). */
+export function breathPattern(id: string | undefined): BreathPattern {
+  return (
+    BREATH_PATTERNS.find((p) => p.id === id) ?? BREATH_PATTERNS[0]
+  );
+}
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
