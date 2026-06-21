@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type {
   AlarmConfig,
   Mood,
+  MotionMode,
   Movement,
   SleepSession,
   UserSettings,
@@ -54,7 +55,11 @@ interface AppState {
   init(): Promise<void>;
 
   startSession(): void;
-  endSession(movements?: Movement[], smartWoke?: boolean): void;
+  endSession(
+    movements?: Movement[],
+    smartWoke?: boolean,
+    motionSource?: MotionMode,
+  ): void;
   cancelSession(): void;
 
   saveMorningCheck(input: {
@@ -109,7 +114,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({ active: { id: uid(), startedAt: new Date().toISOString() } });
   },
 
-  endSession(movements, smartWoke) {
+  endSession(movements, smartWoke, motionSource) {
     const { active } = get();
     if (!active) return;
     const endedAt = new Date().toISOString();
@@ -127,6 +132,7 @@ export const useStore = create<AppState>((set, get) => ({
       durationMin,
       ...(movements ? { movements } : {}),
       ...(smartWoke ? { smartWoke: true } : {}),
+      ...(motionSource ? { motionSource } : {}),
     };
     set({ active: null, pendingMorning: session });
   },

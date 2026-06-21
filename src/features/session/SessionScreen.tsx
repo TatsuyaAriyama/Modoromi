@@ -69,8 +69,9 @@ export function SessionScreen() {
     (smart = false) => {
       void notifySuccess();
       void (async () => {
-        const movements = await recorderRef.current?.stop();
-        endSession(movements, smart);
+        const rec = recorderRef.current;
+        const movements = await rec?.stop();
+        endSession(movements, smart, rec?.trackingMode);
       })();
     },
     [endSession],

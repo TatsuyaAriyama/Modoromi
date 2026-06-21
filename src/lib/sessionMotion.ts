@@ -46,6 +46,11 @@ export class SessionMotion {
     return this.mode === 'native';
   }
 
+  /** Which backend captured the session — recorded on the night for the log. */
+  get trackingMode(): MotionMode {
+    return this.mode;
+  }
+
   /** Stop everything and resolve the movements to store (or undefined). */
   async stop(): Promise<Movement[] | undefined> {
     const jsMovements = this.js.stop();

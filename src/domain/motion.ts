@@ -1,4 +1,6 @@
-import type { Movement } from './types';
+import type { Movement, MotionMode } from './types';
+
+export type { MotionMode };
 
 /**
  * Gravity-excluded acceleration peak (m/s²) above which a sample counts as a
@@ -15,9 +17,6 @@ export function magnitude(x: number, y: number, z: number): number {
   return Math.sqrt(x * x + y * y + z * z);
 }
 
-/** Which sensor backend captured a session's motion. */
-export type MotionMode = 'native' | 'js' | 'none';
-
 /**
  * Did a sensor actually capture this session? A native background recording
  * always counts; the foreground JS path only counts if samples arrived. When
@@ -30,6 +29,16 @@ export function isMotionTracked(mode: MotionMode, sampleCount: number): boolean 
   if (mode === 'native') return true;
   if (mode === 'js') return sampleCount > 0;
   return false;
+}
+
+/**
+ * Was this night captured with the screen off? Only the native background
+ * recorder keeps sampling once the screen locks; the foreground JS path stops
+ * there. Drives the honest per-night note in the log so the user can verify
+ * that background tracking actually ran on their device.
+ */
+export function capturedScreenOff(source: MotionMode | undefined): boolean {
+  return source === 'native';
 }
 
 /** Movements per hour over the session. */

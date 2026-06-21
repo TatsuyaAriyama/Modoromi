@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   RESTLESS_LEVELS,
   RESTLESS_PER_HOUR,
+  capturedScreenOff,
   isMotionTracked,
   magnitude,
   movementHistogram,
@@ -150,5 +151,14 @@ describe('isMotionTracked', () => {
 
   it('never counts when there was no sensor', () => {
     expect(isMotionTracked('none', 999)).toBe(false);
+  });
+});
+
+describe('capturedScreenOff', () => {
+  it('is true only for the native background recorder', () => {
+    expect(capturedScreenOff('native')).toBe(true);
+    expect(capturedScreenOff('js')).toBe(false);
+    expect(capturedScreenOff('none')).toBe(false);
+    expect(capturedScreenOff(undefined)).toBe(false);
   });
 });

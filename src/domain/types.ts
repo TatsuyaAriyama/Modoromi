@@ -1,5 +1,8 @@
 export type Mood = 'fresh' | 'normal' | 'groggy';
 
+/** Which sensor backend captured a session's motion (see domain/motion). */
+export type MotionMode = 'native' | 'js' | 'none';
+
 /**
  * A detected body movement during sleep.
  * `t` is minutes elapsed since the session started; `magnitude` is the
@@ -41,6 +44,13 @@ export interface SleepSession {
    * mirrored back to Health, so import and write-sync can't echo each other.
    */
   imported?: boolean;
+  /**
+   * Which sensor backend captured this night's motion: a native background
+   * recorder ('native', works screen-off), the foreground JS listener ('js',
+   * screen-on only), or nothing ('none'). Lets the log show, per night, whether
+   * screen-off tracking actually ran.
+   */
+  motionSource?: MotionMode;
 }
 
 export interface AlarmConfig {

@@ -93,6 +93,14 @@ export const messages: Record<string, Msg> = {
   'motion.still': { en: 'Slept very still', ja: 'とても静かな眠り' },
   'motion.calm': { en: 'Calm, settled sleep', ja: '落ち着いた眠り' },
   'motion.restless': { en: 'A restless night', ja: '少し落ち着かない夜' },
+  'motion.srcBackground': {
+    en: 'Tracked in the background — the whole night, even with the screen off.',
+    ja: 'バックグラウンドで計測（画面オフでも一晩を通して記録）',
+  },
+  'motion.srcForeground': {
+    en: 'Tracked only while the screen was on — the screen-off stretch isn’t captured.',
+    ja: '画面が点いている間のみ計測（画面オフ中は記録されていません）',
+  },
 
   // ── weekly review (History) ─────────────────────────────
   'review.none': { en: 'No records yet this week', ja: '今週の記録はまだありません' },

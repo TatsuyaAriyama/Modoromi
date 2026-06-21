@@ -6,7 +6,11 @@ import { MoodPicker } from '../../components/MoodPicker';
 import { MovementGraph } from '../../components/MovementGraph';
 import { useStore } from '../../app/store';
 import { computeQualityScore } from '../../domain/score';
-import { movementHistogram, restlessnessLevel } from '../../domain/motion';
+import {
+  capturedScreenOff,
+  movementHistogram,
+  restlessnessLevel,
+} from '../../domain/motion';
 import { formatDate, formatDuration, isoToHm } from '../../domain/format';
 import { useT, useLang } from '../../i18n/useT';
 
@@ -100,6 +104,16 @@ export function SessionDetail({
                 session.durationMin,
               )}
             />
+            {session.motionSource && (
+              <p
+                className="muted"
+                style={{ fontSize: 12, marginTop: 6, lineHeight: 1.6 }}
+              >
+                {capturedScreenOff(session.motionSource)
+                  ? t('motion.srcBackground')
+                  : t('motion.srcForeground')}
+              </p>
+            )}
           </div>
         )}
 
