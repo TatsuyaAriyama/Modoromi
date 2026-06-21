@@ -1,76 +1,291 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja" data-lang="ja">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Madoromi — Design sleep for thinking</title>
-<meta name="description" content="A quiet sleep app for people who think for a living. See your sleep as tomorrow's thinking condition. All data stays on your device." />
+<title>Madoromi（まどろみ） — 思考のための睡眠を設計する</title>
+<meta name="description" content="頭を使って働く人のための、静かな睡眠アプリ。ゆうべの眠りを「今日の思考コンディション」としてそっと映します。すべてのデータは端末内に保存。A quiet sleep app for people who think for a living." />
+<meta name="theme-color" content="#14121d" />
+<meta property="og:title" content="Madoromi — Design sleep for thinking" />
+<meta property="og:description" content="A quiet sleep app for people who think for a living. See your sleep as a calm read on how clearly you'll think today — never a verdict." />
+<meta property="og:type" content="website" />
+<script>
+  // Resolve the language before first paint to avoid a flash of the wrong copy.
+  (function () {
+    try {
+      var saved = localStorage.getItem('madoromi-lang');
+      var lang = saved || (/^ja/.test(navigator.language || '') ? 'ja' : 'en');
+      document.documentElement.setAttribute('data-lang', lang);
+      document.documentElement.setAttribute('lang', lang);
+    } catch (e) {}
+  })();
+</script>
 <style>
   :root{
     --bg:#14121d; --bg2:#1b1830; --card:rgba(255,255,255,.04);
+    --card-hi:rgba(255,255,255,.06);
     --line:rgba(255,255,255,.08); --ink:#d7d2e6; --ink-dim:#9b95b3;
-    --head:#efeafb; --accent:#b9a6f0;
+    --head:#efeafb; --accent:#b9a6f0; --accent2:#e9b8d6;
+    --serif:Georgia,"Hiragino Mincho ProN","Yu Mincho","YuMincho",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
   body{
     background:
-      radial-gradient(120% 80% at 50% -10%, #241f3c 0%, var(--bg) 55%) fixed,
+      radial-gradient(130% 90% at 50% -8%, #2a2348 0%, var(--bg) 52%) fixed,
       var(--bg);
     color:var(--ink);
-    font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    font:16px/1.75 var(--sans);
     -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
   }
-  .wrap{max-width:680px;margin:0 auto;padding:72px 24px 96px}
-  .brand{font-size:14px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-dim)}
-  h1{
-    font-family:Georgia,"Hiragino Mincho ProN","Yu Mincho",serif;
-    font-weight:500;color:var(--head);font-size:42px;line-height:1.25;margin:14px 0 8px;
+
+  /* Bilingual: the active language is set on <html data-lang>; hide the other. */
+  [data-lang="ja"] .en{display:none}
+  [data-lang="en"] .ja{display:none}
+
+  .wrap{max-width:720px;margin:0 auto;padding:0 24px}
+
+  /* ── Top bar ─────────────────────────────────────────── */
+  header.bar{
+    position:sticky;top:0;z-index:10;
+    backdrop-filter:saturate(140%) blur(12px);
+    background:linear-gradient(to bottom,rgba(20,18,29,.82),rgba(20,18,29,.5));
+    border-bottom:1px solid var(--line);
   }
-  .sub{font-size:19px;color:var(--ink);margin:0 0 40px}
-  .eyebrow{display:inline-block;margin:8px 0 30px;width:46px;height:46px;border-radius:50%;
-    background:linear-gradient(160deg,#8f7be0,#e9b8d6)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 26px;margin:18px 0}
-  .card h2{font-family:Georgia,"Hiragino Mincho ProN",serif;font-weight:500;color:var(--head);font-size:20px;margin:0 0 10px}
-  ul{margin:8px 0 0;padding-left:20px}
-  li{margin:6px 0}
-  .links{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
+  .bar .wrap{display:flex;align-items:center;justify-content:space-between;padding-top:14px;padding-bottom:14px}
+  .wordmark{font-size:13px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-dim)}
+  .toggle{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .toggle button{
+    appearance:none;background:none;border:0;cursor:pointer;
+    color:var(--ink-dim);font:600 13px/1 var(--sans);padding:8px 14px;letter-spacing:.02em;
+    transition:color .2s,background .2s;
+  }
+  [data-lang="ja"] .toggle button[data-set="ja"],
+  [data-lang="en"] .toggle button[data-set="en"]{color:#1a1430;background:var(--accent)}
+
+  /* ── Hero ────────────────────────────────────────────── */
+  .hero{padding:76px 0 8px}
+  .eyebrow{display:block;width:52px;height:52px;border-radius:50%;
+    background:linear-gradient(160deg,#8f7be0,var(--accent2));
+    box-shadow:0 0 40px -6px rgba(185,166,240,.5);margin-bottom:26px}
+  .brand{font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:14px}
+  h1{font-family:var(--serif);font-weight:500;color:var(--head);
+    font-size:clamp(34px,7vw,46px);line-height:1.24;margin:0 0 16px;letter-spacing:.01em}
+  .sub{font-size:clamp(17px,3.4vw,20px);color:var(--ink);margin:0 0 18px;max-width:34em}
+  .note{font-size:14px;color:var(--ink-dim);margin:0}
+  .note::before{content:"";display:inline-block;width:18px;height:1px;background:var(--ink-dim);
+    vertical-align:middle;margin-right:10px;opacity:.6}
+
+  /* ── Sections ────────────────────────────────────────── */
+  section.feat{padding:30px 0;border-top:1px solid var(--line)}
+  section.feat:first-of-type{border-top:0}
+  .feat .idx{font-family:var(--serif);font-size:14px;color:var(--accent);letter-spacing:.1em}
+  .feat h2{font-family:var(--serif);font-weight:500;color:var(--head);
+    font-size:clamp(21px,4.4vw,25px);line-height:1.35;margin:8px 0 10px}
+  .feat p{margin:0;color:var(--ink);max-width:36em}
+
+  .reveal{opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ── Privacy callout ─────────────────────────────────── */
+  .calm{margin:40px 0;padding:26px 26px;border:1px solid var(--line);border-radius:18px;
+    background:linear-gradient(180deg,var(--card-hi),var(--card))}
+  .calm h2{font-family:var(--serif);font-weight:500;color:var(--head);font-size:21px;margin:0 0 10px}
+  .calm p{margin:0;color:var(--ink)}
+  .calm .small{font-size:13.5px;color:var(--ink-dim);margin-top:8px}
+
+  /* ── CTA + footer ────────────────────────────────────── */
+  .cta{padding:48px 0 8px;text-align:center}
+  .cta h2{font-family:var(--serif);font-weight:500;color:var(--head);font-size:clamp(24px,5vw,30px);margin:0 0 22px;line-height:1.3}
+  .badge{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:14px;
+    border:1px solid var(--line);background:var(--card-hi);color:var(--ink-dim);font-size:14px}
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  .links{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:34px}
   .links a{color:var(--accent);text-decoration:none;border:1px solid var(--line);
-    padding:10px 18px;border-radius:999px;font-size:15px}
+    padding:10px 20px;border-radius:999px;font-size:15px;transition:border-color .2s}
   .links a:hover{border-color:var(--accent)}
-  footer{margin-top:56px;color:var(--ink-dim);font-size:13px}
-  .ja{color:var(--ink-dim);font-size:14px;margin-top:6px}
+  footer{margin-top:54px;padding-bottom:64px;text-align:center;color:var(--ink-dim);font-size:13px}
+  footer .tag{font-family:var(--serif);font-style:italic;color:var(--ink-dim);margin-bottom:8px}
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1;transform:none;transition:none}
+    *{scroll-behavior:auto}
+  }
 </style>
 </head>
 <body>
-  <main class="wrap">
-    <div class="brand">Madoromi · まどろみ</div>
-    <div class="eyebrow"></div>
-    <h1>Design sleep for thinking</h1>
-    <p class="sub">A quiet sleep app for people who think for a living. See your sleep as a calm read on how clearly you'll think tomorrow — never a verdict.</p>
+  <header class="bar">
+    <div class="wrap">
+      <span class="wordmark">Madoromi · まどろみ</span>
+      <div class="toggle" role="group" aria-label="Language / 言語">
+        <button type="button" data-set="ja" aria-label="日本語">日本語</button>
+        <button type="button" data-set="en" aria-label="English">EN</button>
+      </div>
+    </div>
+  </header>
 
-    <div class="card">
-      <h2>What it does</h2>
-      <ul>
-        <li>Log bedtime and wake time with a quick subjective rating</li>
-        <li>A sleep score and sleep-debt view — a guide, not a judgement</li>
-        <li>A recovery-aware bedtime reminder, worked back from your goal</li>
-        <li>Daily, weekly and monthly trends for duration and quality</li>
-      </ul>
+  <main>
+    <div class="wrap">
+      <section class="hero">
+        <span class="eyebrow" aria-hidden="true"></span>
+        <div class="brand">Madoromi · まどろみ</div>
+        <h1>
+          <span class="ja">思考のための睡眠を設計する</span>
+          <span class="en">Design sleep for thinking</span>
+        </h1>
+        <p class="sub">
+          <span class="ja">頭を使って働く人のための、静かな睡眠アプリ。ゆうべの眠りを「今日の思考コンディション」として、そっと映します。</span>
+          <span class="en">A quiet sleep app for people who think for a living. It reflects last night's sleep as a calm read on how clearly you'll think today.</span>
+        </p>
+        <p class="note">
+          <span class="ja">スコアや睡眠負債は判定ではなく、あくまで目安です。</span>
+          <span class="en">Scores and sleep debt are a gentle guide — never a verdict.</span>
+        </p>
+      </section>
     </div>
 
-    <div class="card">
-      <h2>Private by design</h2>
-      <p>All data stays on your device. No account, no sign-in, no tracking, no ads.</p>
-      <p class="ja">すべてのデータは端末内に保存。アカウント登録・ログイン・トラッキングはありません。</p>
+    <div class="wrap">
+      <section class="feat reveal">
+        <span class="idx">01</span>
+        <h2>
+          <span class="ja">今日の思考コンディション</span>
+          <span class="en">Today's thinking condition</span>
+        </h2>
+        <p>
+          <span class="ja">ゆうべの睡眠の質・睡眠負債・就寝リズムを束ね、今日の頭の冴えを 0–100 のひとつの指標に。数字で急かさず、静かに寄り添います。</span>
+          <span class="en">Last night's quality, your sleep debt and your rhythm fold into a single 0–100 read on today's clarity — quiet, never pushy.</span>
+        </p>
+      </section>
+
+      <section class="feat reveal">
+        <span class="idx">02</span>
+        <h2>
+          <span class="ja">睡眠負債と、無理のない就寝時刻</span>
+          <span class="en">Sleep debt, and a kinder bedtime</span>
+        </h2>
+        <p>
+          <span class="ja">目標睡眠時間とのズレを直近7日で積み上げ、回復を見込んだ就寝時刻を逆算して、そっとリマインドします。</span>
+          <span class="en">Your shortfall against your goal, accumulated over the last seven days — with a recovery-aware bedtime worked back from it.</span>
+        </p>
+      </section>
+
+      <section class="feat reveal">
+        <span class="idx">03</span>
+        <h2>
+          <span class="ja">スマート起床</span>
+          <span class="en">Smart wake</span>
+        </h2>
+        <p>
+          <span class="ja">設定した時刻の少し前、体動から浅い眠りを見つけて、そっと起こします。すっきりとした目覚めへ。</span>
+          <span class="en">A little before your alarm, it senses lighter sleep from your movement and wakes you gently — for a clearer start to the day.</span>
+        </p>
+      </section>
+
+      <section class="feat reveal">
+        <span class="idx">04</span>
+        <h2>
+          <span class="ja">インサイトと履歴</span>
+          <span class="en">Insights and history</span>
+        </h2>
+        <p>
+          <span class="ja">週次レビュー、睡眠時間と質のトレンド、就寝リズムの規則性。気づきは、静かな言葉で差し出します。</span>
+          <span class="en">A weekly review, duration and quality trends, and how regular your rhythm is — surfaced as quiet, plain-spoken insights.</span>
+        </p>
+      </section>
+
+      <section class="feat reveal">
+        <span class="idx">05</span>
+        <h2>
+          <span class="ja">ヘルスケア連携と、ホーム画面ウィジェット</span>
+          <span class="en">Apple Health and a Home Screen widget</span>
+        </h2>
+        <p>
+          <span class="ja">記録した夜をヘルスケアアプリへ書き出し（任意・一方向）。ホーム画面のウィジェットでは、今日のコンディションと睡眠負債をひと目で確認できます。</span>
+          <span class="en">Mirror your nights to Apple Health (optional, one-way), and glance at today's condition and sleep debt from a Home Screen widget.</span>
+        </p>
+      </section>
     </div>
 
-    <nav class="links">
-      <a href="./privacy/">Privacy Policy</a>
-      <a href="./support/">Support</a>
-    </nav>
+    <div class="wrap">
+      <div class="calm reveal">
+        <h2>
+          <span class="ja">静かな設計、プライバシー第一</span>
+          <span class="en">Quiet by design, private by default</span>
+        </h2>
+        <p>
+          <span class="ja">すべてのデータは端末内に保存。アカウント登録・ログイン・トラッキング・広告はありません。</span>
+          <span class="en">All data stays on your device. No account, no sign-in, no tracking, no ads.</span>
+        </p>
+        <p class="small">
+          <span class="ja">書き出しは JSON / CSV に対応。あなたの記録は、いつでもあなたの手元に。</span>
+          <span class="en">Export to JSON or CSV whenever you like — your records are always yours to keep.</span>
+        </p>
+      </div>
+    </div>
 
-    <footer>© 2026 Madoromi. All rights reserved.</footer>
+    <div class="wrap">
+      <section class="cta">
+        <h2>
+          <span class="ja">よい眠りから、冴えた思考へ。</span>
+          <span class="en">From a good night's sleep to a clear mind.</span>
+        </h2>
+        <span class="badge">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="ja">App Store で近日公開予定</span>
+          <span class="en">Coming soon to the App Store</span>
+        </span>
+        <nav class="links">
+          <a href="./privacy/">
+            <span class="ja">プライバシーポリシー</span>
+            <span class="en">Privacy Policy</span>
+          </a>
+          <a href="./support/">
+            <span class="ja">サポート</span>
+            <span class="en">Support</span>
+          </a>
+        </nav>
+      </section>
+
+      <footer>
+        <div class="tag">
+          <span class="ja">思考のための睡眠を設計する</span>
+          <span class="en">Design sleep for thinking</span>
+        </div>
+        © 2026 Madoromi. All rights reserved.
+      </footer>
+    </div>
   </main>
+
+  <script>
+    // Language toggle — persists the choice and updates <html lang/data-lang>.
+    (function () {
+      var root = document.documentElement;
+      function set(lang) {
+        root.setAttribute('data-lang', lang);
+        root.setAttribute('lang', lang);
+        try { localStorage.setItem('madoromi-lang', lang); } catch (e) {}
+      }
+      document.querySelectorAll('.toggle button').forEach(function (b) {
+        b.addEventListener('click', function () { set(b.getAttribute('data-set')); });
+      });
+    })();
+
+    // Gentle reveal on scroll (respects prefers-reduced-motion via CSS fallback).
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window)) {
+        els.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.16 });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
 </body>
 </html>
