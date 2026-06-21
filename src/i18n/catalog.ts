@@ -265,6 +265,30 @@ export const messages: Record<string, Msg> = {
   'nap.doneTitle': { en: 'Good morning', ja: 'おはよう' },
   'nap.doneNote': { en: 'Feeling a little clearer?', ja: '少し頭が軽くなりましたか' },
   'nap.wake': { en: 'Wake up', ja: '起きる' },
+  'nap.modeNormal': { en: 'Regular', ja: 'ふつう' },
+  'nap.modeCoffee': { en: 'Coffee nap', ja: 'コーヒーナップ' },
+  'nap.coffeeTitle': { en: 'Coffee nap', ja: 'コーヒーナップ' },
+  'nap.coffeeTagline': {
+    en: 'A nap that puts caffeine to work',
+    ja: 'カフェインを味方につける仮眠',
+  },
+  'nap.coffeeWhat': {
+    en: 'Drink a coffee, then nap 20 minutes. Caffeine takes about 20 minutes to take effect — so it kicks in just as you wake, and the nap clears the very drowsiness signal caffeine blocks. The two combine for a sharper wake-up than either alone.',
+    ja: 'コーヒーを飲んでから20分眠る方法です。カフェインは効き始めるまで約20分かかるので、ちょうど起きる頃に効いてきます。さらに仮眠は眠気の元（アデノシン）を減らし、そこをカフェインがブロック。仮眠とカフェインの相乗で、どちらか単独よりすっきり目覚められます。',
+  },
+  'nap.coffeeDrink': {
+    en: '☕ Finish a coffee before you start',
+    ja: '☕ はじめる前にコーヒーを一杯',
+  },
+  'nap.coffeeLate': {
+    en: 'Caffeine this late may affect tonight’s sleep',
+    ja: 'この時間のカフェインは夜の睡眠に響くかもしれません',
+  },
+  'nap.coffeeStart': { en: 'Had it — start', ja: '飲んだ、はじめる' },
+  'nap.coffeeDone': {
+    en: 'The caffeine should be landing now — ease into a sharp start',
+    ja: 'そろそろカフェインが効く頃。すっきり動き出しましょう',
+  },
 
   // ── sharpness check ─────────────────────────────────────
   'sharp.title': { en: 'Sharpness check', ja: '冴えチェック' },

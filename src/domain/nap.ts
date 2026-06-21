@@ -4,6 +4,8 @@
  * night's sleep. These are quiet 目安, not prescriptions.
  */
 
+import { parseHm } from './format';
+
 export type NapWindow = 'ideal' | 'caution' | 'discouraged';
 
 export type NapHeadline =
@@ -19,6 +21,28 @@ export interface NapAdvice {
   window: NapWindow;
   /** Catalog token id for a quiet one-line note (translated via `nap.<id>`). */
   headline: NapHeadline;
+}
+
+/**
+ * A "coffee nap": caffeine right before a short nap. Caffeine takes ~20 min to
+ * take effect, so it lands just as you wake — and the nap clears the adenosine
+ * that caffeine then blocks, so the two compound for a sharper wake-up. The nap
+ * is kept to ~20 min for the same reason a power nap is: avoid deep sleep.
+ */
+export const COFFEE_NAP_MIN = 20;
+
+/**
+ * Is a coffee nap now late enough that the caffeine could carry into tonight's
+ * sleep? True once the current time has passed the caffeine cutoff (the same
+ * "last caffeine" 目安 shown on Home). A plain same-day compare — coffee naps
+ * are a daytime thing, so there's no midnight wrap to handle.
+ */
+export function coffeeNapLate(nowHm: string, caffeineCutoffHm: string): boolean {
+  const min = (hm: string) => {
+    const { hour, minute } = parseHm(hm);
+    return hour * 60 + minute;
+  };
+  return min(nowHm) >= min(caffeineCutoffHm);
 }
 
 /** A power nap stays short to avoid deep-sleep grogginess. */

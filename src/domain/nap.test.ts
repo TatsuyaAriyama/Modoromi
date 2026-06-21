@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { POWER_NAP_MIN, SHORT_NAP_MIN, napAdvice } from './nap';
+import {
+  COFFEE_NAP_MIN,
+  POWER_NAP_MIN,
+  SHORT_NAP_MIN,
+  coffeeNapLate,
+  napAdvice,
+} from './nap';
 
 function at(hour: number): Date {
   return new Date(2026, 5, 20, hour, 0);
@@ -41,5 +47,20 @@ describe('napAdvice', () => {
   it('treats a negative debt as zero', () => {
     const a = napAdvice({ now: at(13), debtMin: -200 });
     expect(a.headline).not.toBe('idealRecover');
+  });
+});
+
+describe('coffeeNapLate', () => {
+  it('is false before the caffeine cutoff', () => {
+    expect(coffeeNapLate('13:00', '15:30')).toBe(false);
+  });
+
+  it('is true at or after the caffeine cutoff', () => {
+    expect(coffeeNapLate('15:30', '15:30')).toBe(true);
+    expect(coffeeNapLate('16:45', '15:30')).toBe(true);
+  });
+
+  it('keeps the coffee nap short', () => {
+    expect(COFFEE_NAP_MIN).toBe(20);
   });
 });
