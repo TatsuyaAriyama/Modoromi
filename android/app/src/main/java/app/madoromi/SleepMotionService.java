@@ -15,6 +15,9 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,10 +41,14 @@ public class SleepMotionService extends Service implements SensorEventListener {
     private static final double TAU_MS = 600;
     private static final double MAX_DT_MS = 1000;
 
+    /** Movements are also streamed here so they survive a process kill. */
+    static final String LOG_FILE = "sleep_motion.log";
+
     private static final List<float[]> MOVEMENTS = new ArrayList<>();
     private static long startMs;
 
     private SensorManager sm;
+    private BufferedWriter writer;
     private double gx, gy, gz;
     private boolean primed = false;
     private double prevT;
@@ -56,6 +63,16 @@ public class SleepMotionService extends Service implements SensorEventListener {
         primed = false;
         lastEventT = -Double.MAX_VALUE;
         startMs = System.currentTimeMillis();
+
+        // Fresh log: clear any prior session's persisted movements, then stream
+        // this session's to disk so a kill can be recovered on next launch.
+        File log = new File(getFilesDir(), LOG_FILE);
+        log.delete();
+        try {
+            writer = new BufferedWriter(new FileWriter(log, true));
+        } catch (Exception e) {
+            writer = null;
+        }
 
         startInForeground();
 
@@ -99,6 +116,15 @@ public class SleepMotionService extends Service implements SensorEventListener {
         synchronized (MOVEMENTS) {
             MOVEMENTS.add(new float[] { minutes, (float) mag });
         }
+        if (writer != null) {
+            try {
+                writer.write(minutes + "," + (float) mag + "\n");
+                writer.flush();
+            } catch (Exception e) {
+                // best-effort: a failed append just means that movement isn't
+                // recoverable if the process is killed.
+            }
+        }
     }
 
     @Override
@@ -114,6 +140,14 @@ public class SleepMotionService extends Service implements SensorEventListener {
     @Override
     public void onDestroy() {
         if (sm != null) sm.unregisterListener(this);
+        if (writer != null) {
+            try {
+                writer.close();
+            } catch (Exception e) {
+                // ignore
+            }
+            writer = null;
+        }
         super.onDestroy();
     }
 

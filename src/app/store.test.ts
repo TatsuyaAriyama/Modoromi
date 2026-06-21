@@ -4,6 +4,8 @@ import { useStore } from './store';
 import {
   DEFAULT_SETTINGS,
   alarmRepo,
+  getActiveMarker,
+  setActiveMarker,
   sleepRepo,
 } from '../data/repositories';
 import type { AlarmConfig } from '../domain/types';
@@ -176,5 +178,38 @@ describe('settings', () => {
     await useStore.getState().init();
     expect(useStore.getState().settings.targetDurationMin).toBe(420);
     expect(useStore.getState().loaded).toBe(true);
+  });
+});
+
+describe('crash recovery', () => {
+  it('starting a session leaves a recovery marker', async () => {
+    useStore.getState().startSession();
+    // The marker write is fire-and-forget; let the microtask flush.
+    await Promise.resolve();
+    const marker = await getActiveMarker();
+    expect(marker?.sessionId).toBe(useStore.getState().active?.id);
+  });
+
+  it('ending a session clears the marker', async () => {
+    useStore.getState().startSession();
+    useStore.getState().endSession();
+    await Promise.resolve();
+    expect(await getActiveMarker()).toBeNull();
+  });
+
+  it('recovers an interrupted session on init (app killed mid-night)', async () => {
+    // A session that started 7.5h ago and never ended (no endSession ran).
+    const start = new Date(Date.now() - 450 * 60000).toISOString();
+    await setActiveMarker({ sessionId: 'crashed', startedAt: start });
+
+    await useStore.getState().init();
+
+    const pm = useStore.getState().pendingMorning;
+    expect(pm?.id).toBe('crashed');
+    expect(pm?.recovered).toBe(true);
+    expect(pm?.durationMin).toBeGreaterThanOrEqual(449);
+    expect(pm?.motionSource).toBe('none'); // no native read-back off-device
+    // marker consumed so it can't recover twice
+    expect(await getActiveMarker()).toBeNull();
   });
 });

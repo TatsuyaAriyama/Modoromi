@@ -1,5 +1,6 @@
 import type { AlarmConfig, SleepSession, UserSettings } from '../domain/types';
 import type { SharpnessResult } from '../domain/sharpness';
+import type { RecoveryMarker } from '../domain/recovery';
 import { getJSON, removeKey, setJSON } from './storage';
 
 const KEYS = {
@@ -7,6 +8,7 @@ const KEYS = {
   alarms: 'madoromi.alarms',
   settings: 'madoromi.settings',
   sharpness: 'madoromi.sharpness',
+  activeSession: 'madoromi.activeSession',
 } as const;
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -116,6 +118,21 @@ export const alarmRepo: AlarmRepository = new LocalAlarmRepository();
 export const settingsRepo: SettingsRepository = new LocalSettingsRepository();
 export const sharpnessRepo: SharpnessRepository = new LocalSharpnessRepository();
 
+/**
+ * The "session in progress" marker. Written when a session starts and cleared
+ * when it ends; its presence on launch means the app was killed mid-night and
+ * the session should be recovered (see domain/recovery).
+ */
+export async function getActiveMarker(): Promise<RecoveryMarker | null> {
+  return getJSON<RecoveryMarker | null>(KEYS.activeSession, null);
+}
+export async function setActiveMarker(marker: RecoveryMarker): Promise<void> {
+  await setJSON(KEYS.activeSession, marker);
+}
+export async function clearActiveMarker(): Promise<void> {
+  await removeKey(KEYS.activeSession);
+}
+
 /** Full export blob for Settings → Export. */
 export async function exportAll(): Promise<string> {
   const [sessions, alarms, settings, sharpness] = await Promise.all([
@@ -146,6 +163,7 @@ export async function wipeAll(): Promise<void> {
     removeKey(KEYS.alarms),
     removeKey(KEYS.settings),
     removeKey(KEYS.sharpness),
+    removeKey(KEYS.activeSession),
   ]);
 }
 

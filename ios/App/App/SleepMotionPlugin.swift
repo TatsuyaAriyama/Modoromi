@@ -27,6 +27,7 @@ public class SleepMotionPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "isAvailable", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "start", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "stop", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "recover", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "isUnrestricted", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "requestUnrestricted", returnType: CAPPluginReturnPromise),
     ]
@@ -75,14 +76,35 @@ public class SleepMotionPlugin: CAPPlugin, CAPBridgedPlugin {
         startDate = nil
         // The buffer can hold hours of samples — reduce it off the main thread.
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            let movements = self?.detect(from: from, to: to) ?? []
-            call.resolve(["movements": movements])
+            let result = self?.reduce(from: from, to: to)
+            call.resolve(["movements": result?.movements ?? []])
         }
     }
 
-    private func detect(from: Date, to: Date) -> [[String: Any]] {
-        guard let data = recorder.accelerometerData(from: from, to: to) else { return [] }
+    @objc func recover(_ call: CAPPluginCall) {
+        guard let startISO = call.getString("startISO"),
+              let from = isoFormatter.date(from: startISO) else {
+            call.resolve(["movements": [], "recovered": false])
+            return
+        }
+        let to = Date()
+        // The coprocessor keeps recording even if the app was killed, so the
+        // night survives — read it back from where the session started.
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let result = self?.reduce(from: from, to: to)
+            call.resolve([
+                "movements": result?.movements ?? [],
+                "recovered": result?.hadData ?? false,
+            ])
+        }
+    }
+
+    private func reduce(from: Date, to: Date) -> (movements: [[String: Any]], hadData: Bool) {
+        guard let data = recorder.accelerometerData(from: from, to: to) else {
+            return ([], false)
+        }
         let startMs = from.timeIntervalSince1970 * 1000
+        var hadData = false
 
         var gx = 0.0, gy = 0.0, gz = 0.0
         var primed = false
@@ -92,6 +114,7 @@ public class SleepMotionPlugin: CAPPlugin, CAPBridgedPlugin {
 
         for element in data {
             guard let sample = element as? CMRecordedAccelerometerData else { continue }
+            hadData = true
             let t = sample.startDate.timeIntervalSince1970 * 1000
             let x = sample.acceleration.x * gToMs2
             let y = sample.acceleration.y * gToMs2
@@ -119,6 +142,6 @@ public class SleepMotionPlugin: CAPPlugin, CAPBridgedPlugin {
                 "magnitude": (mag * 100).rounded() / 100,
             ])
         }
-        return out
+        return (out, hadData)
     }
 }

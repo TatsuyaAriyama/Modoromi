@@ -82,6 +82,12 @@ export function SessionDetail({
           </p>
         )}
 
+        {session.recovered && (
+          <p className="muted" style={{ fontSize: 12.5, marginTop: -2 }}>
+            {t('sep.middot')}{t('detail.recovered')}
+          </p>
+        )}
+
         {session.movements && (
           <div className="field">
             <label>{t('motion.title')}</label>

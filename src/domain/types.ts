@@ -51,6 +51,12 @@ export interface SleepSession {
    * screen-off tracking actually ran.
    */
   motionSource?: MotionMode;
+  /**
+   * True when this session was reconstructed after the app/service was killed
+   * mid-night (see domain/recovery). The end time is the relaunch time, so the
+   * duration is an estimate the user may want to sanity-check.
+   */
+  recovered?: boolean;
 }
 
 export interface AlarmConfig {

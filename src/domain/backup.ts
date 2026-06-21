@@ -78,6 +78,7 @@ function isSleepSession(x: unknown): x is SleepSession {
   if (x.smartWoke !== undefined && !isBool(x.smartWoke)) return false;
   if (x.imported !== undefined && !isBool(x.imported)) return false;
   if (x.motionSource !== undefined && !isStr(x.motionSource)) return false;
+  if (x.recovered !== undefined && !isBool(x.recovered)) return false;
   if (
     x.movements !== undefined &&
     !(Array.isArray(x.movements) && x.movements.every(isMovement))

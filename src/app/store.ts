@@ -11,11 +11,16 @@ import { computeQualityScore } from '../domain/score';
 import {
   DEFAULT_SETTINGS,
   alarmRepo,
+  clearActiveMarker,
+  getActiveMarker,
+  setActiveMarker,
   settingsRepo,
   sharpnessRepo,
   sleepRepo,
 } from '../data/repositories';
 import type { SharpnessResult } from '../domain/sharpness';
+import { recoverSession } from '../domain/recovery';
+import { recoverMotionSince } from '../lib/sleepMotion';
 import { uid } from '../lib/id';
 import { syncSchedules } from '../lib/notifications';
 import {
@@ -108,10 +113,31 @@ export const useStore = create<AppState>((set, get) => ({
     set({ sessions, alarms, settings, sharpness, loaded: true });
     void syncSchedules(alarms, settings, sessions);
     refreshWidget(sessions, settings);
+
+    // Recover a session the app was killed in the middle of: the marker is
+    // still present (endSession never ran). Reconstruct it and route it through
+    // the morning check for the user to confirm.
+    const marker = await getActiveMarker();
+    if (marker) {
+      const { movements, recovered } = await recoverMotionSince(marker.startedAt);
+      const session = recoverSession({
+        marker,
+        now: new Date(),
+        movements,
+        recovered,
+      });
+      await clearActiveMarker();
+      if (session && !get().active && !get().pendingMorning) {
+        set({ pendingMorning: session });
+      }
+    }
   },
 
   startSession() {
-    set({ active: { id: uid(), startedAt: new Date().toISOString() } });
+    const active = { id: uid(), startedAt: new Date().toISOString() };
+    set({ active });
+    // Persist a recovery marker so a mid-night crash/kill can be reconstructed.
+    void setActiveMarker({ sessionId: active.id, startedAt: active.startedAt });
   },
 
   endSession(movements, smartWoke, motionSource) {
@@ -135,10 +161,12 @@ export const useStore = create<AppState>((set, get) => ({
       ...(motionSource ? { motionSource } : {}),
     };
     set({ active: null, pendingMorning: session });
+    void clearActiveMarker(); // ended cleanly — no recovery needed
   },
 
   cancelSession() {
     set({ active: null });
+    void clearActiveMarker();
   },
 
   async saveMorningCheck({ mood, subjective, note, theme }) {

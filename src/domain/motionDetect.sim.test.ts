@@ -184,4 +184,20 @@ describe('screen-off detection — failure modes (negative controls)', () => {
     const exempt = run((x) => deliverBatched(x), 10);
     expect(exempt.recall).toBeGreaterThanOrEqual(0.9);
   });
+
+  it('crash recovery reads the whole night back from the buffer', () => {
+    // The app is killed at minute 30. The live (pre-kill) stream loses every
+    // later event — but the iOS coprocessor kept the full buffer, so recovery
+    // reading from the start gets the whole night.
+    const night = simulateNight({ durationMin: DURATION, eventMins: EVENTS, hz: 50 });
+
+    const live = detectMovements(deliverUntilKilled(night, 30), 0);
+    const lateEvents = EVENTS.filter((e) => e >= 30);
+    expect(score(live.map((m) => m.t), lateEvents).recall).toBe(0); // lost live
+
+    const recovered = detectMovements(deliverContinuous(night), 0); // full buffer
+    expect(score(recovered.map((m) => m.t), EVENTS).recall).toBeGreaterThanOrEqual(
+      0.95,
+    );
+  });
 });

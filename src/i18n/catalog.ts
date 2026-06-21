@@ -370,6 +370,10 @@ export const messages: Record<string, Msg> = {
   'detail.timeRange': { en: 'Time', ja: '時間帯' },
   'detail.condition': { en: 'Condition', ja: 'コンディション' },
   'detail.smartWoke': { en: 'Smart wake ended this a little early', ja: 'スマート起床が少し早めに起こしました' },
+  'detail.recovered': {
+    en: 'Recovered after the app closed — the end time is an estimate',
+    ja: 'アプリ終了後に復元（終了時刻は目安です）',
+  },
   'detail.note': { en: 'Note', ja: 'メモ' },
   'detail.confirmDelete': { en: 'Delete this record?', ja: 'この記録を削除しますか？' },
   'detail.deleteConfirm': { en: 'Delete', ja: '削除する' },

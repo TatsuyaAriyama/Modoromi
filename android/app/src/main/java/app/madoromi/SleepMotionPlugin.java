@@ -16,6 +16,9 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.List;
 
 /**
@@ -51,6 +54,37 @@ public class SleepMotionPlugin extends Plugin {
             getContext().startService(intent);
         }
         call.resolve();
+    }
+
+    @PluginMethod
+    public void recover(PluginCall call) {
+        // The service streams movements to a file; if it was killed mid-night,
+        // the file still holds what it captured. Its mere existence means
+        // tracking ran (an empty file = a still night), so recovered = exists.
+        File log = new File(getContext().getFilesDir(), SleepMotionService.LOG_FILE);
+        JSArray arr = new JSArray();
+        boolean recovered = log.exists();
+        if (recovered) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(log))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    if (parts.length == 2) {
+                        JSObject o = new JSObject();
+                        o.put("t", (int) Float.parseFloat(parts[0]));
+                        o.put("magnitude", Math.round(Float.parseFloat(parts[1]) * 100.0) / 100.0);
+                        arr.put(o);
+                    }
+                }
+            } catch (Exception e) {
+                // ignore — return whatever parsed
+            }
+            log.delete();
+        }
+        JSObject ret = new JSObject();
+        ret.put("movements", arr);
+        ret.put("recovered", recovered);
+        call.resolve(ret);
     }
 
     @PluginMethod
