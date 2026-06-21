@@ -16,6 +16,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   onboarded: false,
   smartAlarm: false,
   smartWindowMin: 30,
+  healthSync: false,
 };
 
 /**

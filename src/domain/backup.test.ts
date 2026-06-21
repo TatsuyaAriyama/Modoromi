@@ -31,6 +31,7 @@ const settings: UserSettings = {
   onboarded: true,
   smartAlarm: false,
   smartWindowMin: 30,
+  healthSync: false,
 };
 
 function blob(extra: Record<string, unknown> = {}): string {

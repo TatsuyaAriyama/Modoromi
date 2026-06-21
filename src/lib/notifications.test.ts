@@ -30,6 +30,7 @@ const SETTINGS: UserSettings = {
   onboarded: true,
   smartAlarm: false,
   smartWindowMin: 30,
+  healthSync: false,
 };
 
 describe('buildAlarmNotifications', () => {

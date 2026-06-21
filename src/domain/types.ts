@@ -71,4 +71,10 @@ export interface UserSettings {
    * sleep. Only meaningful when `smartAlarm` is on.
    */
   smartWindowMin: number;
+  /**
+   * Mirror confirmed sleep sessions to Apple Health (HKCategoryTypeSleepAnalysis,
+   * `inBed`). Opt-in: writing requires the user to grant HealthKit permission,
+   * and the write is a best-effort native side-effect (no-op off-device).
+   */
+  healthSync: boolean;
 }

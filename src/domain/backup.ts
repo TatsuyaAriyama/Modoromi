@@ -114,6 +114,7 @@ function parseSettings(x: unknown): UserSettings | null {
     onboarded: isBool(x.onboarded) ? x.onboarded : true,
     smartAlarm: isBool(x.smartAlarm) ? x.smartAlarm : false,
     smartWindowMin: isNum(x.smartWindowMin) ? x.smartWindowMin : 30,
+    healthSync: isBool(x.healthSync) ? x.healthSync : false,
   };
 }
 
