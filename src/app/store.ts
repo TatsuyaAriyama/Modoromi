@@ -16,6 +16,16 @@ import {
 import { uid } from '../lib/id';
 import { syncSchedules } from '../lib/notifications';
 import { mirrorSleepToHealth } from '../lib/health';
+import { pushWidgetSnapshot } from '../lib/widget';
+import { widgetSnapshot } from '../domain/widgetSnapshot';
+
+/**
+ * Recompute and publish the home-screen widget snapshot. Called alongside
+ * `syncSchedules` after anything that moves the log or the target duration,
+ * so the widget never disagrees with the app. Best-effort and no-op off-device.
+ */
+const refreshWidget = (sessions: SleepSession[], settings: UserSettings) =>
+  void pushWidgetSnapshot(widgetSnapshot(sessions, settings.targetDurationMin));
 
 export type ActiveSession = {
   id: string;
@@ -73,6 +83,7 @@ export const useStore = create<AppState>((set, get) => ({
     ]);
     set({ sessions, alarms, settings, loaded: true });
     void syncSchedules(alarms, settings, sessions);
+    refreshWidget(sessions, settings);
   },
 
   startSession() {
@@ -129,6 +140,7 @@ export const useStore = create<AppState>((set, get) => ({
     }));
     if (settings.healthSync) void mirrorSleepToHealth(session);
     void syncSchedules(get().alarms, settings, get().sessions);
+    refreshWidget(get().sessions, settings);
   },
 
   dismissMorning() {
@@ -142,6 +154,7 @@ export const useStore = create<AppState>((set, get) => ({
     }));
     if (settings.healthSync) void mirrorSleepToHealth(pendingMorning);
     void syncSchedules(get().alarms, settings, get().sessions);
+    refreshWidget(get().sessions, settings);
   },
 
   async updateSession(session) {
@@ -150,12 +163,14 @@ export const useStore = create<AppState>((set, get) => ({
       sessions: s.sessions.map((x) => (x.id === session.id ? session : x)),
     }));
     void syncSchedules(get().alarms, get().settings, get().sessions);
+    refreshWidget(get().sessions, get().settings);
   },
 
   async deleteSession(id) {
     await sleepRepo.remove(id);
     set((s) => ({ sessions: s.sessions.filter((x) => x.id !== id) }));
     void syncSchedules(get().alarms, get().settings, get().sessions);
+    refreshWidget(get().sessions, get().settings);
   },
 
   async saveAlarm(alarm) {
@@ -181,11 +196,13 @@ export const useStore = create<AppState>((set, get) => ({
     await settingsRepo.set(settings);
     set({ settings });
     void syncSchedules(get().alarms, settings, get().sessions);
+    refreshWidget(get().sessions, settings);
   },
 
   async replaceSessions(sessions) {
     await sleepRepo.replaceAll(sessions);
     set({ sessions });
     void syncSchedules(get().alarms, get().settings, sessions);
+    refreshWidget(sessions, get().settings);
   },
 }));
