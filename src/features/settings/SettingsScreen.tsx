@@ -203,6 +203,18 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
+        {isNative() && (
+          <div
+            className="set-row"
+            style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}
+          >
+            <span className="set-label">{t('settings.widget')}</span>
+            <span className="muted" style={{ fontSize: 12.5, lineHeight: 1.6 }}>
+              {t('settings.widgetHint')}
+            </span>
+          </div>
+        )}
+
         <div
           className="set-row"
           style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}

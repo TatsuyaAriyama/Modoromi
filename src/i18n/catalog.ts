@@ -321,6 +321,11 @@ export const messages: Record<string, Msg> = {
     en: 'Mirror confirmed nights to the Health app as in-bed sleep. One-way; Madoromi never reads your Health data.',
     ja: '記録した睡眠をヘルスケアアプリに「ベッドにいる時間」として書き出します。書き込みのみで、ヘルスケアのデータを読み取ることはありません。',
   },
+  'settings.widget': { en: 'Home Screen widget', ja: 'ホーム画面ウィジェット' },
+  'settings.widgetHint': {
+    en: 'Add the Madoromi widget from your Home Screen to see today’s thinking condition and sleep debt at a glance. It refreshes after each morning check.',
+    ja: 'ホーム画面にまどろみのウィジェットを追加すると、今日の思考コンディションと睡眠負債をひと目で確認できます。朝のチェックのたびに自動で更新されます。',
+  },
   'settings.exportData': { en: 'Export data (JSON)', ja: 'データをエクスポート（JSON）' },
   'settings.export': { en: 'Export', ja: '書き出す' },
   'settings.exportCsvData': { en: 'Export sleep log (CSV)', ja: '睡眠ログを書き出す（CSV）' },
