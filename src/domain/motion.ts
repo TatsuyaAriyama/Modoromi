@@ -15,6 +15,23 @@ export function magnitude(x: number, y: number, z: number): number {
   return Math.sqrt(x * x + y * y + z * z);
 }
 
+/** Which sensor backend captured a session's motion. */
+export type MotionMode = 'native' | 'js' | 'none';
+
+/**
+ * Did a sensor actually capture this session? A native background recording
+ * always counts; the foreground JS path only counts if samples arrived. When
+ * nothing was captured the night is *untracked* — the caller should omit the
+ * movements field rather than store an empty array, so a phone left on the
+ * nightstand (or a denied permission) isn't credited as a perfectly still
+ * night and doesn't inflate the quality score.
+ */
+export function isMotionTracked(mode: MotionMode, sampleCount: number): boolean {
+  if (mode === 'native') return true;
+  if (mode === 'js') return sampleCount > 0;
+  return false;
+}
+
 /** Movements per hour over the session. */
 export function movementsPerHour(count: number, durationMin: number): number {
   if (durationMin <= 0) return 0;

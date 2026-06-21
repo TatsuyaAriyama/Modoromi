@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   RESTLESS_LEVELS,
   RESTLESS_PER_HOUR,
+  isMotionTracked,
   magnitude,
   movementHistogram,
   movementsPerHour,
@@ -134,5 +135,20 @@ describe('shouldSmartWake', () => {
         windowMin: 30,
       }),
     ).toBe(false);
+  });
+});
+
+describe('isMotionTracked', () => {
+  it('always counts a native background recording', () => {
+    expect(isMotionTracked('native', 0)).toBe(true);
+  });
+
+  it('counts the JS path only when samples arrived', () => {
+    expect(isMotionTracked('js', 1)).toBe(true);
+    expect(isMotionTracked('js', 0)).toBe(false);
+  });
+
+  it('never counts when there was no sensor', () => {
+    expect(isMotionTracked('none', 999)).toBe(false);
   });
 });

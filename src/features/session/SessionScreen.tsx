@@ -6,7 +6,8 @@ import { Toggle } from '../../components/Toggle';
 import { Button } from '../../components/Button';
 import { disableKeepAwake, enableKeepAwake } from '../../lib/keepAwake';
 import { notifySuccess } from '../../lib/haptics';
-import { MotionRecorder, ensureMotionPermission } from '../../lib/motion';
+import { ensureMotionPermission } from '../../lib/motion';
+import { SessionMotion } from '../../lib/sessionMotion';
 import { AlarmPlayer, DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
 import { shouldSmartWake } from '../../domain/motion';
 import { isAlarmDue } from '../../domain/alarmFire';
@@ -44,9 +45,10 @@ export function SessionScreen() {
   const holding = useRef(false);
   const raf = useRef<number | null>(null);
 
-  // One motion recorder per session (lazy-initialised ref).
-  const recorderRef = useRef<MotionRecorder | null>(null);
-  if (recorderRef.current === null) recorderRef.current = new MotionRecorder();
+  // One motion tracker per session (lazy-initialised ref). Prefers a native
+  // background recorder; falls back to the foreground JS listener.
+  const recorderRef = useRef<SessionMotion | null>(null);
+  if (recorderRef.current === null) recorderRef.current = new SessionMotion();
 
   // One alarm player per session.
   const playerRef = useRef<AlarmPlayer | null>(null);
@@ -66,7 +68,10 @@ export function SessionScreen() {
   const wake = useCallback(
     (smart = false) => {
       void notifySuccess();
-      endSession(recorderRef.current?.stop(), smart);
+      void (async () => {
+        const movements = await recorderRef.current?.stop();
+        endSession(movements, smart);
+      })();
     },
     [endSession],
   );
@@ -76,7 +81,7 @@ export function SessionScreen() {
     const t = setInterval(() => {
       const d = new Date();
       setNow(d);
-      setMoveCount(recorderRef.current?.current.length ?? 0);
+      setMoveCount(recorderRef.current?.live.length ?? 0);
       const s = dueInputs.current;
       if (s && !s.ringing && s.active && s.alarm) {
         const due =
@@ -99,7 +104,7 @@ export function SessionScreen() {
     })();
     return () => {
       alive = false;
-      rec?.stop();
+      void rec?.stop();
     };
   }, []);
 
@@ -157,7 +162,7 @@ export function SessionScreen() {
     const minutesToAlarm = minutesUntil(nextAlarm, now);
     if (
       shouldSmartWake({
-        movements: recorderRef.current?.current ?? [],
+        movements: recorderRef.current?.live ?? [],
         elapsedMin,
         minutesToAlarm,
         windowMin: smartWindowMin,
