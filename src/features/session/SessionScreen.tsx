@@ -237,6 +237,8 @@ export function SessionScreen() {
 
           <button
             className="wake-btn"
+            aria-label={t('session.holdToWake')}
+            aria-pressed={holdProgress > 0}
             onMouseDown={startHold}
             onMouseUp={endHold}
             onMouseLeave={endHold}

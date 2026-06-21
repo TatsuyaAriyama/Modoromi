@@ -392,7 +392,12 @@
   flex-direction: column;
   gap: 4px;
   padding: var(--space-3) 0;
+  border: none;
   border-bottom: 1px solid var(--border);
+  background: none;
+  color: inherit;
+  text-align: left;
+  width: 100%;
 }
 .hist-item:last-child {
   border-bottom: none;

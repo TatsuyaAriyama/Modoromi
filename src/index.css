@@ -41,6 +41,30 @@ select {
   font-family: inherit;
 }
 
+/* Keyboard focus: a clear, consistent ring for every interactive element.
+   `:focus-visible` keeps it off for pointer/touch taps, on for keyboard. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Screen-reader-only: present to assistive tech, invisible on screen. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 h1,
 h2,
 h3 {

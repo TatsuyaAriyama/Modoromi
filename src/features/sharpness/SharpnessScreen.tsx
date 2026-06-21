@@ -116,6 +116,14 @@ export function SharpnessScreen({ onClose }: { onClose: () => void }) {
   return (
     <div className="app-frame" style={{ background: 'var(--bg)' }}>
       <div className="sharp-wrap">
+        {/* Announce the actionable moments to screen readers. */}
+        <div className="sr-only" role="status" aria-live="assertive">
+          {phase === 'signal'
+            ? t('sharp.now')
+            : phase === 'tooSoon'
+              ? t('sharp.tooSoon')
+              : ''}
+        </div>
         <div className="sharp-head">
           <h1 className="sharp-title">{t('sharp.title')}</h1>
           <p className="sharp-note">

@@ -264,14 +264,6 @@ export function HistoryScreen() {
             <button
               key={s.id}
               className="hist-item"
-              style={{
-                background: 'none',
-                border: 'none',
-                borderBottom: '1px solid var(--border)',
-                color: 'inherit',
-                textAlign: 'left',
-                width: '100%',
-              }}
               onClick={() => setSelected(s)}
             >
               <div className="spread">

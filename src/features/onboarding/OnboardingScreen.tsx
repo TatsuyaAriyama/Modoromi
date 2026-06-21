@@ -64,6 +64,7 @@ export function OnboardingScreen() {
                   <button
                     key={l.id}
                     data-on={lang === l.id}
+                    aria-pressed={lang === l.id}
                     onClick={() =>
                       void saveSettings({ ...settings, lang: l.id as Lang })
                     }
