@@ -60,8 +60,11 @@ export class MotionDetector {
   private primed = false;
   private prevT = 0;
   private lastEventT = Number.NEGATIVE_INFINITY;
+  private readonly cfg: DetectConfig;
 
-  constructor(private readonly cfg: DetectConfig = DEFAULT_DETECT) {}
+  constructor(cfg: DetectConfig = DEFAULT_DETECT) {
+    this.cfg = cfg;
+  }
 
   /** Push one sample; returns its movement magnitude when it fires, else null. */
   push(s: RawSample): number | null {

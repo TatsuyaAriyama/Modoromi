@@ -15,6 +15,7 @@ import {
   SoundscapePlayer,
 } from '../../lib/soundscape';
 import { tapLight, tapMedium } from '../../lib/haptics';
+import { ensureMotionPermission } from '../../lib/motion';
 import { usePrefersReducedMotion } from '../../app/useReducedMotion';
 import { useT } from '../../i18n/useT';
 
@@ -73,6 +74,9 @@ export function WindDownScreen({
 
   const start = () => {
     void tapMedium();
+    // iOS gates DeviceMotion behind a user gesture — request it here, inside the
+    // tap, so the session's recorder can attach. Native/Android resolve true.
+    void ensureMotionPermission();
     soundRef.current?.stop();
     onStart();
   };

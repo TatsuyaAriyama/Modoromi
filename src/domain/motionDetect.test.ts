@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  DEFAULT_DETECT,
-  MotionDetector,
-  detectMovements,
-  type RawSample,
-} from './motionDetect';
+import { DEFAULT_DETECT, detectMovements, type RawSample } from './motionDetect';
 
 const G = 9.81;
 
