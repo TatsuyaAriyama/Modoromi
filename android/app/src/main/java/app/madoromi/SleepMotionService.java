@@ -120,7 +120,7 @@ public class SleepMotionService extends Service implements SensorEventListener {
             try {
                 writer.write(minutes + "," + (float) mag + "\n");
                 writer.flush();
-            } catch (Exception e) {
+            } catch (Exception ex) {
                 // best-effort: a failed append just means that movement isn't
                 // recoverable if the process is killed.
             }
