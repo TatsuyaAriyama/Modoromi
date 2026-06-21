@@ -15,6 +15,7 @@ import {
   SoundscapePlayer,
 } from '../../lib/soundscape';
 import { tapLight, tapMedium } from '../../lib/haptics';
+import { usePrefersReducedMotion } from '../../app/useReducedMotion';
 import { useT } from '../../i18n/useT';
 
 /**
@@ -31,6 +32,7 @@ export function WindDownScreen({
   onClose: () => void;
 }) {
   const t = useT();
+  const reducedMotion = usePrefersReducedMotion();
   const [patternId, setPatternId] = useState(DEFAULT_BREATH_PATTERN);
   const [sound, setSound] = useState(DEFAULT_SOUNDSCAPE);
   const [state, setState] = useState<BreathState>(() => breathAt(0));
@@ -127,9 +129,11 @@ export function WindDownScreen({
         </div>
 
         <div className="wind-orb-wrap">
+          {/* Reduced motion: hold the orb steady; the cue text still guides the
+              breath so the ritual works without the pulsing animation. */}
           <div
             className="wind-orb"
-            style={{ transform: `scale(${state.scale})` }}
+            style={{ transform: `scale(${reducedMotion ? 0.82 : state.scale})` }}
           />
           <div className="wind-cue">{t(`breath.${state.phase}`)}</div>
         </div>
