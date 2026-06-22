@@ -512,6 +512,12 @@
   line-height: 1.9;
   max-width: 320px;
 }
+.tut-art {
+  display: grid;
+  place-items: center;
+  height: 92px;
+  margin-bottom: var(--space-2);
+}
 .onb-card {
   width: 100%;
   background: rgba(255, 255, 255, 0.12);

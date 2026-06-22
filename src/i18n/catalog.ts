@@ -474,6 +474,37 @@ export const messages: Record<string, Msg> = {
   'settings.wipeConfirm': { en: 'Delete everything', ja: 'すべて削除する' },
 
   // ── Onboarding ──────────────────────────────────────────
+  // ── tutorial (post-onboarding tour) ─────────────────────
+  'settings.replayTutorial': { en: 'How to use Madoromi', ja: '使い方ガイド' },
+  'settings.replayTutorialBtn': { en: 'View', ja: '見る' },
+  'tutorial.start': { en: 'Get started', ja: 'はじめる' },
+  'tutorial.skip': { en: 'Skip', ja: 'スキップ' },
+  'tutorial.welcome.title': { en: 'Welcome to Madoromi', ja: 'まどろみへようこそ' },
+  'tutorial.welcome.body': {
+    en: 'Not just sleep tracking — sleep in service of clear thinking. Here’s a quick tour.',
+    ja: '記録するだけでなく、よく考えるための睡眠を。簡単に使い方を案内します。',
+  },
+  'tutorial.home.title': { en: 'Your day, at a glance', ja: 'ホームでひと目' },
+  'tutorial.home.body': {
+    en: 'Home shows today’s thinking condition, your sleep debt, and tonight’s gentle cues.',
+    ja: 'ホームには今日の思考コンディション、睡眠負債、今夜の目安が並びます。',
+  },
+  'tutorial.sleep.title': { en: 'Drift off, tracked', ja: 'そのまま眠りを記録' },
+  'tutorial.sleep.body': {
+    en: 'Tap “Good night” to breathe and settle, then sleep — Madoromi records the night for you.',
+    ja: '「おやすみ」で深呼吸して、そのまま就寝。まどろみが夜を記録します。',
+  },
+  'tutorial.review.title': { en: 'Look back, notice', ja: '記録でふり返る' },
+  'tutorial.review.body': {
+    en: 'The Log tab charts your duration, quality and condition over time, with quiet insights.',
+    ja: '記録タブで睡眠時間・質・コンディションの推移と、静かな気づきを確認できます。',
+  },
+  'tutorial.extras.title': { en: 'Through the day', ja: '日中もサポート' },
+  'tutorial.extras.body': {
+    en: 'A power nap and a 10-second sharpness check help keep your thinking crisp by day.',
+    ja: '仮眠や10秒の冴えチェックで、日中の思考のキレもサポートします。',
+  },
+
   'onb.tagline': { en: 'Design sleep for thinking', ja: '思考のための睡眠を設計する' },
   'onb.intro': {
     en: 'More than tracking — designing sleep. It surfaces your bedtime, wake time, and quality, and quietly reflects any gap from your goal as tomorrow’s thinking condition.',

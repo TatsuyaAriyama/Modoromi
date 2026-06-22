@@ -14,6 +14,7 @@ import { NapScreen } from './features/nap/NapScreen';
 import { WindDownScreen } from './features/winddown/WindDownScreen';
 import { SharpnessScreen } from './features/sharpness/SharpnessScreen';
 import { OnboardingScreen } from './features/onboarding/OnboardingScreen';
+import { TutorialScreen } from './features/tutorial/TutorialScreen';
 import { useT, useLang } from './i18n/useT';
 
 const TABS: { key: TabKey; labelKey: string }[] = [
@@ -30,6 +31,7 @@ export default function App() {
   const init = useStore((s) => s.init);
   const loaded = useStore((s) => s.loaded);
   const onboarded = useStore((s) => s.settings.onboarded);
+  const tutorialSeen = useStore((s) => s.settings.tutorialSeen);
   const active = useStore((s) => s.active);
   const pendingMorning = useStore((s) => s.pendingMorning);
   const startSession = useStore((s) => s.startSession);
@@ -56,6 +58,10 @@ export default function App() {
 
   // First launch: brand intro + goal + notification permission.
   if (!onboarded) return <OnboardingScreen />;
+
+  // Right after onboarding: a short, skippable feature tour (replayable from
+  // Settings). Sits above the main UI but below any active sleep flow.
+  if (!tutorialSeen && !active && !pendingMorning) return <TutorialScreen />;
 
   // Full-screen flows take over.
   if (active) return <SessionScreen />;

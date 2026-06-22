@@ -356,6 +356,19 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </div>
+
+        <div className="set-row">
+          <span className="set-label">{t('settings.replayTutorial')}</span>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              void saveSettings({ ...settings, tutorialSeen: false });
+              onClose();
+            }}
+          >
+            {t('settings.replayTutorialBtn')}
+          </Button>
+        </div>
       </Card>
 
       <Card>

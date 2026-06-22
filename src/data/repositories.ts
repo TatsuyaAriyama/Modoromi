@@ -19,6 +19,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   bedtimeReminder: false,
   weeklyReview: false,
   onboarded: false,
+  tutorialSeen: false,
   smartAlarm: false,
   smartWindowMin: 30,
   healthSync: false,

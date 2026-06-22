@@ -30,6 +30,7 @@ const settings: UserSettings = {
   bedtimeReminder: false,
   weeklyReview: false,
   onboarded: true,
+  tutorialSeen: true,
   smartAlarm: false,
   smartWindowMin: 30,
   healthSync: false,

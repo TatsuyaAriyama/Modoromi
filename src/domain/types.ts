@@ -87,6 +87,8 @@ export interface UserSettings {
    */
   weeklyReview: boolean;
   onboarded: boolean; // first-launch flow completed
+  /** Whether the post-onboarding feature tour has been seen (replayable). */
+  tutorialSeen: boolean;
   /**
    * Smart wake: end the session a little early when body movement suggests
    * light sleep within the window before the set alarm. Only fires while the

@@ -131,6 +131,7 @@ function parseSettings(x: unknown): UserSettings | null {
     bedtimeReminder: isBool(x.bedtimeReminder) ? x.bedtimeReminder : false,
     weeklyReview: isBool(x.weeklyReview) ? x.weeklyReview : false,
     onboarded: isBool(x.onboarded) ? x.onboarded : true,
+    tutorialSeen: isBool(x.tutorialSeen) ? x.tutorialSeen : true,
     smartAlarm: isBool(x.smartAlarm) ? x.smartAlarm : false,
     smartWindowMin: isNum(x.smartWindowMin) ? x.smartWindowMin : 30,
     healthSync: isBool(x.healthSync) ? x.healthSync : false,
