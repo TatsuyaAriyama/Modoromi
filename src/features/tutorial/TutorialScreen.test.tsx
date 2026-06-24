@@ -21,7 +21,7 @@ afterEach(cleanup);
 describe('TutorialScreen', () => {
   it('opens on the welcome slide', () => {
     render(<TutorialScreen />);
-    expect(screen.getByText('Welcome to Madoromi')).toBeTruthy();
+    expect(screen.getByText(/Welcome to Madoromi/)).toBeTruthy();
   });
 
   it('advances through the slides with Next', () => {

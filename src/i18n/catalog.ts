@@ -479,7 +479,10 @@ export const messages: Record<string, Msg> = {
   'settings.replayTutorialBtn': { en: 'View', ja: '見る' },
   'tutorial.start': { en: 'Get started', ja: 'はじめる' },
   'tutorial.skip': { en: 'Skip', ja: 'スキップ' },
-  'tutorial.welcome.title': { en: 'Welcome to Madoromi', ja: 'まどろみへようこそ' },
+  'tutorial.welcome.title': {
+    en: 'Welcome to Madoromi — design your finest sleep',
+    ja: 'ようこそ — 至高の睡眠を設計する「Madoromi」へ',
+  },
   'tutorial.welcome.body': {
     en: 'Not just sleep tracking — sleep in service of clear thinking. Here’s a quick tour.',
     ja: '記録するだけでなく、よく考えるための睡眠を。簡単に使い方を案内します。',
