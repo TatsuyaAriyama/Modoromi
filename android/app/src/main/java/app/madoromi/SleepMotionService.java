@@ -12,6 +12,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -34,6 +35,10 @@ public class SleepMotionService extends Service implements SensorEventListener {
 
     private static final String CHANNEL_ID = "madoromi_sleep_motion";
     private static final int NOTIFICATION_ID = 0x5_1ee9; // arbitrary, stable
+    /** logcat tag for overnight verification: `adb logcat -s MadoromiMotion`. */
+    private static final String TAG = "MadoromiMotion";
+    /** Heartbeat roughly once a minute at ~10 Hz — proves the SoC keeps waking. */
+    private static final long HEARTBEAT_EVERY = 600;
 
     // Detection constants — keep in lockstep with src/domain/motionDetect.ts.
     private static final double THRESHOLD = 1.2; // m/s² of linear acceleration
@@ -53,6 +58,7 @@ public class SleepMotionService extends Service implements SensorEventListener {
     private boolean primed = false;
     private double prevT;
     private double lastEventT = -Double.MAX_VALUE;
+    private long samples;
 
     @Override
     public void onCreate() {
@@ -83,6 +89,7 @@ public class SleepMotionService extends Service implements SensorEventListener {
                 // ~10 Hz sampling, batched up to 60s (FIFO) to spare the battery.
                 sm.registerListener(this, accel, 100_000, 60_000_000);
             }
+            Log.i(TAG, "service started, accelerometer=" + (accel != null));
         }
     }
 
@@ -95,6 +102,9 @@ public class SleepMotionService extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent e) {
         final double t = System.currentTimeMillis();
         final double x = e.values[0], y = e.values[1], z = e.values[2];
+        if (++samples % HEARTBEAT_EVERY == 0) {
+            Log.i(TAG, "heartbeat samples=" + samples + " movements=" + MOVEMENTS.size());
+        }
         if (!primed) {
             gx = x; gy = y; gz = z;
             primed = true;
@@ -115,6 +125,8 @@ public class SleepMotionService extends Service implements SensorEventListener {
         final float minutes = (float) Math.max(0, Math.round((t - startMs) / 60000.0));
         synchronized (MOVEMENTS) {
             MOVEMENTS.add(new float[] { minutes, (float) mag });
+            Log.i(TAG, "movement #" + MOVEMENTS.size() + " min=" + minutes
+                + " mag=" + String.format("%.2f", mag));
         }
         if (writer != null) {
             try {
@@ -139,6 +151,8 @@ public class SleepMotionService extends Service implements SensorEventListener {
 
     @Override
     public void onDestroy() {
+        Log.i(TAG, "service stopped, samples=" + samples
+            + " movements=" + drainMovements().size());
         if (sm != null) sm.unregisterListener(this);
         if (writer != null) {
             try {
