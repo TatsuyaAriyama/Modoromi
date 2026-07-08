@@ -48,3 +48,26 @@ describe('TutorialScreen', () => {
     );
   });
 });
+
+describe('TutorialScreen swipe', () => {
+  const swipe = (el: Element, fromX: number, toX: number) => {
+    fireEvent.touchStart(el, { touches: [{ clientX: fromX, clientY: 300 }] });
+    fireEvent.touchEnd(el, { changedTouches: [{ clientX: toX, clientY: 300 }] });
+  };
+
+  it('swiping left advances, swiping right goes back', () => {
+    const { container } = render(<TutorialScreen />);
+    const inner = container.querySelector('.onb-inner') as Element;
+    swipe(inner, 300, 100); // left
+    expect(screen.getByText('Your day, at a glance')).toBeTruthy();
+    swipe(inner, 100, 300); // right
+    expect(screen.getByText(/Welcome to Madoromi/)).toBeTruthy();
+  });
+
+  it('ignores short drags (a tap is not a swipe)', () => {
+    const { container } = render(<TutorialScreen />);
+    const inner = container.querySelector('.onb-inner') as Element;
+    swipe(inner, 300, 280);
+    expect(screen.getByText(/Welcome to Madoromi/)).toBeTruthy();
+  });
+});

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { EyeMark } from '../../components/EyeMark';
@@ -80,11 +80,33 @@ export function TutorialScreen() {
     else setStep((s) => s + 1);
   };
 
+  // Swipe between slides, the gesture a paged tour invites. Left advances
+  // (never past the last slide — finishing stays an explicit tap), right goes
+  // back. Short drags are ignored so taps don't misfire.
+  const touchX = useRef<number | null>(null);
+  const SWIPE_MIN_PX = 48;
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (Math.abs(dx) < SWIPE_MIN_PX) return;
+    void tapMedium();
+    if (dx < 0 && !last) setStep((s) => s + 1);
+    else if (dx > 0 && step > 0) setStep((s) => s - 1);
+  };
+
   const slide = SLIDES[step];
 
   return (
     <div className="onb">
-      <div className="onb-inner">
+      <div
+        className="onb-inner"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <div className="onb-body">
           <div className="tut-art" aria-hidden="true">
             {slide.art}
