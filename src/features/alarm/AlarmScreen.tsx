@@ -3,6 +3,7 @@ import '../screens.css';
 import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
+import { EmptyState } from '../../components/EmptyState';
 import { Toggle } from '../../components/Toggle';
 import { AlarmEditor } from './AlarmEditor';
 import type { AlarmConfig } from '../../domain/types';
@@ -90,7 +91,7 @@ export function AlarmScreen() {
 
       {alarms.length === 0 ? (
         <Card>
-          <p className="empty">{t('alarm.empty')}</p>
+          <EmptyState title={t('alarm.empty')} hint={t('alarm.emptyHint')} />
         </Card>
       ) : (
         <Card>

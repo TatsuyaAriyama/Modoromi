@@ -369,6 +369,10 @@ export const messages: Record<string, Msg> = {
   'chart.condition': { en: 'Thinking-condition trend over time', ja: '思考コンディションの推移' },
   'history.sessions': { en: 'Sessions', ja: 'セッション' },
   'history.empty': { en: 'No records yet', ja: 'まだ記録がありません' },
+  'history.emptyHint': {
+    en: 'Tap “Good night” on Home tonight — your first night will appear here.',
+    ja: '今夜ホームの「おやすみ」から眠ると、最初の記録がここに並びます。',
+  },
   'history.themes': { en: 'Thinking themes', ja: '思考テーマのふり返り' },
 
   // ── Session detail ──────────────────────────────────────
@@ -392,6 +396,10 @@ export const messages: Record<string, Msg> = {
   'alarm.recoveryEarly': { en: 'Earlier, to recover', ja: '回復のため早め' },
   'alarm.fromTarget': { en: 'From your goal', ja: '目標から逆算' },
   'alarm.empty': { en: 'No alarms yet', ja: 'アラームはまだありません' },
+  'alarm.emptyHint': {
+    en: 'A steady wake time steadies your thinking — add one below.',
+    ja: '起床時刻を揃えると思考も安定します。下のボタンから追加できます。',
+  },
   'alarm.snoozeMeta': { en: (p) => ` · Snooze ${p.min} min`, ja: (p) => ` ・ スヌーズ${p.min}分` },
   'alarm.add': { en: '+ Add alarm', ja: '＋ アラームを追加' },
   'alarm.enableAria': { en: (p) => `Enable ${p.time}`, ja: (p) => `${p.time} を有効化` },

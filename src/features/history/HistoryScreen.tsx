@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
+import { EmptyState } from '../../components/EmptyState';
 import { BarChart } from '../../components/BarChart';
 import { LineChart } from '../../components/LineChart';
 import { SessionDetail } from './SessionDetail';
@@ -258,7 +259,7 @@ export function HistoryScreen() {
           {t('history.sessions')}
         </div>
         {sorted.length === 0 ? (
-          <p className="empty">{t('history.empty')}</p>
+          <EmptyState title={t('history.empty')} hint={t('history.emptyHint')} />
         ) : (
           sorted.map((s) => (
             <button
