@@ -359,6 +359,7 @@ export const messages: Record<string, Msg> = {
   'history.month': { en: 'Month', ja: '月' },
   'history.weeklyReview': { en: 'This week', ja: '今週の振り返り' },
   'history.logged': { en: (p) => `${p.nights} nights logged`, ja: (p) => `記録 ${p.nights}日` },
+  'history.streak': { en: (p) => `${p.days}-day streak`, ja: (p) => `連続${p.days}日` },
   'history.vsPrev': { en: (p) => ` · ${p.delta} vs last week`, ja: (p) => ` ・ 先週比 ${p.delta}` },
   'history.insights': { en: 'Noticing', ja: '気づき' },
   'history.avgDuration': { en: 'Avg. sleep', ja: '平均睡眠時間' },

@@ -19,6 +19,7 @@ import { buildConditionSeries } from '../../domain/conditionSeries';
 import { weeklyReview } from '../../domain/review';
 import { deriveInsights } from '../../domain/insights';
 import { themeLog } from '../../domain/themeLog';
+import { loggedStreakDays } from '../../domain/streak';
 import {
   buildSharpnessSeries,
   latestResult,
@@ -65,6 +66,7 @@ export function HistoryScreen() {
     [sessions, targetMin],
   );
   const themes = useMemo(() => themeLog(sessions), [sessions]);
+  const streak = useMemo(() => loggedStreakDays(sessions), [sessions]);
   const sharpSeries = useMemo(
     () => buildSharpnessSeries(sharpness, days, new Date(), lang),
     [sharpness, days, lang],
@@ -107,8 +109,11 @@ export function HistoryScreen() {
       </div>
 
       <Card tight>
-        <div className="stat-label" style={{ marginBottom: 6 }}>
-          {t('history.weeklyReview')}
+        <div className="spread" style={{ marginBottom: 6 }}>
+          <span className="stat-label">{t('history.weeklyReview')}</span>
+          {streak >= 2 && (
+            <span className="pill">{t('history.streak', { days: streak })}</span>
+          )}
         </div>
         <p className="review-headline">
           {review.headlineParts.map((p) => t(`review.${p}`)).join(t('sep.middot'))}
