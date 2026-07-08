@@ -9,6 +9,7 @@ import {
   movementsPerHour,
   restlessnessLevel,
   shouldSmartWake,
+  sleepOnsetMin,
   stabilityScore,
 } from './motion';
 import type { Movement } from './types';
@@ -160,5 +161,32 @@ describe('capturedScreenOff', () => {
     expect(capturedScreenOff('js')).toBe(false);
     expect(capturedScreenOff('none')).toBe(false);
     expect(capturedScreenOff(undefined)).toBe(false);
+  });
+});
+
+describe('sleepOnsetMin', () => {
+  const move = (t: number): Movement => ({ t, magnitude: 2 });
+
+  it('reads no movement as settling immediately', () => {
+    expect(sleepOnsetMin([], 480)).toBe(0);
+  });
+
+  it('finds the onset after early tossing and turning', () => {
+    // Restless at 2, 5, 8 — then quiet: sleep starts around minute 8.
+    expect(sleepOnsetMin([move(2), move(5), move(8)], 480)).toBe(8);
+  });
+
+  it('keeps a quiet start even when movement comes later', () => {
+    // Still from lights-out; a roll-over at minute 40 is mid-sleep.
+    expect(sleepOnsetMin([move(40), move(200)], 480)).toBe(0);
+  });
+
+  it('returns null when the night never settles', () => {
+    const restless = Array.from({ length: 48 }, (_, i) => move(i * 10));
+    expect(sleepOnsetMin(restless, 480)).toBeNull();
+  });
+
+  it('returns null for a too-short session', () => {
+    expect(sleepOnsetMin([], 10)).toBeNull();
   });
 });

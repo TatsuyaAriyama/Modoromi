@@ -41,6 +41,30 @@ export function capturedScreenOff(source: MotionMode | undefined): boolean {
   return source === 'native';
 }
 
+/** A stretch this long without movement reads as "settled into sleep". */
+export const ONSET_STILL_MIN = 15;
+
+/**
+ * Estimated minutes from lights-out to falling asleep: the start of the first
+ * {@link ONSET_STILL_MIN}-minute stretch with no movement. No movements at all
+ * means the body settled immediately (0). Returns null when the night never
+ * had a still stretch long enough to call sleep — no estimate is more honest
+ * than a bad one. A 目安, not a diagnosis.
+ */
+export function sleepOnsetMin(
+  movements: Movement[],
+  durationMin: number,
+): number | null {
+  if (durationMin < ONSET_STILL_MIN) return null;
+  const times = movements.map((m) => m.t).sort((a, b) => a - b);
+  let prev = 0; // a candidate onset: the moment the last movement settled
+  for (const t of times) {
+    if (t - prev >= ONSET_STILL_MIN) return prev;
+    prev = Math.max(prev, t);
+  }
+  return durationMin - prev >= ONSET_STILL_MIN ? prev : null;
+}
+
 /** Movements per hour over the session. */
 export function movementsPerHour(count: number, durationMin: number): number {
   if (durationMin <= 0) return 0;

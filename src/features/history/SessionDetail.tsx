@@ -11,6 +11,7 @@ import {
   capturedScreenOff,
   movementHistogram,
   restlessnessLevel,
+  sleepOnsetMin,
 } from '../../domain/motion';
 import { formatDate, formatDuration, isoToHm } from '../../domain/format';
 import { useT, useLang } from '../../i18n/useT';
@@ -31,6 +32,10 @@ export function SessionDetail({
   const [mood, setMood] = useState<Mood | undefined>(session.mood);
   const [note, setNote] = useState(session.note ?? '');
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const onset = session.movements
+    ? sleepOnsetMin(session.movements, session.durationMin)
+    : null;
 
   const save = async () => {
     const qualityScore = mood
@@ -104,6 +109,13 @@ export function SessionDetail({
                 {t('motion.count', { count: session.movements.length })}
               </span>
             </div>
+            {onset != null && (
+              <p className="muted num" style={{ fontSize: 13, marginBottom: 6 }}>
+                {onset === 0
+                  ? t('detail.onsetInstant')
+                  : t('detail.onset', { dur: formatDuration(onset, lang) })}
+              </p>
+            )}
             <MovementGraph
               bins={movementHistogram(
                 session.movements,

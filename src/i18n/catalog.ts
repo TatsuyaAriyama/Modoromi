@@ -386,6 +386,14 @@ export const messages: Record<string, Msg> = {
     en: 'Recovered after the app closed — the end time is an estimate',
     ja: 'アプリ終了後に復元（終了時刻は目安です）',
   },
+  'detail.onset': {
+    en: (p) => `Fell asleep in about ${p.dur}`,
+    ja: (p) => `入眠まで 約${p.dur}`,
+  },
+  'detail.onsetInstant': {
+    en: 'Drifted off almost immediately',
+    ja: 'ほとんどすぐに眠りにつきました',
+  },
   'detail.note': { en: 'Note', ja: 'メモ' },
   'detail.confirmDelete': { en: 'Delete this record?', ja: 'この記録を削除しますか？' },
   'detail.deleteConfirm': { en: 'Delete', ja: '削除する' },
