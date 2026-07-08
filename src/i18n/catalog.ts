@@ -477,6 +477,10 @@ export const messages: Record<string, Msg> = {
   'settings.export': { en: 'Export', ja: '書き出す' },
   'settings.exportCsvData': { en: 'Export sleep log (CSV)', ja: '睡眠ログを書き出す（CSV）' },
   'settings.exportCsv': { en: 'Export CSV', ja: 'CSVで書き出す' },
+  'settings.exportSharpnessData': {
+    en: 'Export sharpness checks (CSV)',
+    ja: '冴えチェックを書き出す（CSV）',
+  },
   'settings.importData': { en: 'Restore from backup', ja: 'バックアップから読み込み' },
   'settings.import': { en: 'Restore', ja: '読み込む' },
   'settings.wipeData': { en: 'Delete all data', ja: 'すべてのデータを削除' },

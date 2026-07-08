@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CSV_COLUMNS, sessionsToCsv } from './csv';
+import { CSV_COLUMNS, sessionsToCsv, sharpnessToCsv } from './csv';
 import type { SleepSession } from './types';
 
 function mk(over: Partial<SleepSession> & { id: string }): SleepSession {
@@ -45,14 +45,14 @@ describe('sessionsToCsv', () => {
       }),
     ]);
     const row = csv.split('\r\n')[1];
-    expect(row).toBe('2026-06-21,23:15,06:45,450,fresh,82,4,2,,');
+    expect(row).toBe('2026-06-21,23:15,06:45,450,fresh,82,4,2,,,,');
   });
 
   it('leaves optional fields blank when absent', () => {
     const csv = sessionsToCsv([mk({ id: 'a' })]);
     const row = csv.split('\r\n')[1];
-    // mood, quality, subjective, movements, note, theme all empty
-    expect(row).toBe('2026-06-21,23:00,07:00,480,,,,,,');
+    // mood, quality, subjective, movements, note, theme, source, recovered
+    expect(row).toBe('2026-06-21,23:00,07:00,480,,,,,,,,');
   });
 
   it('escapes commas, quotes, and newlines per RFC 4180', () => {
@@ -62,6 +62,31 @@ describe('sessionsToCsv', () => {
     const row = csv.split('\r\n').slice(1).join('\r\n');
     // The embedded newline keeps the field quoted; quotes are doubled.
     expect(row).toContain('"late, ""rough"" night\nwoke twice"');
-    expect(row.endsWith(',plain')).toBe(true);
+    expect(row.endsWith(',plain,,')).toBe(true);
+  });
+});
+
+describe('source and recovered columns', () => {
+  it('marks imported nights as health and recovered nights as yes', () => {
+    const csv = sessionsToCsv([
+      mk({ id: 'a', imported: true }),
+      mk({ id: 'b', motionSource: 'native', recovered: true }),
+    ]);
+    const [, row1, row2] = csv.split('\r\n');
+    expect(row1.endsWith(',health,')).toBe(true);
+    expect(row2.endsWith(',native,yes')).toBe(true);
+  });
+});
+
+describe('sharpnessToCsv', () => {
+  it('exports results oldest first with the documented columns', () => {
+    const csv = sharpnessToCsv([
+      { id: 'b', takenAt: '2026-06-21T07:30:00', medianMs: 260, bestMs: 240, trials: 5, score: 87 },
+      { id: 'a', takenAt: '2026-06-20T07:30:00', medianMs: 300, bestMs: 270, trials: 5, score: 73 },
+    ]);
+    const lines = csv.split('\r\n');
+    expect(lines[0]).toBe('date,time,score,medianMs,bestMs,trials');
+    expect(lines[1]).toBe('2026-06-20,07:30,73,300,270,5');
+    expect(lines[2]).toBe('2026-06-21,07:30,87,260,240,5');
   });
 });

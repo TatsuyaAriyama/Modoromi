@@ -9,7 +9,7 @@ import { Toggle } from '../../components/Toggle';
 import type { Lang, ThemePref } from '../../domain/types';
 import { exportAll, importAll, wipeAll } from '../../data/repositories';
 import { parseBackup } from '../../domain/backup';
-import { sessionsToCsv } from '../../domain/csv';
+import { sessionsToCsv, sharpnessToCsv } from '../../domain/csv';
 import { isAndroid, isNative } from '../../lib/platform';
 import { requestHealthAccess } from '../../lib/health';
 import {
@@ -27,6 +27,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const lang = useLang();
   const settings = useStore((s) => s.settings);
   const sessions = useStore((s) => s.sessions);
+  const sharpness = useStore((s) => s.sharpness);
   const saveSettings = useStore((s) => s.saveSettings);
   const importFromHealth = useStore((s) => s.importFromHealth);
   const init = useStore((s) => s.init);
@@ -78,6 +79,14 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
 
   const onExportCsv = () => {
     deliver(`madoromi-sleep-${stamp()}.csv`, 'text/csv', sessionsToCsv(sessions));
+  };
+
+  const onExportSharpnessCsv = () => {
+    deliver(
+      `madoromi-sharpness-${stamp()}.csv`,
+      'text/csv',
+      sharpnessToCsv(sharpness),
+    );
   };
 
   const onImport = async () => {
@@ -385,6 +394,14 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             {t('settings.exportCsv')}
           </Button>
         </div>
+        {sharpness.length > 0 && (
+          <div className="set-row">
+            <span className="set-label">{t('settings.exportSharpnessData')}</span>
+            <Button variant="ghost" onClick={onExportSharpnessCsv}>
+              {t('settings.exportCsv')}
+            </Button>
+          </div>
+        )}
         <div className="set-row">
           <span className="set-label">{t('settings.importData')}</span>
           <Button
