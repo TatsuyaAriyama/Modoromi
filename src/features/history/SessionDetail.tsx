@@ -2,6 +2,7 @@ import { useState } from 'react';
 import '../screens.css';
 import type { Mood, SleepSession } from '../../domain/types';
 import { Button } from '../../components/Button';
+import { Sheet } from '../../components/Sheet';
 import { MoodPicker } from '../../components/MoodPicker';
 import { MovementGraph } from '../../components/MovementGraph';
 import { useStore } from '../../app/store';
@@ -50,8 +51,7 @@ export function SessionDetail({
   };
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <Sheet onClose={onClose} label={formatDate(new Date(session.endedAt), lang)}>
         <div className="spread">
           <h2 style={{ fontSize: 18 }}>
             {formatDate(new Date(session.endedAt), lang)}
@@ -175,7 +175,6 @@ export function SessionDetail({
             {t('detail.delete')}
           </Button>
         )}
-      </div>
-    </div>
+    </Sheet>
   );
 }

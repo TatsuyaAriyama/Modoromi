@@ -3,6 +3,7 @@ import '../screens.css';
 import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
+import { Sheet } from '../../components/Sheet';
 import { TimeDial } from '../../components/TimeDial';
 import { Toggle } from '../../components/Toggle';
 import type { Lang, ThemePref } from '../../domain/types';
@@ -410,73 +411,67 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       <p className="banner">{t('settings.disclaimer')}</p>
 
       {exported && (
-        <div className="sheet-backdrop" onClick={() => setExported(null)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>{t('settings.exportTitle')}</h2>
-            <textarea
-              className="textarea"
-              style={{ minHeight: 220 }}
-              readOnly
-              value={exported}
-            />
-            <Button block onClick={() => setExported(null)}>
-              {t('common.close')}
-            </Button>
-          </div>
-        </div>
+        <Sheet onClose={() => setExported(null)} label={t('settings.exportTitle')}>
+          <h2 style={{ fontSize: 18 }}>{t('settings.exportTitle')}</h2>
+          <textarea
+            className="textarea"
+            style={{ minHeight: 220 }}
+            readOnly
+            value={exported}
+          />
+          <Button block onClick={() => setExported(null)}>
+            {t('common.close')}
+          </Button>
+        </Sheet>
       )}
 
       {importOpen && (
-        <div className="sheet-backdrop" onClick={() => setImportOpen(false)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>{t('settings.importTitle')}</h2>
-            <p className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
-              {t('settings.importHint')}
-            </p>
-            <textarea
-              className="textarea"
-              style={{ minHeight: 180 }}
-              placeholder='{"app":"Madoromi", ...}'
-              value={importText}
-              onChange={(e) => {
-                setImportText(e.target.value);
-                setImportError(null);
-              }}
-            />
-            {importError && (
-              <span style={{ color: '#d9748a', fontSize: 13 }}>
-                {translate(lang, `backup.${importError}`)}
-              </span>
-            )}
-            <Button
-              variant="primary"
-              block
-              large
-              disabled={importText.trim() === ''}
-              onClick={() => void onImport()}
-            >
-              {t('settings.importConfirm')}
-            </Button>
-            <Button variant="ghost" block onClick={() => setImportOpen(false)}>
-              {t('common.cancel.soft')}
-            </Button>
-          </div>
-        </div>
+        <Sheet onClose={() => setImportOpen(false)} label={t('settings.importTitle')}>
+          <h2 style={{ fontSize: 18 }}>{t('settings.importTitle')}</h2>
+          <p className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
+            {t('settings.importHint')}
+          </p>
+          <textarea
+            className="textarea"
+            style={{ minHeight: 180 }}
+            placeholder='{"app":"Madoromi", ...}'
+            value={importText}
+            onChange={(e) => {
+              setImportText(e.target.value);
+              setImportError(null);
+            }}
+          />
+          {importError && (
+            <span style={{ color: '#d9748a', fontSize: 13 }}>
+              {translate(lang, `backup.${importError}`)}
+            </span>
+          )}
+          <Button
+            variant="primary"
+            block
+            large
+            disabled={importText.trim() === ''}
+            onClick={() => void onImport()}
+          >
+            {t('settings.importConfirm')}
+          </Button>
+          <Button variant="ghost" block onClick={() => setImportOpen(false)}>
+            {t('common.cancel.soft')}
+          </Button>
+        </Sheet>
       )}
 
       {confirmWipe && (
-        <div className="sheet-backdrop" onClick={() => setConfirmWipe(false)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>{t('settings.wipeTitle')}</h2>
-            <p className="muted">{t('settings.wipeHint')}</p>
-            <Button variant="danger" block large onClick={() => void onWipe()}>
-              {t('settings.wipeConfirm')}
-            </Button>
-            <Button variant="ghost" block onClick={() => setConfirmWipe(false)}>
-              {t('common.cancel.soft')}
-            </Button>
-          </div>
-        </div>
+        <Sheet onClose={() => setConfirmWipe(false)} label={t('settings.wipeTitle')}>
+          <h2 style={{ fontSize: 18 }}>{t('settings.wipeTitle')}</h2>
+          <p className="muted">{t('settings.wipeHint')}</p>
+          <Button variant="danger" block large onClick={() => void onWipe()}>
+            {t('settings.wipeConfirm')}
+          </Button>
+          <Button variant="ghost" block onClick={() => setConfirmWipe(false)}>
+            {t('common.cancel.soft')}
+          </Button>
+        </Sheet>
       )}
     </div>
   );
