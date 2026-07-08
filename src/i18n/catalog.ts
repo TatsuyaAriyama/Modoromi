@@ -219,7 +219,10 @@ export const messages: Record<string, Msg> = {
   'theme.night': { en: 'Night', ja: 'ナイト' },
 
   // ── Home screen ─────────────────────────────────────────
-  'home.greeting': { en: 'Getting ready for sleep', ja: 'おやすみの準備を' },
+  'home.greeting.morning': { en: 'Good morning', ja: 'おはようございます' },
+  'home.greeting.day': { en: 'May your thinking run clear', ja: '今日も思考が冴えますように' },
+  'home.greeting.evening': { en: 'Getting ready for sleep', ja: 'おやすみの準備を' },
+  'home.greeting.night': { en: 'The day is done — rest well', ja: '今日もおつかれさまでした' },
   'home.theme': { en: 'Today’s thinking theme', ja: '今日の思考テーマ' },
   'home.tonightCues': { en: 'Tonight’s cues', ja: '今夜の目安' },
   'home.caffeineCue': { en: 'Last caffeine', ja: 'カフェインは控えめに' },

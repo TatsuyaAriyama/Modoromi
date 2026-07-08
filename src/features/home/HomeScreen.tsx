@@ -11,6 +11,7 @@ import {
 } from '../../domain/consistency';
 import { thinkingCondition } from '../../domain/condition';
 import { todaysTheme } from '../../domain/theme';
+import { greetingSlot } from '../../domain/greeting';
 import { isoToHm } from '../../domain/format';
 import { formatDate, formatDuration } from '../../i18n/catalog';
 import { isQualityConfirmed } from '../../domain/score';
@@ -66,7 +67,9 @@ export function HomeScreen({
       <div className="home-head">
         <div>
           <div className="home-date">{formatDate(new Date(), lang)}</div>
-          <h1 className="home-greeting">{t('home.greeting')}</h1>
+          <h1 className="home-greeting">
+            {t(`home.greeting.${greetingSlot()}`)}
+          </h1>
         </div>
         <button
           className="icon-btn"
