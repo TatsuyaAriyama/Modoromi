@@ -17,6 +17,7 @@
 }
 
 .tab {
+  position: relative;
   background: none;
   border: none;
   display: flex;
@@ -29,8 +30,28 @@
   letter-spacing: var(--tracking-wide);
   transition: color 0.2s ease;
 }
+/* A small dot slides in above the active tab's icon (absolute, so switching
+   tabs never shifts the layout). */
+.tab::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0;
+  transform: translateY(3px) scale(0.4);
+  transition: opacity 0.25s ease, transform 0.25s var(--ease-soft);
+}
 .tab[data-active='true'] {
   color: var(--primary);
+}
+.tab[data-active='true']::after {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 .tab svg {
   width: 22px;

@@ -242,6 +242,31 @@
   box-shadow: var(--shadow-orb);
   transition: transform 0.25s var(--ease-soft), box-shadow 0.3s ease;
 }
+/* A soft halo that breathes behind the orb — slow enough to read as calm.
+   Animations live on the pseudo-elements so :active press feedback (a
+   transform on the button itself) is never fought by the keyframes. */
+.cta-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--gradient-twilight);
+  filter: blur(16px);
+  z-index: -1;
+  pointer-events: none;
+  animation: orb-halo 7s ease-in-out infinite;
+}
+@keyframes orb-halo {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.14;
+  }
+}
 .cta-hero::after {
   content: '';
   position: absolute;
@@ -250,6 +275,18 @@
   border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
   opacity: 0.6;
   pointer-events: none;
+  animation: orb-ring 7s ease-in-out infinite;
+}
+@keyframes orb-ring {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.3;
+  }
 }
 .cta-hero:active {
   transform: scale(0.96);
@@ -275,11 +312,55 @@
   color: var(--text-mute);
   margin-top: var(--space-3);
 }
+/* The closed eye drifts, barely — the feeling of floating off to sleep. */
+.session-eye {
+  animation: eye-drift 11s ease-in-out infinite;
+}
+@keyframes eye-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
 .session-mid {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-4);
+}
+/* While asleep: a dim halo behind the clock, breathing at a sleeper's pace.
+   Ambient only — quiet enough to fall asleep to, disabled by the global
+   prefers-reduced-motion rule like every other animation. */
+.session-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--primary) 20%, transparent) 0%,
+    transparent 68%
+  );
+  pointer-events: none;
+  z-index: -1;
+  animation: halo-breathe 9s ease-in-out infinite;
+}
+@keyframes halo-breathe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.88);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08);
+    opacity: 0.85;
+  }
 }
 .session-hint {
   font-size: 12px;
@@ -708,6 +789,17 @@
   font-size: 72px;
   line-height: 1;
   letter-spacing: 0.02em;
+  /* A gentle pulse in time with the ring — waking, not jangling. */
+  animation: ring-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ring-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
 }
 .alarm-ring-title {
   font-family: var(--font-display);
@@ -883,6 +975,19 @@
   background: var(--gradient-twilight);
   color: var(--mist);
   box-shadow: var(--shadow-orb);
+  /* A quick pop when the light comes on — the moment reads instantly. */
+  animation: sharp-pop 0.25s ease-out;
+}
+@keyframes sharp-pop {
+  0% {
+    transform: scale(0.94);
+  }
+  60% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .sharp-orb[data-phase='tooSoon'] {
   background: color-mix(in srgb, #d9748a 28%, var(--surface-2));

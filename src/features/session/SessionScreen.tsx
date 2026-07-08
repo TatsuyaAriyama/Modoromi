@@ -208,9 +208,12 @@ export function SessionScreen() {
   return (
     <div className="app-frame" style={{ background: 'var(--bg)' }}>
       <div className="session-wrap">
-        <EyeMark size={56} color="var(--text)" open={false} />
+        <div className="session-eye" aria-hidden="true">
+          <EyeMark size={56} color="var(--text)" open={false} />
+        </div>
 
         <div className="session-mid">
+          <div className="session-halo" aria-hidden="true" />
           <div className="session-clock num">
             {hh}
             <span style={{ opacity: 0.4 }}>:</span>
