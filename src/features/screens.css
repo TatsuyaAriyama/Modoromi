@@ -292,6 +292,15 @@
   transform: scale(0.96);
 }
 
+/* Full-screen flows ease in rather than popping (session, nap, wind, sharp).
+   Uses the shared fade-in keyframes; quieted by prefers-reduced-motion. */
+.session-wrap,
+.nap-wrap,
+.wind-wrap,
+.sharp-wrap {
+  animation: fade-in 0.45s ease;
+}
+
 /* Session full-screen */
 .session-wrap {
   height: 100%;
@@ -408,6 +417,21 @@
 }
 .morning-dur {
   font-size: 40px;
+}
+/* Post-save score reveal — the check's small payoff. */
+.morning-reveal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  animation: fade-in 0.5s ease;
+}
+.morning-score {
+  font-size: 88px;
+  line-height: 1.1;
+  color: var(--primary);
+  letter-spacing: 0.02em;
 }
 
 /* Alarm list */

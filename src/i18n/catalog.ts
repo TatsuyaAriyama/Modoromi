@@ -259,6 +259,12 @@ export const messages: Record<string, Msg> = {
   'morning.notePlaceholder': { en: 'had a dream / woke in the night, etc.', ja: '夢を見た / 途中で目が覚めた など' },
   'morning.save': { en: 'Save', ja: '保存する' },
   'morning.later': { en: 'Later (log the time only)', ja: 'あとで（時間だけ記録）' },
+  'morning.scoreTitle': { en: 'Last night’s quality', ja: '昨夜の質スコア' },
+  'morning.scoreCopy': {
+    en: 'Saved — trends live in the Log tab',
+    ja: '記録しました。推移は記録タブで確認できます',
+  },
+  'morning.begin': { en: 'Start the day', ja: '今日をはじめる' },
 
   // ── Wind-down ───────────────────────────────────────────
   'wind.title': { en: 'Breathe, and let the day go', ja: '深呼吸して、頭をほどく' },

@@ -34,6 +34,7 @@ export default function App() {
   const tutorialSeen = useStore((s) => s.settings.tutorialSeen);
   const active = useStore((s) => s.active);
   const pendingMorning = useStore((s) => s.pendingMorning);
+  const morningResult = useStore((s) => s.morningResult);
   const startSession = useStore((s) => s.startSession);
 
   const [tab, setTab] = useState<TabKey>('home');
@@ -61,11 +62,14 @@ export default function App() {
 
   // Right after onboarding: a short, skippable feature tour (replayable from
   // Settings). Sits above the main UI but below any active sleep flow.
-  if (!tutorialSeen && !active && !pendingMorning) return <TutorialScreen />;
+  if (!tutorialSeen && !active && !pendingMorning && morningResult == null) {
+    return <TutorialScreen />;
+  }
 
-  // Full-screen flows take over.
+  // Full-screen flows take over. The morning screen stays mounted through the
+  // post-save score reveal (morningResult) so the moment isn't cut short.
   if (active) return <SessionScreen />;
-  if (pendingMorning) return <MorningScreen />;
+  if (pendingMorning || morningResult != null) return <MorningScreen />;
   if (napOpen) return <NapScreen onClose={() => setNapOpen(false)} />;
   if (sharpnessOpen) {
     return <SharpnessScreen onClose={() => setSharpnessOpen(false)} />;

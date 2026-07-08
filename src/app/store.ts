@@ -56,6 +56,12 @@ interface AppState {
   active: ActiveSession;
   /** Session awaiting the morning check (set after waking). */
   pendingMorning: SleepSession | null;
+  /**
+   * Quality score of the just-confirmed morning check, shown once as a short
+   * reveal after saving. Set only after the data is safely persisted, so the
+   * flourish can never cost a record. Cleared when the user moves on.
+   */
+  morningResult: number | null;
 
   init(): Promise<void>;
 
@@ -74,6 +80,8 @@ interface AppState {
     theme?: string;
   }): Promise<void>;
   dismissMorning(): void;
+  /** Dismiss the post-save score reveal. */
+  clearMorningResult(): void;
 
   updateSession(session: SleepSession): Promise<void>;
   deleteSession(id: string): Promise<void>;
@@ -102,6 +110,7 @@ export const useStore = create<AppState>((set, get) => ({
   sharpness: [],
   active: null,
   pendingMorning: null,
+  morningResult: null,
 
   async init() {
     const [sessions, alarms, settings, sharpness] = await Promise.all([
@@ -187,13 +196,20 @@ export const useStore = create<AppState>((set, get) => ({
       qualityScore,
     };
     await sleepRepo.save(session);
+    // The reveal flag is set only after the save above — the flourish can
+    // never race ahead of the record.
     set((s) => ({
       sessions: [...s.sessions, session],
       pendingMorning: null,
+      morningResult: qualityScore,
     }));
     if (settings.healthSync) void mirrorSleepToHealth(session);
     void syncSchedules(get().alarms, settings, get().sessions);
     refreshWidget(get().sessions, settings);
+  },
+
+  clearMorningResult() {
+    set({ morningResult: null });
   },
 
   dismissMorning() {

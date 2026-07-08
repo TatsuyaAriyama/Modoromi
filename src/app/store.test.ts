@@ -25,6 +25,7 @@ function resetStore() {
     settings: DEFAULT_SETTINGS,
     active: null,
     pendingMorning: null,
+    morningResult: null,
   });
 }
 
@@ -87,12 +88,17 @@ describe('session lifecycle', () => {
 
     await useStore.getState().saveMorningCheck({ mood: 'fresh', note: '  ok  ' });
 
-    const { sessions, pendingMorning } = useStore.getState();
+    const { sessions, pendingMorning, morningResult } = useStore.getState();
     expect(pendingMorning).toBeNull();
     expect(sessions).toHaveLength(1);
     expect(sessions[0].mood).toBe('fresh');
     expect(sessions[0].note).toBe('ok'); // trimmed
     expect(typeof sessions[0].qualityScore).toBe('number');
+
+    // The score reveal is armed with the confirmed score, and dismissable.
+    expect(morningResult).toBe(sessions[0].qualityScore);
+    useStore.getState().clearMorningResult();
+    expect(useStore.getState().morningResult).toBeNull();
 
     // Persisted through the repository, not just held in memory.
     const stored = await sleepRepo.all();
@@ -109,11 +115,13 @@ describe('session lifecycle', () => {
     vi.useRealTimers();
 
     useStore.getState().dismissMorning();
-    const { sessions, pendingMorning } = useStore.getState();
+    const { sessions, pendingMorning, morningResult } = useStore.getState();
     expect(pendingMorning).toBeNull();
     expect(sessions).toHaveLength(1);
     expect(sessions[0].qualityScore).toBeUndefined();
     expect(sessions[0].mood).toBeUndefined();
+    // A skipped check has no confirmed score — no reveal.
+    expect(morningResult).toBeNull();
   });
 });
 
