@@ -365,6 +365,7 @@ export const messages: Record<string, Msg> = {
   'history.avgDuration': { en: 'Avg. sleep', ja: '平均睡眠時間' },
   'history.avgQuality': { en: 'Avg. quality', ja: '平均質スコア' },
   'chart.durationTarget': { en: 'Sleep duration (dotted = goal)', ja: '睡眠時間（点線 = 目標）' },
+  'chart.schedule': { en: 'Sleep rhythm (bed → wake)', ja: '就寝・起床のリズム' },
   'chart.qualityTrend': { en: 'Quality-score trend', ja: '質スコアの推移' },
   'chart.conditionTrend': { en: 'Thinking-condition trend', ja: '思考コンディションの推移' },
   'chart.condition': { en: 'Thinking-condition trend over time', ja: '思考コンディションの推移' },

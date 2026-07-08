@@ -5,6 +5,7 @@ import { Card } from '../../components/Card';
 import { EmptyState } from '../../components/EmptyState';
 import { BarChart } from '../../components/BarChart';
 import { LineChart } from '../../components/LineChart';
+import { ScheduleChart } from '../../components/ScheduleChart';
 import { SessionDetail } from './SessionDetail';
 import {
   averageDuration,
@@ -20,6 +21,7 @@ import { weeklyReview } from '../../domain/review';
 import { deriveInsights } from '../../domain/insights';
 import { themeLog } from '../../domain/themeLog';
 import { loggedStreakDays } from '../../domain/streak';
+import { buildScheduleSeries } from '../../domain/schedule';
 import {
   buildSharpnessSeries,
   latestResult,
@@ -67,6 +69,10 @@ export function HistoryScreen() {
   );
   const themes = useMemo(() => themeLog(sessions), [sessions]);
   const streak = useMemo(() => loggedStreakDays(sessions), [sessions]);
+  const schedule = useMemo(
+    () => buildScheduleSeries(sessions, days, new Date(), lang),
+    [sessions, days, lang],
+  );
   const sharpSeries = useMemo(
     () => buildSharpnessSeries(sharpness, days, new Date(), lang),
     [sharpness, days, lang],
@@ -201,6 +207,13 @@ export function HistoryScreen() {
           }))}
           target={targetMin}
         />
+      </Card>
+
+      <Card tight>
+        <div className="stat-label" style={{ marginBottom: 8 }}>
+          {t('chart.schedule')}
+        </div>
+        <ScheduleChart data={schedule} />
       </Card>
 
       <Card tight>
