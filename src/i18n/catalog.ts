@@ -401,6 +401,7 @@ export const messages: Record<string, Msg> = {
     ja: '起床時刻を揃えると思考も安定します。下のボタンから追加できます。',
   },
   'alarm.snoozeMeta': { en: (p) => ` · Snooze ${p.min} min`, ja: (p) => ` ・ スヌーズ${p.min}分` },
+  'alarm.nextIn': { en: (p) => `Rings in ${p.dur}`, ja: (p) => `${p.dur}後に鳴ります` },
   'alarm.add': { en: '+ Add alarm', ja: '＋ アラームを追加' },
   'alarm.enableAria': { en: (p) => `Enable ${p.time}`, ja: (p) => `${p.time} を有効化` },
 

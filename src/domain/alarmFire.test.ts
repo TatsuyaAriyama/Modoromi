@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isAlarmDue, nextAlarmDate } from './alarmFire';
+import { isAlarmDue, minutesUntilAlarm, nextAlarmDate } from './alarmFire';
 
 describe('nextAlarmDate', () => {
   it('rolls to the next morning when the time has already passed today', () => {
@@ -41,5 +41,27 @@ describe('isAlarmDue', () => {
     expect(isAlarmDue('07:00', start.toISOString(), new Date(2026, 5, 21, 7, 0))).toBe(
       true,
     );
+  });
+});
+
+describe('minutesUntilAlarm', () => {
+  // 2026-06-20 is a Saturday.
+  const SAT_NOON = new Date(2026, 5, 20, 12, 0);
+
+  it('counts to a one-shot later today', () => {
+    expect(minutesUntilAlarm('13:30', [], SAT_NOON)).toBe(90);
+  });
+
+  it('rolls a passed one-shot to tomorrow', () => {
+    expect(minutesUntilAlarm('07:00', [], SAT_NOON)).toBe(19 * 60);
+  });
+
+  it('waits for the repeat weekday (Mon from Saturday noon)', () => {
+    // Sat 12:00 → Mon 07:00 = 43h.
+    expect(minutesUntilAlarm('07:00', [1], SAT_NOON)).toBe(43 * 60);
+  });
+
+  it('fires today when the repeat weekday matches and time is ahead', () => {
+    expect(minutesUntilAlarm('23:00', [6], SAT_NOON)).toBe(11 * 60);
   });
 });

@@ -7,7 +7,8 @@ import { EmptyState } from '../../components/EmptyState';
 import { Toggle } from '../../components/Toggle';
 import { AlarmEditor } from './AlarmEditor';
 import type { AlarmConfig } from '../../domain/types';
-import { weekdayName } from '../../domain/format';
+import { formatDuration, weekdayName } from '../../domain/format';
+import { minutesUntilAlarm } from '../../domain/alarmFire';
 import { recommendedBedtime } from '../../domain/bedtime';
 import { useT, useLang } from '../../i18n/useT';
 import type { Lang } from '../../domain/types';
@@ -121,6 +122,16 @@ export function AlarmScreen() {
                     ? t('alarm.snoozeMeta', { min: a.snoozeMinutes })
                     : ''}
                 </div>
+                {a.enabled && (
+                  <div className="alarm-meta" style={{ opacity: 0.7 }}>
+                    {t('alarm.nextIn', {
+                      dur: formatDuration(
+                        minutesUntilAlarm(a.time, a.repeatDays, new Date()),
+                        lang,
+                      ),
+                    })}
+                  </div>
+                )}
               </button>
               <Toggle
                 on={a.enabled}
