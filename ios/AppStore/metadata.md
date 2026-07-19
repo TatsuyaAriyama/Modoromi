@@ -16,7 +16,7 @@
 | SKU | madoromi-ios-001 |
 | プライマリ言語 / Primary Language | **English (U.S.)** |
 | 対応言語 / Localizations | English (U.S.), Japanese |
-| バージョン | 1.0（ビルド 1） |
+| バージョン | 1.0（ビルド 2） |
 | プライマリカテゴリ | ヘルスケア/フィットネス（Health & Fitness） |
 | セカンダリカテゴリ | ライフスタイル（Lifestyle） |
 | 価格 | 無料 / Free |
@@ -53,6 +53,8 @@
 > • Daily, weekly and monthly trends for duration and quality
 > • Three themes that follow your device’s dark setting and the time of day
 >   (day / night / a no-glow mode while you sleep)
+> • Share a night as a quiet, text-free card — just the duration and the
+>   orbit of your sleep, nothing you didn’t choose to include
 >
 > The thinking behind it
 > • Numbers are a guide (目安), never a verdict. A calm UI that never rushes you.
@@ -94,6 +96,7 @@
 > ・負債を踏まえた「回復のための就寝リマインダー」の逆算
 > ・日別/週別/月別の睡眠時間と質スコアの推移
 > ・端末のダーク設定と時間帯に追従する3つのテーマ（昼/夜/睡眠中の無発光）
+> ・眠りを静かなカードにして共有 — 文字のない、眠った長さと軌道だけの1枚
 >
 > ■ 設計の思想
 > ・数値は断定ではなく「目安」。生活を急かさない静かなUI。
@@ -106,7 +109,7 @@
 
 ### キーワード（100字以内・カンマ区切り）
 
-> 睡眠,睡眠記録,睡眠負債,目覚まし,アラーム,就寝,起床,生活リズム,睡眠スコア,コンディション,習慣,ヘルスケア
+> 睡眠,睡眠記録,睡眠負債,目覚まし,アラーム,就寝,起床,生活リズム,睡眠スコア,コンディション,習慣,ヘルスケア,共有
 
 ---
 
