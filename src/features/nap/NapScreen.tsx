@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { EyeMark } from '../../components/EyeMark';
+import { NightSky } from '../../components/NightSky';
 import { Button } from '../../components/Button';
 import { sleepDebtMin } from '../../domain/debt';
 import { NAP_LENGTHS_MIN, napAdvice } from '../../domain/nap';
@@ -73,6 +74,7 @@ export function NapScreen({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="app-frame" style={{ background: 'var(--bg)' }}>
+      <NightSky />
       <div className="nap-wrap">
         <div className="nap-head">
           <EyeMark size={44} color="var(--text)" open={phase === 'done'} />

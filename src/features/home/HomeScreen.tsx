@@ -1,29 +1,81 @@
 import '../screens.css';
 import { useStore } from '../../app/store';
-import { Card } from '../../components/Card';
 import { EyeMark } from '../../components/EyeMark';
 import { lastSession, sleepDebtMin } from '../../domain/debt';
 import { recommendedBedtime } from '../../domain/bedtime';
-import {
-  consistencyScore,
-  regularityLevel,
-} from '../../domain/consistency';
+import { consistencyScore } from '../../domain/consistency';
 import { thinkingCondition } from '../../domain/condition';
-import { todaysTheme } from '../../domain/theme';
 import { isoToHm } from '../../domain/format';
 import { formatDate, formatDuration } from '../../i18n/catalog';
 import { isQualityConfirmed } from '../../domain/score';
 import { tapMedium } from '../../lib/haptics';
 import { useT, useLang } from '../../i18n/useT';
+import type { SleepSession } from '../../domain/types';
+
+/* Last-7-nights skyline — the whole history at a glance, zero labels.
+   Dashed hairline = goal; the most recent night is brightest. Tap → Log. */
+function Skyline({
+  sessions,
+  goalMin,
+}: {
+  sessions: SleepSession[];
+  goalMin: number;
+}) {
+  const W = 320;
+  const H = 72;
+  const recent = [...sessions]
+    .sort((a, b) => (a.endedAt < b.endedAt ? 1 : -1))
+    .slice(0, 7)
+    .reverse();
+  const max = Math.max(goalMin, ...recent.map((s) => s.durationMin), 1) * 1.06;
+  const slot = W / 7;
+  const barW = 20;
+  const y = (v: number) => H * (1 - v / max);
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" aria-hidden="true">
+      <line
+        x1={0}
+        x2={W}
+        y1={y(goalMin)}
+        y2={y(goalMin)}
+        stroke="var(--accent)"
+        strokeWidth={1}
+        strokeDasharray="3 5"
+        opacity={0.5}
+      />
+      {recent.map((s, i) => {
+        // Right-align so tonight's empty slot never gaps the left edge.
+        const cx = (7 - recent.length + i) * slot + slot / 2;
+        const top = y(s.durationMin);
+        const isLast = i === recent.length - 1;
+        return (
+          <rect
+            key={s.id}
+            x={cx - barW / 2}
+            y={top}
+            width={barW}
+            height={H - top}
+            rx={4}
+            fill={isLast ? 'var(--accent)' : 'var(--primary)'}
+            opacity={isLast ? 1 : 0.45}
+          />
+        );
+      })}
+    </svg>
+  );
+}
 
 export function HomeScreen({
   onOpenSettings,
   onGoAlarm,
+  onGoLog,
   onStartNap,
   onWindDown,
 }: {
   onOpenSettings: () => void;
   onGoAlarm: () => void;
+  onGoLog: () => void;
   onStartNap: () => void;
   onWindDown: () => void;
 }) {
@@ -31,7 +83,6 @@ export function HomeScreen({
   const lang = useLang();
   const sessions = useStore((s) => s.sessions);
   const settings = useStore((s) => s.settings);
-  const alarms = useStore((s) => s.alarms);
 
   const last = lastSession(sessions);
   const debt = sleepDebtMin(sessions, settings.targetDurationMin);
@@ -44,12 +95,6 @@ export function HomeScreen({
     consistency,
   });
 
-  const theme = todaysTheme(sessions);
-
-  const nextAlarm = alarms
-    .filter((a) => a.enabled)
-    .map((a) => a.time)
-    .sort()[0];
   const plan = recommendedBedtime({
     wakeTime: settings.defaultWakeTime,
     targetMin: settings.targetDurationMin,
@@ -57,13 +102,26 @@ export function HomeScreen({
   });
   const reminderTime = settings.bedtimeReminder ? plan.bedtimeHm : undefined;
 
+  // One sentence for last night: how long, and how it sat against the goal.
+  const gap = last ? last.durationMin - settings.targetDurationMin : 0;
+  const lastNightLine = !last
+    ? t('home.noRecordsLine')
+    : t(
+        gap > 0
+          ? 'home.lastNightOver'
+          : gap < 0
+            ? 'home.lastNightUnder'
+            : 'home.lastNightExact',
+        {
+          dur: formatDuration(last.durationMin, lang),
+          gap: formatDuration(Math.abs(gap), lang),
+        },
+      );
+
   return (
     <div className="screen">
       <div className="home-head">
-        <div>
-          <div className="home-date">{formatDate(new Date(), lang)}</div>
-          <h1 className="home-greeting">{t('home.greeting')}</h1>
-        </div>
+        <div className="home-date">{formatDate(new Date(), lang)}</div>
         <button
           className="icon-btn"
           aria-label={t('settings.title')}
@@ -76,98 +134,31 @@ export function HomeScreen({
         </button>
       </div>
 
-      {theme && (
-        <div className="theme-banner">
-          <span className="theme-label">{t('home.theme')}</span>
-          <span className="theme-text">{theme}</span>
+      {/* The poster: today's condition as one giant fact. */}
+      <div className="poster">
+        <span className="kicker">{t('home.condKicker')}</span>
+        <div className={`poster-num num cond-${condition.tier}`}>
+          {condition.index}
         </div>
-      )}
-
-      {/* Last night summary */}
-      <Card>
-        <div className="stat-label">{t('home.lastNight')}</div>
-        {last ? (
-          <>
-            <div className="summary-big num">
-              {formatDuration(last.durationMin, lang)}
-            </div>
-            <div className="summary-row">
-              <div className="stat">
-                <span className="stat-label">{t('home.vsTarget')}</span>
-                <span className="stat-val num">
-                  {formatDuration(
-                    last.durationMin - settings.targetDurationMin,
-                    lang,
-                  )}
-                </span>
-              </div>
-              <div className="stat">
-                <span className="stat-label">{t('home.quality')}</span>
-                <span className="stat-val num">
-                  {isQualityConfirmed(last) ? last.qualityScore : '—'}
-                </span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <p className="muted" style={{ marginTop: 8 }}>
-            {t('home.noRecords')}
-          </p>
-        )}
-      </Card>
-
-      {/* Thinking condition (synthesises quality, debt, regularity) */}
-      <Card tight>
-        <div className="spread">
-          <div className="stat-label">{t('home.condition')}</div>
-          <EyeMark size={36} color="var(--text-mute)" />
-        </div>
-        <div className={`cond-headline cond-${condition.tier}`}>
+        <div className={`poster-word cond-${condition.tier}`}>
           {t(`cond.${condition.tier}`)}
-          <span className="cond-index num">{condition.index}</span>
         </div>
-        <p className={`muted cond-${condition.tier}`} style={{ fontSize: 13 }}>
-          {t(`cond.${condition.tier}Copy`)}
-        </p>
-        <div className="summary-row" style={{ marginTop: 10 }}>
-          <div className="stat">
-            <span className="stat-label">{t('home.debt7')}</span>
-            <span className="stat-val num">
-              {debt > 0
-                ? `-${formatDuration(debt, lang)}`
-                : formatDuration(0, lang)}
-            </span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">{t('stat.regularity')}</span>
-            <span className="stat-val">
-              {consistency == null
-                ? '—'
-                : t(`reg.${regularityLevel(consistency)}`)}
-            </span>
-          </div>
-        </div>
-      </Card>
+        <p className="poster-line">{t(`cond.${condition.tier}Copy`)}</p>
+      </div>
 
-      {/* Primary CTA */}
+      {/* Last 7 nights, one tap from the log. */}
+      <button
+        className="skyline"
+        aria-label={t('tab.history')}
+        onClick={onGoLog}
+      >
+        <Skyline sessions={sessions} goalMin={settings.targetDurationMin} />
+        <span className="skyline-caption">{lastNightLine}</span>
+      </button>
+
       <div className="cta-wrap">
-        {reminderTime && (
-          <span className="pill">
-            {plan.recoveryMin > 0
-              ? t('home.suggestedBedtime')
-              : t('home.bedtimeReminder')}{' '}
-            {reminderTime}
-          </span>
-        )}
-        {reminderTime && plan.recoveryMin > 0 && (
-          <span className="muted" style={{ fontSize: 12.5 }}>
-            {t('home.earlierBy', {
-              amount: formatDuration(plan.recoveryMin, lang),
-            })}
-          </span>
-        )}
         {last && !isQualityConfirmed(last) && (
-          <span className="muted" style={{ fontSize: 13 }}>
+          <span className="muted" style={{ fontSize: 12.5 }}>
             {t('home.morningCheckPending', { time: isoToHm(last.endedAt) })}
           </span>
         )}
@@ -178,17 +169,28 @@ export function HomeScreen({
             onWindDown();
           }}
         >
-          <EyeMark size={40} color="var(--mist)" />
+          <EyeMark size={44} color="var(--plane-fg)" className="eye-blink" />
           {t('home.cta')}
         </button>
-        {!nextAlarm && (
-          <button className="back-btn" onClick={onGoAlarm}>
-            {t('home.setAlarm')}
-          </button>
+        {reminderTime && (
+          <span className="bedtime-chip">
+            ☾{' '}
+            {plan.recoveryMin > 0
+              ? t('home.bedtimeRecoveryLine', {
+                  time: reminderTime,
+                  amount: formatDuration(plan.recoveryMin, lang),
+                })
+              : t('home.bedtimeLine', { time: reminderTime })}
+          </span>
         )}
-        <button className="back-btn" onClick={onStartNap}>
-          {t('home.nap')}
-        </button>
+        <div className="quick-row">
+          <button className="quick-btn" onClick={onStartNap}>
+            {t('nap.title')}
+          </button>
+          <button className="quick-btn" onClick={onGoAlarm}>
+            {t('tab.alarm')}
+          </button>
+        </div>
       </div>
     </div>
   );

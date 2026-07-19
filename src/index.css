@@ -13,7 +13,7 @@ body,
 
 html {
   /* default before the theme provider resolves */
-  background: #1a1430;
+  background: #0a0712;
 }
 
 body {
@@ -41,10 +41,11 @@ select {
   font-family: inherit;
 }
 
+/* Landfall rule: no bold. Weight stops at 500. */
 h1,
 h2,
 h3 {
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: var(--tracking-tight);
   margin: 0;
 }
@@ -57,16 +58,26 @@ p {
 /* Brand / editorial display face — Mincho, for quiet sophistication. */
 .display {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.01em;
 }
 
 .num {
   font-family: var(--font-num);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
-/* App frame: phone-width column centered on wide screens. */
+/* Kicker — small tracked label above every content block (Landfall grammar). */
+.kicker {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-widest);
+  color: var(--text-mute);
+  text-transform: uppercase;
+}
+
+/* App frame: phone-width column centered on wide screens. Flat ground. */
 .app-frame {
   width: 100%;
   max-width: 440px;
@@ -76,27 +87,15 @@ p {
   position: relative;
   background: var(--bg);
   transition: background 0.5s ease;
-}
-/* A faint twilight glow at the top — quiet atmosphere, never noise. */
-.app-frame::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 360px;
-  background: radial-gradient(130% 100% at 50% -12%, var(--glow) 0%, transparent 62%);
-  pointer-events: none;
-  z-index: 0;
-}
-.app-frame > * {
-  position: relative;
-  z-index: 1;
+  /* Own stacking context, so the night sky can sit behind the content
+     (z-index: -1) without falling behind the frame's own background. */
+  isolation: isolate;
 }
 
 .screen {
   flex: 1;
-  padding: var(--space-6) var(--space-5) calc(76px + var(--space-6));
+  /* Clear the floating dock (bottom offset + pill height) plus breathing room. */
+  padding: var(--space-6) var(--space-5) calc(90px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
@@ -116,9 +115,9 @@ p {
 
 .screen-title {
   font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
 .muted {

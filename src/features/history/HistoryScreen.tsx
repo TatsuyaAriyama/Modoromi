@@ -1,9 +1,6 @@
 import { useMemo, useState } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
-import { Card } from '../../components/Card';
-import { BarChart } from '../../components/BarChart';
-import { LineChart } from '../../components/LineChart';
 import { SessionDetail } from './SessionDetail';
 import {
   averageDuration,
@@ -14,15 +11,119 @@ import {
   consistencyScore,
   regularityLevel,
 } from '../../domain/consistency';
-import { buildConditionSeries } from '../../domain/conditionSeries';
 import { weeklyReview } from '../../domain/review';
 import { deriveInsights } from '../../domain/insights';
-import { isoToHm } from '../../domain/format';
-import { formatDate, formatDuration } from '../../i18n/catalog';
-import type { SleepSession } from '../../domain/types';
+import { formatDuration } from '../../i18n/catalog';
+import { weekdayName } from '../../domain/format';
+import type { Lang, SleepSession } from '../../domain/types';
 import { useT, useLang } from '../../i18n/useT';
 
 type Range = 'week' | 'month';
+
+/* ── The night river ────────────────────────────────────────────
+   Each night floats at its true clock position: a band from bed
+   to wake on a 19:00 → 12:00 axis, newest at the top. Bedtime
+   drift becomes a visible wiggle; quality becomes brightness. */
+
+const AXIS_START = 19 * 60; // 19:00
+const AXIS_SPAN = 17 * 60; // → 12:00 next day
+
+function riverX(iso: string): number {
+  const d = new Date(iso);
+  const min = (d.getHours() * 60 + d.getMinutes() - AXIS_START + 1440) % 1440;
+  return Math.min(Math.max(min / AXIS_SPAN, 0), 1);
+}
+
+function NightRiver({
+  nights,
+  lang,
+  onPick,
+}: {
+  nights: SleepSession[];
+  lang: Lang;
+  onPick: (s: SleepSession) => void;
+}) {
+  return (
+    <div className="river">
+      <div className="river-axis num" aria-hidden="true">
+        {[21, 0, 3, 6, 9].map((h) => (
+          <span
+            key={h}
+            className="river-hour"
+            style={{ left: `${(((h * 60 - AXIS_START + 1440) % 1440) / AXIS_SPAN) * 100}%` }}
+          >
+            {h}
+          </span>
+        ))}
+      </div>
+      {nights.map((s) => {
+        const x0 = riverX(s.startedAt);
+        const x1 = riverX(s.endedAt);
+        const q = s.qualityScore;
+        return (
+          <button key={s.id} className="river-row" onClick={() => onPick(s)}>
+            <span className="river-day">
+              {weekdayName(new Date(s.endedAt).getDay(), lang)}
+            </span>
+            <span className="river-lane">
+              <span
+                className="river-night"
+                style={{
+                  left: `${x0 * 100}%`,
+                  width: `${Math.max((x1 - x0) * 100, 2)}%`,
+                  opacity: q != null ? 0.3 + 0.7 * (q / 100) : 0.35,
+                }}
+              />
+            </span>
+            <span className="river-score num">{q ?? '—'}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ── The constellation ──────────────────────────────────────────
+   Quality over time as stars, joined by a faint thread. */
+
+function Constellation({
+  points,
+}: {
+  points: { label: string; value: number | null }[];
+}) {
+  const W = 320;
+  const H = 96;
+  const padX = 10;
+  const padY = 12;
+  const n = Math.max(points.length, 1);
+  const x = (i: number) =>
+    padX + (n === 1 ? (W - padX * 2) / 2 : ((W - padX * 2) * i) / (n - 1));
+  const y = (v: number) => padY + (H - padY * 2) * (1 - v / 100);
+  const stars = points
+    .map((p, i) => (p.value == null ? null : { x: x(i), y: y(p.value), i }))
+    .filter((p): p is { x: number; y: number; i: number } => p !== null);
+  const thread = stars
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+    .join(' ');
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" aria-hidden="true">
+      {thread && <path d={thread} className="const-thread" />}
+      {stars.map((p) => (
+        <g key={p.i}>
+          <circle cx={p.x} cy={p.y} r={2} className="const-star" />
+          {/* every third star gets a sparkle cross */}
+          {p.i % 3 === 0 && (
+            <path
+              d={`M ${p.x - 5} ${p.y} H ${p.x + 5} M ${p.x} ${p.y - 5} V ${p.y + 5}`}
+              className="const-sparkle"
+            />
+          )}
+        </g>
+      ))}
+    </svg>
+  );
+}
 
 export function HistoryScreen() {
   const t = useT();
@@ -36,10 +137,6 @@ export function HistoryScreen() {
   const series = useMemo(
     () => buildDaySeries(sessions, days, new Date(), lang),
     [sessions, days, lang],
-  );
-  const conditionSeries = useMemo(
-    () => buildConditionSeries(sessions, targetMin, days, new Date(), lang),
-    [sessions, targetMin, days, lang],
   );
   const avgDur = averageDuration(series);
   const avgQ = averageQuality(series);
@@ -56,13 +153,15 @@ export function HistoryScreen() {
     [sessions, targetMin],
   );
 
-  const sorted = useMemo(
+  const nights = useMemo(
     () =>
-      [...sessions].sort(
-        (a, b) =>
-          new Date(b.endedAt).getTime() - new Date(a.endedAt).getTime(),
-      ),
-    [sessions],
+      [...sessions]
+        .sort(
+          (a, b) =>
+            new Date(b.endedAt).getTime() - new Date(a.endedAt).getTime(),
+        )
+        .slice(0, days),
+    [sessions, days],
   );
 
   return (
@@ -87,136 +186,64 @@ export function HistoryScreen() {
         </div>
       </div>
 
-      <Card tight>
-        <div className="stat-label" style={{ marginBottom: 6 }}>
-          {t('history.weeklyReview')}
-        </div>
-        <p className="review-headline">
-          {review.headlineParts.map((p) => t(`review.${p}`)).join(t('sep.middot'))}
-        </p>
-        {review.loggedNights > 0 && (
-          <span className="muted" style={{ fontSize: 12.5 }}>
-            {t('history.logged', { nights: review.loggedNights })}
-            {review.qualityDeltaVsPrev != null &&
-              t('history.vsPrev', {
-                delta: `${review.qualityDeltaVsPrev > 0 ? '+' : ''}${review.qualityDeltaVsPrev}`,
-              })}
-          </span>
-        )}
-      </Card>
+      {nights.length === 0 ? (
+        <p className="empty">{t('history.empty')}</p>
+      ) : (
+        <>
+          {/* the week, as one written sentence */}
+          <p className="review-headline display">
+            {review.headlineParts.map((p) => t(`review.${p}`)).join(t('sep.middot'))}
+          </p>
 
-      {insights.length > 0 && (
-        <Card tight>
-          <div className="stat-label" style={{ marginBottom: 6 }}>
-            {t('history.insights')}
-          </div>
-          <ul className="insight-list">
-            {insights.map((i) => (
-              <li key={i.id} className="insight-item">
-                {t(`insight.${i.id}`, i.params)}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      <Card tight>
-        <div className="summary-row">
-          <div className="stat">
-            <span className="stat-label">{t('history.avgDuration')}</span>
-            <span className="stat-val num">
-              {avgDur > 0 ? formatDuration(avgDur, lang) : '—'}
-            </span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">{t('history.avgQuality')}</span>
-            <span className="stat-val num">{avgQ ?? '—'}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">{t('stat.regularity')}</span>
-            <span className="stat-val">
-              {consistency == null
-                ? '—'
-                : t(`reg.${regularityLevel(consistency)}`)}
-            </span>
-          </div>
-        </div>
-      </Card>
-
-      <Card tight>
-        <div className="stat-label" style={{ marginBottom: 8 }}>
-          {t('chart.durationTarget')}
-        </div>
-        <BarChart
-          data={series.map((s) => ({
-            label: s.label,
-            value: s.durationMin,
-          }))}
-          target={targetMin}
-        />
-      </Card>
-
-      <Card tight>
-        <div className="stat-label" style={{ marginBottom: 8 }}>
-          {t('chart.qualityTrend')}
-        </div>
-        <LineChart
-          data={series.map((s) => ({
-            label: s.label,
-            value: s.qualityScore,
-          }))}
-        />
-      </Card>
-
-      <Card tight>
-        <div className="stat-label" style={{ marginBottom: 8 }}>
-          {t('chart.conditionTrend')}
-        </div>
-        <LineChart
-          data={conditionSeries.map((p) => ({
-            label: p.label,
-            value: p.index,
-          }))}
-          ariaLabel={t('chart.condition')}
-        />
-      </Card>
-
-      <Card>
-        <div className="stat-label" style={{ marginBottom: 4 }}>
-          {t('history.sessions')}
-        </div>
-        {sorted.length === 0 ? (
-          <p className="empty">{t('history.empty')}</p>
-        ) : (
-          sorted.map((s) => (
-            <button
-              key={s.id}
-              className="hist-item"
-              style={{
-                background: 'none',
-                border: 'none',
-                borderBottom: '1px solid var(--border)',
-                color: 'inherit',
-                textAlign: 'left',
-                width: '100%',
-              }}
-              onClick={() => setSelected(s)}
-            >
-              <div className="spread">
-                <span>{formatDate(new Date(s.endedAt), lang)}</span>
-                <span className="score-badge num">
-                  {s.qualityScore ?? '—'}
-                </span>
-              </div>
-              <span className="muted num" style={{ fontSize: 13 }}>
-                {formatDuration(s.durationMin, lang)} {t('sep.middot')}
-                {isoToHm(s.startedAt)}–{isoToHm(s.endedAt)}
-                {s.note ? ` ${t('sep.middot')}${s.note}` : ''}
+          {/* three numbers, no boxes */}
+          <div className="summary-row">
+            <div className="stat">
+              <span className="stat-label">{t('history.avgDuration')}</span>
+              <span className="stat-val num" style={{ color: 'var(--numeral)' }}>
+                {avgDur > 0 ? formatDuration(avgDur, lang) : '—'}
               </span>
-            </button>
-          ))
-        )}
-      </Card>
+            </div>
+            <div className="stat">
+              <span className="stat-label">{t('history.avgQuality')}</span>
+              <span className="stat-val num" style={{ color: 'var(--numeral)' }}>
+                {avgQ ?? '—'}
+              </span>
+            </div>
+            <div className="stat">
+              <span className="stat-label">{t('stat.regularity')}</span>
+              <span className="stat-val">
+                {consistency == null
+                  ? '—'
+                  : t(`reg.${regularityLevel(consistency)}`)}
+              </span>
+            </div>
+          </div>
+
+          {/* each night, floating at its true clock position */}
+          <NightRiver nights={nights} lang={lang} onPick={setSelected} />
+
+          {/* quality, drawn as a constellation */}
+          <div>
+            <span className="kicker">{t('chart.qualityTrend')}</span>
+            <Constellation
+              points={series.map((s) => ({
+                label: s.label,
+                value: s.qualityScore,
+              }))}
+            />
+          </div>
+
+          {insights.length > 0 && (
+            <ul className="insight-list">
+              {insights.map((i) => (
+                <li key={i.id} className="insight-item">
+                  {t(`insight.${i.id}`, i.params)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
 
       {selected && (
         <SessionDetail

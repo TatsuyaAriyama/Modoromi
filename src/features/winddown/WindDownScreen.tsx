@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import '../screens.css';
 import { Button } from '../../components/Button';
 import { EyeMark } from '../../components/EyeMark';
+import { NightSky } from '../../components/NightSky';
 import {
   WIND_DOWN_BREATHS,
   breathAt,
@@ -47,13 +48,12 @@ export function WindDownScreen({
 
   return (
     <div className="app-frame" style={{ background: 'var(--bg)' }}>
+      <NightSky />
       <div className="wind-wrap">
         <div className="wind-head">
           <EyeMark size={40} color="var(--text)" />
           <h1 className="wind-title">{t('wind.title')}</h1>
-          <p className="wind-note">
-            {done ? t('wind.ready') : t('wind.guide')}
-          </p>
+          {done && <p className="wind-note">{t('wind.ready')}</p>}
         </div>
 
         <div className="wind-orb-wrap">

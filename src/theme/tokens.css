@@ -1,24 +1,23 @@
-/* Madoromi — design tokens derived from the app icon (twilight: violet → rose). */
+/* Madoromi — design tokens.
+   Landfall grammar: flat planes, no gradients, no shadows, weight ≤ 500.
+   Palette: near-black ground × decisive violet × lavender numerals. */
 
 :root {
-  /* Brand core (icon-derived) */
-  --violet: #876ac8;
-  --violet-deep: #6a56a8;
-  --mauve: #a87dc3;
-  --rose: #c98fb4;
-  --mist: #f7f4fb;
-  --ink: #211c2e;
+  /* Brand core */
+  --black: #0a0712;
+  --violet: #6d5ae0; /* interactive / bold planes */
+  --violet-deep: #4b3ba8; /* pressed / secondary plane */
+  --lavender: #cfc6f4; /* display accent on black (Landfall lavender) */
+  --mist: #f3f0fb;
+  --ink: #16101f;
 
-  --gradient-twilight: linear-gradient(
-    180deg,
-    #6a56a8 0%,
-    #876ac8 45%,
-    #a87dc3 75%,
-    #c98fb4 100%
-  );
+  /* Semantic accents — small doses only */
+  --mint: #a8e6c8; /* good */
+  --rose: #eda2b6; /* caution */
 
   /* Radii / spacing / typography */
-  --radius-card: 22px;
+  --radius-card: 20px;
+  --radius-ctl: 14px;
   --radius-pill: 999px;
   --space-1: 4px;
   --space-2: 8px;
@@ -31,8 +30,7 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
     "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
   /* Mincho (serif) for brand & display moments — quiet, literary, on-brand
-     for "思考のための睡眠". iOS/macOS ship Hiragino Mincho; YuMincho is the
-     Windows fallback, then a generic serif. */
+     for "思考のための睡眠". */
   --font-display: "Hiragino Mincho ProN", "Hiragino Mincho Pro", "YuMincho",
     "Yu Mincho", "Noto Serif JP", serif;
   --font-num: "SF Mono", "SFMono-Regular", ui-monospace, "Menlo", monospace;
@@ -44,55 +42,70 @@
   --tracking-wider: 0.14em;
   --tracking-widest: 0.24em;
 
-  /* Elevation & motion */
-  --shadow-soft: 0 8px 30px rgba(20, 14, 40, 0.18);
-  --shadow-card: 0 18px 40px -24px rgba(8, 5, 20, 0.7);
-  --shadow-orb: 0 30px 70px -18px rgba(108, 86, 168, 0.6);
-  --hairline: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* Motion */
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ---- day theme (bright lavender) ---- */
+/* ---- day theme (paper × violet ink) ---- */
 [data-theme="day"] {
-  --bg: #f3eff7;
-  --surface: #fbf9fd;
-  --surface-2: #f0eaf7;
-  --text: #211c2e;
-  --text-mute: #6e6680;
-  --primary: #7a61ba;
-  --primary-contrast: #ffffff;
-  --accent: #b86e9c;
-  --border: rgba(33, 28, 46, 0.07);
+  --mint: #2c8a60; /* darker doses for paper ground */
+  --rose: #bf4f6c;
+  --bg: #f2effa;
+  --surface: #fbfaff;
+  --surface-2: #e9e4f6;
+  --text: #16101f;
+  --text-mute: #6e6584;
+  --primary: #5b48c8;
+  --primary-contrast: #fbfaff;
+  --accent: var(--violet);
+  --border: rgba(22, 16, 31, 0.1);
+  --plane: #5b48c8; /* bold poster plane */
+  --plane-fg: #f3f0fb;
+  --numeral: #16101f;
   --hero-fg: var(--mist);
-  --glow: rgba(122, 97, 186, 0.16);
+  /* Daylight: no stars, only the faintest trace of the rings. */
+  --sky-star: transparent;
+  --sky-ring: rgba(22, 16, 31, 0.06);
+  --sky-opacity: 1;
 }
 
-/* ---- night theme (default) ---- */
+/* ---- night theme (default: near-black × violet) ---- */
 [data-theme="night"] {
-  --bg: #1a1430;
-  --surface: #251c40;
-  --surface-2: #2e2450;
-  --text: #ece7f5;
-  --text-mute: #9a8fb5;
-  --primary: #9b81db;
-  --primary-contrast: #15102a;
-  --accent: #d99bc4;
-  --border: rgba(236, 231, 245, 0.08);
+  --bg: #0a0712;
+  --surface: #140e1f;
+  --surface-2: #1e1631;
+  --text: #efeafa;
+  --text-mute: #8d81a8;
+  --primary: #8875e8;
+  --primary-contrast: #0a0712;
+  --accent: var(--lavender);
+  --border: rgba(207, 198, 244, 0.1);
+  --plane: #5b48c8;
+  --plane-fg: #f3f0fb;
+  --numeral: var(--lavender);
   --hero-fg: var(--mist);
-  --glow: rgba(155, 129, 219, 0.2);
+  --sky-star: #cfc6f4;
+  --sky-ring: rgba(207, 198, 244, 0.09);
+  --sky-opacity: 1;
 }
 
 /* ---- sleep theme (active session, minimal luminance) ---- */
 [data-theme="sleep"] {
-  --bg: #0d0a18;
-  --surface: #0d0a18;
-  --surface-2: #120e20;
-  --text: #9c84b8;
-  --text-mute: #5a4f72;
-  --primary: #6f5d9c;
-  --primary-contrast: #0d0a18;
-  --accent: #6f5d9c;
-  --border: rgba(156, 132, 184, 0.1);
-  --hero-fg: #9c84b8;
-  --glow: transparent;
+  --bg: #06040d;
+  --surface: #06040d;
+  --surface-2: #0d0918;
+  --text: #8f7cb4;
+  --text-mute: #514566;
+  --primary: #64549c;
+  --primary-contrast: #06040d;
+  --accent: #64549c;
+  --border: rgba(143, 124, 180, 0.12);
+  --plane: #0d0918;
+  --plane-fg: #8f7cb4;
+  --numeral: #8f7cb4;
+  --hero-fg: #8f7cb4;
+  /* Sleeping: the sky goes dark too — no stray luminance. */
+  --sky-star: transparent;
+  --sky-ring: transparent;
+  --sky-opacity: 0;
 }

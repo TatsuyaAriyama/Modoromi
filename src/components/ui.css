@@ -1,27 +1,27 @@
-/* Shared component styles (plain CSS, class-namespaced). */
+/* Shared component styles (plain CSS, class-namespaced).
+   Flat planes + 1px hairlines. No gradients, no shadows, weight ≤ 500. */
 
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   padding: var(--space-5);
-  box-shadow: var(--hairline), var(--shadow-card);
 }
 
 .card-pad-tight {
   padding: var(--space-4);
 }
 
-/* Buttons */
+/* Buttons — flat, decisive, medium weight. */
 .btn {
   border: none;
-  border-radius: var(--radius-pill);
-  padding: 15px 24px;
+  border-radius: var(--radius-ctl);
+  padding: 16px 24px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.04em;
   transition: transform 0.15s var(--ease-soft), opacity 0.2s ease,
-    box-shadow 0.25s ease, background 0.2s ease;
+    background 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -33,18 +33,14 @@
 .btn:disabled {
   opacity: 0.4;
   cursor: default;
-  box-shadow: none;
 }
 
 .btn-primary {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--primary) 88%, white),
-    var(--primary)
-  );
+  background: var(--primary);
   color: var(--primary-contrast);
-  box-shadow: var(--hairline),
-    0 12px 26px -10px color-mix(in srgb, var(--primary) 70%, transparent);
+}
+.btn-primary:active {
+  background: var(--violet-deep);
 }
 .btn-ghost {
   background: transparent;
@@ -52,20 +48,20 @@
   border: 1px solid var(--border);
 }
 .btn-accent {
-  background: var(--accent);
-  color: #fff;
+  background: var(--plane);
+  color: var(--plane-fg);
 }
 .btn-danger {
   background: transparent;
-  color: #d9748a;
-  border: 1px solid rgba(217, 116, 138, 0.4);
+  color: var(--rose);
+  border: 1px solid color-mix(in srgb, var(--rose) 40%, transparent);
 }
 .btn-block {
   width: 100%;
 }
 .btn-lg {
   padding: 18px 28px;
-  font-size: 18px;
+  font-size: 17px;
 }
 
 /* MoodPicker */
@@ -73,28 +69,38 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);
+  width: 100%;
 }
 .mood-opt {
   background: var(--surface-2);
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-ctl);
   padding: var(--space-4) var(--space-2);
   color: var(--text);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease,
+    color 0.15s ease;
 }
 .mood-opt[data-selected='true'] {
   border-color: var(--primary);
-  background: color-mix(in srgb, var(--primary) 14%, var(--surface-2));
+  background: var(--primary);
+  color: var(--primary-contrast);
 }
 .mood-emoji {
-  font-size: 24px;
+  display: grid;
+  place-items: center;
+  height: 32px;
+  color: var(--text-mute);
+}
+.mood-opt[data-selected='true'] .mood-emoji {
+  color: currentColor;
 }
 .mood-label {
   font-size: 13px;
+  font-weight: 500;
 }
 
 /* TimeDial */
@@ -110,62 +116,70 @@
   gap: var(--space-1);
 }
 .dial-step {
-  width: 40px;
+  width: 44px;
   height: 32px;
   border-radius: 10px;
   border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 18px;
+  background: transparent;
+  color: var(--text-mute);
+  font-size: 16px;
   line-height: 1;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.dial-step:active {
+  color: var(--text);
+  border-color: var(--primary);
 }
 .dial-val {
-  font-size: 40px;
-  min-width: 64px;
+  font-size: 44px;
+  min-width: 68px;
   text-align: center;
 }
 .dial-sep {
   font-size: 36px;
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
 /* misc */
 .pill {
   display: inline-flex;
   align-items: center;
-  padding: 5px 13px;
+  padding: 6px 14px;
   border-radius: var(--radius-pill);
   font-size: 12.5px;
-  letter-spacing: 0.02em;
-  background: var(--surface-2);
+  letter-spacing: var(--tracking-wide);
+  border: 1px solid var(--border);
+  background: transparent;
   color: var(--text-mute);
 }
 .toggle {
-  width: 46px;
+  width: 48px;
   height: 28px;
   border-radius: 999px;
-  border: none;
+  border: 1px solid var(--border);
   background: var(--surface-2);
   position: relative;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
   flex: 0 0 auto;
 }
 .toggle[data-on='true'] {
   background: var(--primary);
+  border-color: var(--primary);
 }
 .toggle::after {
   content: '';
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: #fff;
-  transition: transform 0.2s ease;
+  background: var(--text-mute);
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 .toggle[data-on='true']::after {
-  transform: translateX(18px);
+  transform: translateX(20px);
+  background: var(--primary-contrast);
 }
 
 .field {
@@ -174,7 +188,9 @@
   gap: var(--space-2);
 }
 .field label {
-  font-size: 14px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-wider);
   color: var(--text-mute);
 }
 .input,
@@ -182,7 +198,7 @@
 .select {
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-ctl);
   padding: 12px 14px;
   color: var(--text);
   font-size: 16px;
@@ -191,4 +207,42 @@
 .textarea {
   resize: vertical;
   min-height: 64px;
+}
+
+/* Range sliders — flat violet track, no browser blue. */
+.input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 0;
+  height: 28px;
+  background: transparent;
+  border: none;
+  accent-color: var(--primary);
+}
+.input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-2);
+}
+.input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -10px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+}
+.input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-2);
+}
+.input[type='range']::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary);
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { EyeMark } from '../../components/EyeMark';
+import { NightSky } from '../../components/NightSky';
 import { Toggle } from '../../components/Toggle';
 import { Button } from '../../components/Button';
 import { disableKeepAwake, enableKeepAwake } from '../../lib/keepAwake';
@@ -201,6 +202,7 @@ export function SessionScreen() {
 
   return (
     <div className="app-frame" style={{ background: 'var(--bg)' }}>
+      <NightSky />
       <div className="session-wrap">
         <EyeMark size={56} color="var(--text)" open={false} />
 

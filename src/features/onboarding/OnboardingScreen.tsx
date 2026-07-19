@@ -50,7 +50,7 @@ export function OnboardingScreen() {
         <div className="onb-body">
           {step === 0 && (
             <>
-              <EyeMark size={84} color="var(--mist)" />
+              <EyeMark size={84} color="var(--lavender)" />
               <h1 className="onb-title">Madoromi</h1>
               <p className="onb-sub">{t('onb.tagline')}</p>
               <p className="onb-copy">{t('onb.intro')}</p>
@@ -82,7 +82,7 @@ export function OnboardingScreen() {
               </h1>
               <div className="onb-card">
                 <div className="field">
-                  <label style={{ color: 'var(--mist)', opacity: 0.85 }}>
+                  <label style={{ color: '#8d81a8' }}>
                     {t('onb.targetLabel')}
                   </label>
                   <select
@@ -90,20 +90,20 @@ export function OnboardingScreen() {
                     value={targetMin}
                     onChange={(e) => setTargetMin(Number(e.target.value))}
                     style={{
-                      background: 'rgba(255,255,255,0.16)',
-                      color: 'var(--mist)',
-                      borderColor: 'rgba(255,255,255,0.3)',
+                      background: '#1e1631',
+                      color: '#efeafa',
+                      borderColor: 'rgba(207,198,244,0.15)',
                     }}
                   >
                     {DURATION_OPTIONS.map((m) => (
-                      <option key={m} value={m} style={{ color: '#211c2e' }}>
+                      <option key={m} value={m} style={{ color: '#16101f' }}>
                         {formatDuration(m, lang)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="field">
-                  <label style={{ color: 'var(--mist)', opacity: 0.85 }}>
+                  <label style={{ color: '#8d81a8' }}>
                     {t('onb.wakeLabel')}
                   </label>
                   <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -130,12 +130,24 @@ export function OnboardingScreen() {
                 {t('onb.permDisclaimer')}
               </p>
               {permState === 'granted' && (
-                <span className="pill" style={{ background: 'rgba(255,255,255,0.2)', color: 'var(--mist)' }}>
+                <span
+                  className="pill"
+                  style={{
+                    borderColor: 'rgba(207,198,244,0.3)',
+                    color: 'var(--lavender)',
+                  }}
+                >
                   {t('onb.permGranted')}
                 </span>
               )}
               {permState === 'denied' && (
-                <span className="pill" style={{ background: 'rgba(255,255,255,0.2)', color: 'var(--mist)' }}>
+                <span
+                  className="pill"
+                  style={{
+                    borderColor: 'rgba(207,198,244,0.3)',
+                    color: 'var(--lavender)',
+                  }}
+                >
                   {t('onb.permDenied')}
                 </span>
               )}

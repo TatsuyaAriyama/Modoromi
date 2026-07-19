@@ -182,10 +182,10 @@ export const messages: Record<string, Msg> = {
   'cond.steady': { en: 'Steady', ja: 'おだやか' },
   'cond.foggy': { en: 'A bit foggy', ja: 'ややぼんやり' },
   'cond.depleted': { en: 'Needs recovery', ja: '要回復' },
-  'cond.sharpCopy': { en: 'Your thinking should flow well today', ja: '思考がよく回りそうな一日です' },
-  'cond.steadyCopy': { en: 'A steady, settled condition today', ja: '安定したコンディションです' },
-  'cond.foggyCopy': { en: 'Ease in — start with lighter focus', ja: '無理せず、軽めの集中から始めましょう' },
-  'cond.depletedCopy': { en: 'Prioritize recovery; an early night tonight', ja: '回復を優先して。今夜は早めの就寝を' },
+  'cond.sharpCopy': { en: 'Your thinking should flow well today.', ja: '思考がよく回りそうな一日です。' },
+  'cond.steadyCopy': { en: 'A steady, settled condition today.', ja: '安定したコンディションです。' },
+  'cond.foggyCopy': { en: 'Ease in — start with lighter focus.', ja: '無理せず、軽めの集中から始めましょう。' },
+  'cond.depletedCopy': { en: 'Prioritize recovery; take an early night.', ja: '回復を優先して。今夜は早めに眠りましょう。' },
 
   // ── regularity levels ───────────────────────────────────
   'reg.high': { en: 'High', ja: '高い' },
@@ -199,6 +199,33 @@ export const messages: Record<string, Msg> = {
 
   // ── Home screen ─────────────────────────────────────────
   'home.greeting': { en: 'Getting ready for sleep', ja: 'おやすみの準備を' },
+  'home.condKicker': { en: 'TODAY’S MIND', ja: 'きょうの思考' },
+  // Every line on the home screen reads as a full sentence, so nothing needs
+  // a label to be understood.
+  'home.lastNightOver': {
+    en: (p) => `Last night you slept ${p.dur} — ${p.gap} past your goal.`,
+    ja: (p) => `昨夜は${p.dur}、目標を${p.gap}こえました。`,
+  },
+  'home.lastNightUnder': {
+    en: (p) => `Last night you slept ${p.dur} — ${p.gap} short of your goal.`,
+    ja: (p) => `昨夜は${p.dur}、目標にあと${p.gap}でした。`,
+  },
+  'home.lastNightExact': {
+    en: (p) => `Last night you slept ${p.dur}, right on your goal.`,
+    ja: (p) => `昨夜は${p.dur}、ちょうど目標どおりです。`,
+  },
+  'home.noRecordsLine': {
+    en: 'No nights recorded yet — tonight can be the first.',
+    ja: 'まだ記録がありません。今夜が最初の一晩です。',
+  },
+  'home.bedtimeLine': {
+    en: (p) => `Sleep by ${p.time} tonight to hit your goal.`,
+    ja: (p) => `今夜は${p.time}に眠ると、目標にとどきます。`,
+  },
+  'home.bedtimeRecoveryLine': {
+    en: (p) => `Sleep by ${p.time} tonight — ${p.amount} earlier, to pay down your debt.`,
+    ja: (p) => `睡眠負債のぶん、今夜は${p.amount}早い${p.time}に。`,
+  },
   'home.theme': { en: 'Today’s thinking theme', ja: '今日の思考テーマ' },
   'home.lastNight': { en: 'Last night', ja: '昨夜のサマリー' },
   'home.vsTarget': { en: 'vs. goal', ja: '目標との差' },
@@ -227,10 +254,10 @@ export const messages: Record<string, Msg> = {
     ja: (p) => `寝返り ${p.count} 回`,
   },
   'morning.condition': { en: 'This morning’s condition', ja: '今朝のコンディション' },
-  'morning.subjective': { en: 'How rested do you feel? (1–5)', ja: '主観的な眠りの質（1〜5）' },
-  'morning.theme': { en: 'Something to think about today (optional)', ja: '今日、考えたいこと（任意）' },
+  'morning.subjective': { en: 'Sleep quality', ja: '眠りの質' },
+  'morning.theme': { en: 'On your mind today', ja: '考えたいこと' },
   'morning.themePlaceholder': { en: 'e.g. outline the project brief', ja: '例：企画の骨子をまとめる' },
-  'morning.note': { en: 'A quick note (optional)', ja: 'ひとことメモ（任意）' },
+  'morning.note': { en: 'Note', ja: 'メモ' },
   'morning.notePlaceholder': { en: 'had a dream / woke in the night, etc.', ja: '夢を見た / 途中で目が覚めた など' },
   'morning.save': { en: 'Save', ja: '保存する' },
   'morning.later': { en: 'Later (log the time only)', ja: 'あとで（時間だけ記録）' },
@@ -352,10 +379,13 @@ export const messages: Record<string, Msg> = {
   'settings.wipeConfirm': { en: 'Delete everything', ja: 'すべて削除する' },
 
   // ── Onboarding ──────────────────────────────────────────
+  'alarm.bed': { en: 'Bed', ja: '就寝' },
+  'alarm.wake': { en: 'Wake', ja: '起床' },
+
   'onb.tagline': { en: 'Design sleep for thinking', ja: '思考のための睡眠を設計する' },
   'onb.intro': {
-    en: 'More than tracking — designing sleep. It surfaces your bedtime, wake time, and quality, and quietly reflects any gap from your goal as tomorrow’s thinking condition.',
-    ja: '睡眠を記録するだけでなく、設計する。就寝・起床・質を可視化し、目標とのズレを翌日の思考コンディションとして静かに見せます。',
+    en: 'Tonight’s sleep becomes tomorrow’s thinking.',
+    ja: '今夜の眠りが、明日の思考になる。',
   },
   'onb.goalTitle': { en: 'Set your goal', ja: '目標を決めましょう' },
   'onb.targetLabel': { en: 'Sleep goal', ja: '目標睡眠時間' },

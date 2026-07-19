@@ -3,6 +3,7 @@ import '../screens.css';
 import { useStore } from '../../app/store';
 import { Button } from '../../components/Button';
 import { EyeMark } from '../../components/EyeMark';
+import { NightSky } from '../../components/NightSky';
 import { MoodPicker } from '../../components/MoodPicker';
 import type { Mood } from '../../domain/types';
 import { isoToHm } from '../../domain/format';
@@ -40,6 +41,7 @@ export function MorningScreen() {
 
   return (
     <div className="app-frame">
+      <NightSky />
       <div className="screen morning-wrap">
         <EyeMark size={72} color="var(--primary)" open={eyeOpen} />
         <div style={{ textAlign: 'center' }}>
@@ -59,14 +61,15 @@ export function MorningScreen() {
           )}
         </div>
 
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <span className="stat-label">{t('morning.condition')}</span>
-          <MoodPicker value={mood} onChange={setMood} />
-        </div>
+        <MoodPicker value={mood} onChange={setMood} />
 
         <div className="field" style={{ width: '100%' }}>
-          <label>{t('morning.subjective')}</label>
+          <div className="spread">
+            <label htmlFor="subjective">{t('morning.subjective')}</label>
+            <span className="muted num">{subjective}</span>
+          </div>
           <input
+            id="subjective"
             className="input"
             type="range"
             min={1}
@@ -74,16 +77,13 @@ export function MorningScreen() {
             value={subjective}
             onChange={(e) => setSubjective(Number(e.target.value))}
           />
-          <span className="muted num" style={{ alignSelf: 'center' }}>
-            {subjective}
-          </span>
         </div>
 
         <div className="field" style={{ width: '100%' }}>
-          <label>{t('morning.theme')}</label>
           <input
             className="input"
             value={theme}
+            aria-label={t('morning.theme')}
             placeholder={t('morning.themePlaceholder')}
             maxLength={60}
             onChange={(e) => setTheme(e.target.value)}
@@ -91,10 +91,10 @@ export function MorningScreen() {
         </div>
 
         <div className="field" style={{ width: '100%' }}>
-          <label>{t('morning.note')}</label>
           <textarea
             className="textarea"
             value={note}
+            aria-label={t('morning.note')}
             placeholder={t('morning.notePlaceholder')}
             onChange={(e) => setNote(e.target.value)}
           />

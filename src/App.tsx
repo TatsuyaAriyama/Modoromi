@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import './app/app.css';
 import { useStore } from './app/store';
 import { useTheme } from './app/useTheme';
+import { NightSky } from './components/NightSky';
 import { TabIcon, type TabKey } from './components/TabIcon';
 import { HomeScreen } from './features/home/HomeScreen';
 import { AlarmScreen } from './features/alarm/AlarmScreen';
@@ -71,6 +72,7 @@ export default function App() {
 
   return (
     <div className="app-frame">
+      <NightSky />
       {settingsOpen ? (
         <SettingsScreen onClose={() => setSettingsOpen(false)} />
       ) : (
@@ -79,6 +81,7 @@ export default function App() {
             <HomeScreen
               onOpenSettings={() => setSettingsOpen(true)}
               onGoAlarm={() => setTab('alarm')}
+              onGoLog={() => setTab('history')}
               onStartNap={() => setNapOpen(true)}
               onWindDown={() => setWindDownOpen(true)}
             />
@@ -99,7 +102,7 @@ export default function App() {
               onClick={() => setTab(tab2.key)}
             >
               <TabIcon tab={tab2.key} />
-              {t(tab2.labelKey)}
+              <span className="tab-label">{t(tab2.labelKey)}</span>
             </button>
           ))}
         </nav>
