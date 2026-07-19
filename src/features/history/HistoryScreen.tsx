@@ -16,7 +16,8 @@ import { deriveInsights } from '../../domain/insights';
 import { formatDuration } from '../../i18n/catalog';
 import { weekdayName } from '../../domain/format';
 import type { Lang, SleepSession } from '../../domain/types';
-import { useT, useLang } from '../../i18n/useT';
+import { useClock, useT, useLang } from '../../i18n/useT';
+import { formatIsoTime, type Clock } from '../../i18n/clock';
 
 type Range = 'week' | 'month';
 
@@ -40,14 +41,18 @@ function riverX(iso: string): number {
 function NightRiver({
   nights,
   lang,
+  clock,
+  t,
   onPick,
 }: {
   nights: SleepSession[];
   lang: Lang;
+  clock: Clock;
+  t: (key: string, params?: Record<string, string | number>) => string;
   onPick: (s: SleepSession) => void;
 }) {
   return (
-    <div className="river">
+    <div className="river" role="group" aria-label={t('history.nightsAria')}>
       <div className="river-axis num" aria-hidden="true">
         {[21, 0, 3, 6, 9].map((h) => (
           <span
@@ -68,6 +73,21 @@ function NightRiver({
             key={s.id}
             className="river-row"
             style={{ '--i': Math.min(i, STAGGER_CAP) } as CSSProperties}
+            /* aria-label IS right here (unlike the alarm row): the name has to
+               interleave day, times, duration and score, which the visible
+               fragments cannot do on their own. Drift and outliers are NOT
+               repeated per row — that is the shape of the whole block, and the
+               screen already states it in the headline and the insights. */
+            aria-label={t(
+              q != null ? 'history.nightAria' : 'history.nightAriaNoScore',
+              {
+                day: weekdayName(new Date(s.endedAt).getDay(), lang),
+                start: formatIsoTime(s.startedAt, clock),
+                end: formatIsoTime(s.endedAt, clock),
+                dur: formatDuration(s.durationMin, lang),
+                ...(q != null ? { q } : {}),
+              },
+            )}
             onClick={() => onPick(s)}
           >
             <span className="river-day">
@@ -99,8 +119,13 @@ function NightRiver({
 
 function Constellation({
   points,
+  label,
 }: {
   points: { label: string; value: number | null }[];
+  /** The one fact the shape carries that no text on this screen does: the
+      spread. Direction is in the review headline and the centre is the
+      Avg. quality stat, so neither is repeated here. */
+  label: string | null;
 }) {
   const W = 320;
   const H = 96;
@@ -118,7 +143,11 @@ function Constellation({
     .join(' ');
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      width="100%"
+      {...(label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true as const })}
+    >
       {thread && <path d={thread} pathLength={1} className="const-thread" />}
       {stars.map((p, k) => (
         <g
@@ -147,6 +176,7 @@ function Constellation({
 export function HistoryScreen() {
   const t = useT();
   const lang = useLang();
+  const clock = useClock();
   const sessions = useStore((s) => s.sessions);
   const targetMin = useStore((s) => s.settings.targetDurationMin);
   const [range, setRange] = useState<Range>('week');
@@ -172,6 +202,19 @@ export function HistoryScreen() {
     [sessions, targetMin],
   );
 
+  // Only worth speaking once there is a spread to speak of.
+  const scores = series
+    .map((s) => s.qualityScore)
+    .filter((v): v is number => v != null);
+  const spreadLabel =
+    scores.length >= 2
+      ? t('chart.qualityRangeAria', {
+          n: scores.length,
+          min: Math.min(...scores),
+          max: Math.max(...scores),
+        })
+      : null;
+
   const nights = useMemo(
     () =>
       [...sessions]
@@ -187,7 +230,7 @@ export function HistoryScreen() {
     <div className="screen">
       <div className="spread">
         <h1 className="screen-title">{t('tab.history')}</h1>
-        <div className="seg" role="group" aria-label={t('tab.history')}>
+        <div className="seg" role="group" aria-label={t('history.rangeAria')}>
           <button
             data-on={range === 'week'}
             aria-pressed={range === 'week'}
@@ -245,6 +288,8 @@ export function HistoryScreen() {
             key={range}
             nights={nights}
             lang={lang}
+            clock={clock}
+            t={t}
             onPick={setSelected}
           />
 
@@ -253,6 +298,7 @@ export function HistoryScreen() {
             <span className="kicker">{t('chart.qualityTrend')}</span>
             <Constellation
               key={range}
+              label={spreadLabel}
               points={series.map((s) => ({
                 label: s.label,
                 value: s.qualityScore,

@@ -6,11 +6,11 @@ import { lastSession, sleepDebtMin } from '../../domain/debt';
 import { recommendedBedtime } from '../../domain/bedtime';
 import { consistencyScore } from '../../domain/consistency';
 import { thinkingCondition } from '../../domain/condition';
-import { isoToHm } from '../../domain/format';
 import { formatDate, formatDuration } from '../../i18n/catalog';
 import { isQualityConfirmed } from '../../domain/score';
 import { tapMedium } from '../../lib/haptics';
-import { useT, useLang } from '../../i18n/useT';
+import { useClock, useT, useLang } from '../../i18n/useT';
+import { formatHm, formatIsoTime } from '../../i18n/clock';
 import type { SleepSession } from '../../domain/types';
 
 /* Last-7-nights skyline — the whole history at a glance, zero labels.
@@ -84,6 +84,7 @@ export function HomeScreen({
 }) {
   const t = useT();
   const lang = useLang();
+  const clock = useClock();
   const sessions = useStore((s) => s.sessions);
   const settings = useStore((s) => s.settings);
 
@@ -104,6 +105,18 @@ export function HomeScreen({
     debtMin: debt,
   });
   const reminderTime = settings.bedtimeReminder ? plan.bedtimeHm : undefined;
+
+  const recent = [...sessions]
+    .sort((a, b) => (a.endedAt < b.endedAt ? 1 : -1))
+    .slice(0, 7);
+  const goalTally =
+    recent.length >= 3
+      ? t('home.skylineAria', {
+          n: recent.length,
+          met: recent.filter((s) => s.durationMin >= settings.targetDurationMin)
+            .length,
+        })
+      : null;
 
   // One sentence for last night: how long, and how it sat against the goal.
   const gap = last ? last.durationMin - settings.targetDurationMin : 0;
@@ -153,23 +166,28 @@ export function HomeScreen({
       <p className="poster-line">{t(`cond.${condition.tier}Copy`)}</p>
 
       {/* The last 7 nights stand on the horizon and reflect in the water. */}
-      <button
-        className="horizon"
-        aria-label={t('tab.history')}
-        onClick={onGoLog}
-      >
+      {/* No aria-label: it replaced the button's whole content, so the visible
+          sentence below — the entire point of this block — was silent. The
+          content names the button now. */}
+      <button className="horizon" onClick={onGoLog}>
         <Skyline sessions={sessions} goalMin={settings.targetDurationMin} />
         <span className="horizon-line" aria-hidden="true" />
         <span className="horizon-reflection" aria-hidden="true">
           <Skyline sessions={sessions} goalMin={settings.targetDurationMin} />
         </span>
         <span className="skyline-caption">{lastNightLine}</span>
+        {/* The one fact the seven bars carry that the caption does not: how
+            many of them cleared the goal. Suppressed below three nights —
+            "1 of the last 1 night met your goal" is not a shape. */}
+        {goalTally && <span className="sr-only">{goalTally}</span>}
       </button>
 
       <div className="night-words">
         {last && !isQualityConfirmed(last) && (
           <span className="muted" style={{ fontSize: 12.5 }}>
-            {t('home.morningCheckPending', { time: isoToHm(last.endedAt) })}
+            {t('home.morningCheckPending', {
+              time: formatIsoTime(last.endedAt, clock),
+            })}
           </span>
         )}
         {reminderTime && (
@@ -177,10 +195,10 @@ export function HomeScreen({
             ☾{' '}
             {plan.recoveryMin > 0
               ? t('home.bedtimeRecoveryLine', {
-                  time: reminderTime,
+                  time: formatHm(reminderTime, clock),
                   amount: formatDuration(plan.recoveryMin, lang),
                 })
-              : t('home.bedtimeLine', { time: reminderTime })}
+              : t('home.bedtimeLine', { time: formatHm(reminderTime, clock) })}
           </span>
         )}
       </div>

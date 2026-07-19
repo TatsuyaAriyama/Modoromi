@@ -77,6 +77,7 @@ const KEYS = {
 export const DEFAULT_SETTINGS: UserSettings = {
   lang: 'en',
   theme: 'auto',
+  clockPref: 'auto',
   targetDurationMin: 450, // 7.5h
   defaultWakeTime: '07:00',
   bedtimeReminder: false,

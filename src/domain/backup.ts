@@ -4,6 +4,7 @@ import type {
   Mood,
   Movement,
   SleepSession,
+  ClockPref,
   ThemePref,
   UserSettings,
 } from './types';
@@ -45,6 +46,7 @@ export type BackupParseResult =
 const MOODS: Mood[] = ['fresh', 'normal', 'groggy'];
 const THEMES: ThemePref[] = ['auto', 'day', 'night'];
 const LANGS: Lang[] = ['en', 'ja'];
+const CLOCK_PREFS: ClockPref[] = ['auto', '12', '24'];
 
 function isObject(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
@@ -110,6 +112,9 @@ function parseSettings(x: unknown): UserSettings | null {
   return {
     lang: LANGS.includes(x.lang as Lang) ? (x.lang as Lang) : 'en',
     theme: x.theme as ThemePref,
+    clockPref: CLOCK_PREFS.includes(x.clockPref as ClockPref)
+      ? (x.clockPref as ClockPref)
+      : 'auto',
     targetDurationMin: x.targetDurationMin,
     defaultWakeTime: x.defaultWakeTime,
     bedtimeReminder: isBool(x.bedtimeReminder) ? x.bedtimeReminder : false,

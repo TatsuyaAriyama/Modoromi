@@ -7,7 +7,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TimeDial } from '../../components/TimeDial';
 import { Toggle } from '../../components/Toggle';
-import type { Lang, ThemePref } from '../../domain/types';
+import type { ClockPref, Lang, ThemePref } from '../../domain/types';
 import { exportAll, importAll, wipeAll } from '../../data/repositories';
 import { parseBackup } from '../../domain/backup';
 import { sessionsToCsv } from '../../domain/csv';
@@ -139,6 +139,22 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
                 onClick={() => void saveSettings({ ...settings, theme: tp })}
               >
                 {t(`theme.${tp}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="set-row">
+          <span className="set-label">{t('clock.title')}</span>
+          <div className="seg" role="group" aria-label={t('clock.title')}>
+            {(['auto', '12', '24'] as ClockPref[]).map((c) => (
+              <button
+                key={c}
+                data-on={settings.clockPref === c}
+                aria-pressed={settings.clockPref === c}
+                onClick={() => void saveSettings({ ...settings, clockPref: c })}
+              >
+                {t(`clock.${c}`)}
               </button>
             ))}
           </div>

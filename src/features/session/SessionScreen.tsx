@@ -13,13 +13,15 @@ import { shouldSmartWake } from '../../domain/motion';
 import { nextAlarmFor } from '../../domain/alarmFire';
 import type { AlarmConfig } from '../../domain/types';
 import { cancelSnooze, scheduleSnooze } from '../../lib/notifications';
-import { useLang, useT } from '../../i18n/useT';
+import { useClock, useLang, useT } from '../../i18n/useT';
+import { formatHm, hmParts } from '../../i18n/clock';
 
 const HOLD_MS = 1200;
 
 export function SessionScreen() {
   const t = useT();
   const lang = useLang();
+  const clock = useClock();
   const active = useStore((s) => s.active);
   const endSession = useStore((s) => s.endSession);
   const cancelSession = useStore((s) => s.cancelSession);
@@ -206,8 +208,13 @@ export function SessionScreen() {
 
   if (!active) return null;
 
-  const hh = String(now.getHours()).padStart(2, '0');
-  const mm = String(now.getMinutes()).padStart(2, '0');
+  // The 80px clock renders its period as a small superscript rather than
+  // inline: " PM" at full size would overflow a 375px screen.
+  const nowHm = `${String(now.getHours()).padStart(2, '0')}:${String(
+    now.getMinutes(),
+  ).padStart(2, '0')}`;
+  const parts = hmParts(nowHm, clock);
+  const [hh, mm] = parts.digits.split(':');
 
   // Drive the hold timer off the timestamp rAF hands the callback, so we
   // never read an impure clock during the render path.
@@ -248,13 +255,19 @@ export function SessionScreen() {
 
         <div className="session-mid">
           <div className="session-clock num">
+            {parts.period && parts.periodFirst && (
+              <span className="clock-period">{parts.period}</span>
+            )}
             {hh}
             <span style={{ opacity: 0.4 }}>:</span>
             {mm}
+            {parts.period && !parts.periodFirst && (
+              <span className="clock-period">{parts.period}</span>
+            )}
           </div>
           {nextAlarm && (
             <div className="session-alarm num">
-              {t('session.alarm', { time: nextAlarm })}
+              {t('session.alarm', { time: formatHm(nextAlarm, clock) })}
               {smartAlarm && ` ${t('sep.middot')}${t('session.smartWake')}`}
             </div>
           )}
@@ -343,7 +356,7 @@ export function SessionScreen() {
         >
           <EyeMark size={72} color="var(--mist)" open />
           <div className="alarm-ring-time num">
-            {hh}:{mm}
+            {formatHm(nowHm, clock)}
           </div>
           <div className="alarm-ring-title" id="alarm-ring-title">
             {t('session.wakeTime')}

@@ -6,15 +6,16 @@ import { EyeMark } from '../../components/EyeMark';
 import { NightSky } from '../../components/NightSky';
 import { MoodPicker } from '../../components/MoodPicker';
 import type { Mood } from '../../domain/types';
-import { isoToHm } from '../../domain/format';
 import { notifySuccess } from '../../lib/haptics';
-import { useT } from '../../i18n/useT';
+import { useClock, useT } from '../../i18n/useT';
+import { formatIsoTime } from '../../i18n/clock';
 import { useLang } from '../../i18n/useT';
 import { formatDuration } from '../../i18n/catalog';
 
 export function MorningScreen() {
   const t = useT();
   const lang = useLang();
+  const clock = useClock();
   const pending = useStore((s) => s.pendingMorning);
   const saveMorningCheck = useStore((s) => s.saveMorningCheck);
   const dismissMorning = useStore((s) => s.dismissMorning);
@@ -52,7 +53,8 @@ export function MorningScreen() {
             {t('morning.greeting')}
           </h1>
           <p className="muted" style={{ marginTop: 6 }}>
-            {isoToHm(pending.startedAt)} → {isoToHm(pending.endedAt)}
+            {formatIsoTime(pending.startedAt, clock)} →{' '}
+            {formatIsoTime(pending.endedAt, clock)}
           </p>
           <div className="morning-dur num">
             {formatDuration(pending.durationMin, lang)}

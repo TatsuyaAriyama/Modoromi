@@ -189,6 +189,33 @@
   min-width: 68px;
   text-align: center;
 }
+/* A 12-hour hour is one or two digits, so the column can be narrower — that
+   width is what pays for the AM/PM control beside it. */
+.dial-val[data-h12] {
+  min-width: 56px;
+}
+/* Modelled on .dial-step rather than the feature-layer .seg: TimeDial imports
+   only ./ui.css and must not depend on screens.css. */
+.dial-period {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 46px;
+}
+.dial-period button {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: none;
+  color: var(--text-mute);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.dial-period button[data-on='true'] {
+  color: var(--text);
+  border-color: var(--primary);
+}
 .dial-sep {
   font-size: 36px;
   opacity: 0.4;

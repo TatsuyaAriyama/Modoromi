@@ -363,6 +363,49 @@ export const messages: Record<string, Msg> = {
     en: 'Add the Madoromi widget from your Home Screen to see today’s thinking condition and sleep debt at a glance. It refreshes after each morning check.',
     ja: 'ホーム画面にMadoromiのウィジェットを追加すると、今日の思考コンディションと睡眠負債をひと目で確認できます。朝のチェックのたびに自動で更新されます。',
   },
+  // ── spoken shapes (text alternatives for the visual encodings) ──
+  'alarm.planAria': {
+    en: (p) => `You plan to sleep from ${p.bed} to ${p.wake} — ${p.dur}.`,
+    ja: (p) => `${p.bed}から${p.wake}まで、${p.dur}の睡眠予定です。`,
+  },
+  'repeat.once': { en: 'Once', ja: '次回のみ' },
+  'repeat.daily': { en: 'Every day', ja: '毎日' },
+  'repeat.weekdays': { en: 'Weekdays', ja: '平日' },
+  'repeat.weekends': { en: 'Weekends', ja: '土日' },
+  'repeat.off': { en: 'Off', ja: 'オフ' },
+  'history.nightsAria': {
+    en: 'Each night at its clock time',
+    ja: '各夜の就寝から起床までの時間帯',
+  },
+  'history.rangeAria': { en: 'Time range', ja: '表示期間' },
+  'history.nightAria': {
+    en: (p) => `${p.day} — slept ${p.start} to ${p.end}, ${p.dur}, quality ${p.q}.`,
+    ja: (p) => `${p.day}曜 — ${p.start}から${p.end}、${p.dur}、質スコア${p.q}。`,
+  },
+  'history.nightAriaNoScore': {
+    en: (p) => `${p.day} — slept ${p.start} to ${p.end}, ${p.dur}.`,
+    ja: (p) => `${p.day}曜 — ${p.start}から${p.end}、${p.dur}。`,
+  },
+  'chart.qualityRangeAria': {
+    en: (p) =>
+      `Quality across ${p.n} ${plural(p.n, 'night', 'nights')} ranged from ${p.min} to ${p.max}.`,
+    ja: (p) => `${p.n}日間の質スコアは${p.min}〜${p.max}でした。`,
+  },
+  'home.skylineAria': {
+    en: (p) =>
+      `${p.met} of the last ${p.n} ${plural(p.n, 'night', 'nights')} met your goal.`,
+    ja: (p) => `直近${p.n}日のうち${p.met}日は目標にとどきました。`,
+  },
+
+  // ── clock ───────────────────────────────────────────────
+  'clock.am': { en: 'AM', ja: '午前' },
+  'clock.pm': { en: 'PM', ja: '午後' },
+  'clock.title': { en: 'Clock', ja: '時刻表示' },
+  'clock.auto': { en: 'Auto', ja: '自動' },
+  'clock.12': { en: '12h', ja: '12時間' },
+  'clock.24': { en: '24h', ja: '24時間' },
+  'dial.period': { en: 'AM or PM', ja: '午前・午後' },
+
   // ── data faults (a read that could not be trusted) ──────
   'data.faultTitle': {
     en: 'Some stored data could not be read',

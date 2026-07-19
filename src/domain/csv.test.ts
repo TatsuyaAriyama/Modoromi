@@ -65,3 +65,21 @@ describe('sessionsToCsv', () => {
     expect(row.endsWith(',plain')).toBe(true);
   });
 });
+
+describe('the export is data, not display', () => {
+  it('stays 24-hour regardless of any clock preference', () => {
+    // The clock seam is display-only. If a future change routes csv.ts through
+    // it, this breaks — which is the point.
+    const csv = sessionsToCsv([
+      {
+        id: 'x',
+        startedAt: '2026-07-18T23:05:00',
+        endedAt: '2026-07-19T07:30:00',
+        durationMin: 505,
+      },
+    ]);
+    expect(csv).toContain('23:05');
+    expect(csv).toContain('07:30');
+    expect(csv).not.toMatch(/AM|PM|午前|午後/);
+  });
+});

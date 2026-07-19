@@ -360,6 +360,16 @@
   letter-spacing: var(--tracking-tight);
   color: var(--numeral);
 }
+/* The period rides small beside the 80px numerals: " PM" at full size would
+   overflow a 375px screen. */
+.clock-period {
+  font-size: 0.3em;
+  letter-spacing: var(--tracking-wide);
+  opacity: 0.55;
+  padding: 0 0.15em;
+  vertical-align: 0.9em;
+}
+
 .session-alarm {
   font-size: 14px;
   color: var(--text-mute);
@@ -487,7 +497,9 @@
 }
 .orbit-center-time {
   fill: var(--numeral);
-  font-size: 34px;
+  /* Sized for the widest form ("12:30 AM"); the SVG scales with the viewBox
+     so this is stable across screen widths. */
+  font-size: 30px;
   font-weight: 500;
   text-anchor: middle;
 }
@@ -513,9 +525,14 @@
 }
 .alarm-row-main {
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* A 12-hour time is materially wider than "07:00"; rather than overflow the
+     row, let the day dots drop to a second line at narrow widths. */
+  flex-wrap: wrap;
+  row-gap: var(--space-2);
   gap: var(--space-3);
   background: none;
   border: none;
@@ -527,6 +544,13 @@
   font-size: 30px;
   font-weight: 500;
   color: var(--numeral);
+  white-space: nowrap;
+}
+.alarm-period {
+  font-size: 0.45em;
+  letter-spacing: var(--tracking-wide);
+  opacity: 0.6;
+  padding: 0 0.25em;
 }
 .alarm-row[data-off='true'] .alarm-time,
 .alarm-row[data-off='true'] .day-dots {
@@ -534,11 +558,12 @@
 }
 .day-dots {
   display: inline-flex;
-  gap: 4px;
+  gap: 3px;
 }
 .day-dot {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
   border-radius: 50%;
   display: grid;
   place-items: center;

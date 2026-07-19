@@ -55,6 +55,9 @@ export interface AlarmConfig {
 
 export type ThemePref = 'auto' | 'day' | 'night';
 
+/** How times are DISPLAYED. Storage is always 24-hour "HH:mm". */
+export type ClockPref = 'auto' | '12' | '24';
+
 /** UI language. English is the default; Japanese is selectable. */
 export type Lang = 'en' | 'ja';
 
@@ -62,6 +65,8 @@ export interface UserSettings {
   /** UI language (defaults to English). */
   lang: Lang;
   theme: ThemePref;
+  /** How times are DISPLAYED. Storage is always 24-hour "HH:mm". */
+  clockPref: ClockPref;
   targetDurationMin: number; // e.g. 450 (7.5h)
   defaultWakeTime: string; // "HH:mm"
   bedtimeReminder: boolean;

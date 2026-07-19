@@ -8,7 +8,10 @@ import type { AlarmConfig, Lang } from '../../domain/types';
 import { subtractMinutesHm, weekdayName } from '../../domain/format';
 import { recommendedBedtime } from '../../domain/bedtime';
 import { nextAlarmFor } from '../../domain/alarmFire';
-import { useT, useLang } from '../../i18n/useT';
+import { repeatPhrase } from '../../domain/repeat';
+import { formatDuration } from '../../i18n/catalog';
+import { useClock, useT, useLang } from '../../i18n/useT';
+import { formatHm, hmParts, type Clock } from '../../i18n/clock';
 import { sleepDebtMin } from '../../domain/debt';
 import { DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
 import { uid } from '../../lib/id';
@@ -78,14 +81,18 @@ function NightOrbit({
   wake,
   alarms,
   skipId,
+  clock,
   t,
+  lang,
 }: {
   bed: string;
   wake: string;
   alarms: AlarmConfig[];
   /** The alarm already drawn as the waking eye; not repeated as a ring dot. */
   skipId?: string;
-  t: (key: string) => string;
+  clock: Clock;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  lang: Lang;
 }) {
   const arcRef = useRef<SVGPathElement>(null);
   const moonRef = useRef<SVGTextElement>(null);
@@ -142,7 +149,15 @@ function NightOrbit({
       className="orbit"
       viewBox="0 0 280 280"
       role="img"
-      aria-label={`${t('alarm.bed')} ${bed} — ${t('alarm.wake')} ${wake}`}
+      /* The insight the violet arc carries is its LENGTH — how long tonight
+         is — and that number appears nowhere else on this screen. The other
+         alarms' dots are deliberately not enumerated: every one is a row
+         below, with its own time and repeat pattern. */
+      aria-label={t('alarm.planAria', {
+        bed: formatHm(bed, clock),
+        wake: formatHm(wake, clock),
+        dur: formatDuration(span, lang),
+      })}
       style={{ '--arc-len': arcLen } as CSSProperties}
     >
       {/* the 24h ring + quarter marks */}
@@ -187,12 +202,25 @@ function NightOrbit({
         {t('alarm.wake')}
       </text>
       <text x={C} y={C + 10} className="orbit-center-time num">
-        {wake}
+        {formatHm(wake, clock)}
       </text>
       <text x={C} y={C + 34} className="orbit-center-sub num">
-        ☾ {bed}
+        ☾ {formatHm(bed, clock)}
       </text>
     </svg>
+  );
+}
+
+/* The period rides small beside the numerals: at 30px "12:05 PM" wraps to a
+   second line and pushes the day dots off the row. */
+function AlarmTime({ hm, clock }: { hm: string; clock: Clock }) {
+  const { digits, period, periodFirst } = hmParts(hm, clock);
+  return (
+    <span className="alarm-time num">
+      {period && periodFirst && <span className="alarm-period">{period}</span>}
+      {digits}
+      {period && !periodFirst && <span className="alarm-period">{period}</span>}
+    </span>
   );
 }
 
@@ -202,7 +230,11 @@ function DayDots({ days, lang }: { days: number[]; lang: Lang }) {
     <span className="day-dots" aria-hidden="true">
       {Array.from({ length: 7 }, (_, d) => (
         <span key={d} className="day-dot" data-on={days.includes(d)}>
-          {weekdayName(d, lang)}
+          {/* Japanese weekday names are already one character; English ones
+              are three, which will not fit a dot — use the initial, which is
+              the convention anyway. The row's accessible name carries the
+              real pattern, so nothing is lost here. */}
+          {lang === 'ja' ? weekdayName(d, lang) : weekdayName(d, lang).charAt(0)}
         </span>
       ))}
     </span>
@@ -212,6 +244,7 @@ function DayDots({ days, lang }: { days: number[]; lang: Lang }) {
 export function AlarmScreen() {
   const t = useT();
   const lang = useLang();
+  const clock = useClock();
   const alarms = useStore((s) => s.alarms);
   const settings = useStore((s) => s.settings);
   const sessions = useStore((s) => s.sessions);
@@ -259,7 +292,15 @@ export function AlarmScreen() {
         </button>
       </div>
 
-      <NightOrbit bed={bed} wake={wake} alarms={alarms} skipId={nextId} t={t} />
+      <NightOrbit
+        bed={bed}
+        wake={wake}
+        alarms={alarms}
+        skipId={nextId}
+        clock={clock}
+        t={t}
+        lang={lang}
+      />
 
       {alarms.length === 0 ? (
         <p className="empty">{t('alarm.empty')}</p>
@@ -274,13 +315,20 @@ export function AlarmScreen() {
                   setEditing(a);
                 }}
               >
-                <span className="alarm-time num">{a.time}</span>
+                <AlarmTime hm={a.time} clock={clock} />
+                {/* A visually-hidden span rather than an aria-label: the time
+                    is visible text, and an aria-label would replace it and
+                    put the row at risk of a label-in-name mismatch. */}
+                <span className="sr-only">
+                  {repeatPhrase(a.repeatDays, lang)}
+                  {!a.enabled ? ` — ${t('repeat.off')}` : ''}
+                </span>
                 <DayDots days={a.repeatDays} lang={lang} />
               </button>
               <Toggle
                 on={a.enabled}
                 onChange={(enabled) => void saveAlarm({ ...a, enabled })}
-                label={t('alarm.enableAria', { time: a.time })}
+                label={t('alarm.enableAria', { time: formatHm(a.time, clock) })}
               />
             </div>
           ))}

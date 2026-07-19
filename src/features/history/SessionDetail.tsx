@@ -8,8 +8,9 @@ import { MovementGraph } from '../../components/MovementGraph';
 import { useStore } from '../../app/store';
 import { computeQualityScore } from '../../domain/score';
 import { movementHistogram, restlessnessLevel } from '../../domain/motion';
-import { formatDate, formatDuration, isoToHm } from '../../domain/format';
-import { useT, useLang } from '../../i18n/useT';
+import { formatDate, formatDuration } from '../../domain/format';
+import { useClock, useT, useLang } from '../../i18n/useT';
+import { formatIsoTime } from '../../i18n/clock';
 
 export function SessionDetail({
   session,
@@ -21,6 +22,7 @@ export function SessionDetail({
   const t = useT();
   const lang = useLang();
   const titleId = useId();
+  const clock = useClock();
   const updateSession = useStore((s) => s.updateSession);
   const deleteSession = useStore((s) => s.deleteSession);
   const targetMin = useStore((s) => s.settings.targetDurationMin);
@@ -69,7 +71,8 @@ export function SessionDetail({
           <div className="stat">
             <span className="stat-label">{t('detail.timeRange')}</span>
             <span className="stat-val num">
-              {isoToHm(session.startedAt)}–{isoToHm(session.endedAt)}
+              {formatIsoTime(session.startedAt, clock)}–
+              {formatIsoTime(session.endedAt, clock)}
             </span>
           </div>
         </div>
