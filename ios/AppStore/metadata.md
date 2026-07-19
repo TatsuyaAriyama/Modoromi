@@ -16,7 +16,7 @@
 | SKU | madoromi-ios-001 |
 | プライマリ言語 / Primary Language | **English (U.S.)** |
 | 対応言語 / Localizations | English (U.S.), Japanese |
-| バージョン | 1.0（ビルド 2） |
+| バージョン | 1.1（ビルド 2） |
 | プライマリカテゴリ | ヘルスケア/フィットネス（Health & Fitness） |
 | セカンダリカテゴリ | ライフスタイル（Lifestyle） |
 | 価格 | 無料 / Free |
@@ -115,13 +115,14 @@
 
 ## URL
 
-| 項目 | 値（要確定） |
+| 項目 | 値 |
 | --- | --- |
-| サポートURL / Support URL | https://madoromi.app/support |
-| マーケティングURL / Marketing URL | https://madoromi.app |
-| プライバシーポリシーURL / Privacy Policy URL | https://madoromi.app/privacy （本リポジトリ ios/AppStore/privacy-policy.md の内容を掲載） |
+| サポートURL / Support URL | https://tatsuyaariyama.github.io/Modoromi/support/ |
+| マーケティングURL / Marketing URL | https://tatsuyaariyama.github.io/Modoromi/ |
+| プライバシーポリシーURL / Privacy Policy URL | 要App Store Connect側で確認（本リポジトリ ios/AppStore/privacy-policy.md の内容を掲載） |
 
-> 注: ドメイン madoromi.app は未取得なら取得が必要。サポート/プライバシーの2URLは申請に必須。
+> 実際にApp Store Connectへ登録済みの値（2026-07-20時点、v1.1準備中に確認）。
+> madoromi.app は未取得のプレースホルダーだったため、GitHub Pages（本リポジトリのdocs/）に差し替え済み。
 
 ## 年齢制限（Age Rating）
 
