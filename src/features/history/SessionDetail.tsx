@@ -14,9 +14,14 @@ import { formatIsoTime } from '../../i18n/clock';
 
 export function SessionDetail({
   session,
+  onShare,
   onClose,
 }: {
   session: SleepSession;
+  /** Hands the night up: the owner swaps this sheet for the share sheet.
+   *  Nesting two Sheets would make one Escape close both, because Sheet binds
+   *  its keydown listener on `document`. */
+  onShare: (s: SleepSession) => void;
   onClose: () => void;
 }) {
   const t = useT();
@@ -124,6 +129,10 @@ export function SessionDetail({
 
         <Button block large onClick={() => void save()}>
           {t('common.save')}
+        </Button>
+
+        <Button variant="ghost" block onClick={() => onShare(session)}>
+          {t('share.action')}
         </Button>
 
         {confirmDelete ? (

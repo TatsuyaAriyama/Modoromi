@@ -1,0 +1,29 @@
+/* The card preview is the exported PNG itself — 4:5, so it reserves its box
+   before the image decodes and the sheet does not jump. */
+.share-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1080 / 1350;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  background: var(--black);
+  object-fit: contain;
+}
+
+/* Same box while rendering, so the layout is identical before and after. */
+.share-placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1080 / 1350;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  text-align: center;
+  padding: var(--space-5);
+}
+
+.share-note {
+  font-size: 12.5px;
+  line-height: 1.7;
+}

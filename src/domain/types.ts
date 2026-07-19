@@ -88,4 +88,14 @@ export interface UserSettings {
    * and the write is a best-effort native side-effect (no-op off-device).
    */
   healthSync: boolean;
+  /**
+   * Put exact bed/wake clock times on a shared card. Off by default: a run of
+   * times is an occupancy schedule for the user's home.
+   */
+  shareShowTimes?: boolean;
+  /**
+   * Put the morning's one-line theme on a shared card. Off by default.
+   * `note` has no equivalent flag and is never shareable.
+   */
+  shareShowTheme?: boolean;
 }

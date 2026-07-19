@@ -1,3 +1,5 @@
+import { EYE_LASHES } from './eyeGeometry';
+
 interface EyeMarkProps {
   /** false = closed eye (sleeping), true = open eye (awake). */
   open?: boolean;
@@ -58,12 +60,10 @@ export function EyeMark({
           <circle cx="50" cy="52" r="9" fill={color} stroke="none" />
         ) : (
           <>
-            {/* lashes */}
-            <line x1="20" y1="48" x2="14" y2="56" />
-            <line x1="34" y1="58" x2="31" y2="68" />
-            <line x1="50" y1="62" x2="50" y2="73" />
-            <line x1="66" y1="58" x2="69" y2="68" />
-            <line x1="80" y1="48" x2="86" y2="56" />
+            {/* lashes — from the shared geometry above */}
+            {EYE_LASHES.map(([x1, y1, x2, y2]) => (
+              <line key={`${x1}-${y1}`} x1={x1} y1={y1} x2={x2} y2={y2} />
+            ))}
           </>
         )}
       </g>

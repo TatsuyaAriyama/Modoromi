@@ -122,6 +122,8 @@ function parseSettings(x: unknown): UserSettings | null {
     smartAlarm: isBool(x.smartAlarm) ? x.smartAlarm : false,
     smartWindowMin: isNum(x.smartWindowMin) ? x.smartWindowMin : 30,
     healthSync: isBool(x.healthSync) ? x.healthSync : false,
+    shareShowTimes: isBool(x.shareShowTimes) ? x.shareShowTimes : false,
+    shareShowTheme: isBool(x.shareShowTheme) ? x.shareShowTheme : false,
   };
 }
 

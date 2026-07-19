@@ -2,6 +2,7 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { SessionDetail } from './SessionDetail';
+import { ShareSheet } from '../share/ShareSheet';
 import {
   averageDuration,
   averageQuality,
@@ -181,6 +182,7 @@ export function HistoryScreen() {
   const targetMin = useStore((s) => s.settings.targetDurationMin);
   const [range, setRange] = useState<Range>('week');
   const [selected, setSelected] = useState<SleepSession | null>(null);
+  const [sharing, setSharing] = useState<SleepSession | null>(null);
 
   const days = range === 'week' ? 7 : 30;
   const series = useMemo(
@@ -321,8 +323,15 @@ export function HistoryScreen() {
       {selected && (
         <SessionDetail
           session={selected}
+          onShare={(s) => {
+            setSelected(null);
+            setSharing(s);
+          }}
           onClose={() => setSelected(null)}
         />
+      )}
+      {sharing && (
+        <ShareSheet session={sharing} onClose={() => setSharing(null)} />
       )}
     </div>
   );
