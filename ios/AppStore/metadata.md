@@ -119,7 +119,7 @@
 | --- | --- |
 | サポートURL / Support URL | https://tatsuyaariyama.github.io/Modoromi/support/ |
 | マーケティングURL / Marketing URL | https://tatsuyaariyama.github.io/Modoromi/ |
-| プライバシーポリシーURL / Privacy Policy URL | 要App Store Connect側で確認（本リポジトリ ios/AppStore/privacy-policy.md の内容を掲載） |
+| プライバシーポリシーURL / Privacy Policy URL | https://tatsuyaariyama.github.io/Modoromi/privacy/ （英語・日本語ロケールとも設定済み。ページ実体は docs/privacy/index.html） |
 
 > 実際にApp Store Connectへ登録済みの値（2026-07-20時点、v1.1準備中に確認）。
 > madoromi.app は未取得のプレースホルダーだったため、GitHub Pages（本リポジトリのdocs/）に差し替え済み。
