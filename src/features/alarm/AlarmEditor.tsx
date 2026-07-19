@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import '../screens.css';
 import type { AlarmConfig } from '../../domain/types';
 import { weekdayName } from '../../domain/format';
 import { Button } from '../../components/Button';
+import { Sheet } from '../../components/Sheet';
 import { TimeDial } from '../../components/TimeDial';
 import { Toggle } from '../../components/Toggle';
 import { ALARM_SOUNDS, AlarmPlayer, normalizeSound } from '../../lib/alarmSound';
@@ -21,6 +22,7 @@ export function AlarmEditor({
 }) {
   const t = useT();
   const lang = useLang();
+  const titleId = useId();
   const [draft, setDraft] = useState<AlarmConfig>({
     ...initial,
     sound: normalizeSound(initial.sound),
@@ -42,10 +44,12 @@ export function AlarmEditor({
   };
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <Sheet titleId={titleId} onClose={onClose}>
+      <>
         <div className="spread">
-          <h2 style={{ fontSize: 18 }}>{t('alarm.title')}</h2>
+          <h2 style={{ fontSize: 18 }} id={titleId}>
+            {t('alarm.title')}
+          </h2>
           <button className="back-btn" onClick={onClose}>
             {t('common.close')}
           </button>
@@ -148,7 +152,7 @@ export function AlarmEditor({
             {t('editor.delete')}
           </Button>
         )}
-      </div>
-    </div>
+      </>
+    </Sheet>
   );
 }

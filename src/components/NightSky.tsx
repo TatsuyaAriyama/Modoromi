@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { memo, type CSSProperties } from 'react';
 import './nightsky.css';
 
 /**
@@ -32,7 +32,10 @@ const STARS: [number, number, number, number][] = [
 // A few of the brighter stars breathe, on staggered cycles.
 const TWINKLE = new Set([2, 5, 9, 13, 17, 24]);
 
-export function NightSky() {
+/* memo: NightSky takes no props, and its parents (SessionScreen, NapScreen,
+   WindDownScreen) re-render on a timer. Without this, 43 SVG nodes reconcile
+   every second all night long. */
+export const NightSky = memo(function NightSky() {
   return (
     <svg
       className="night-sky"
@@ -51,6 +54,7 @@ export function NightSky() {
           cy={cy}
           r={r}
           className={TWINKLE.has(i) ? 'sky-star sky-star-twinkle' : 'sky-star'}
+          {...(TWINKLE.has(i) ? { 'data-ambient': '' } : {})}
           style={
             {
               '--o': o,
@@ -63,4 +67,4 @@ export function NightSky() {
       ))}
     </svg>
   );
-}
+});

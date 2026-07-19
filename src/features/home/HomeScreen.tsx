@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { EyeMark } from '../../components/EyeMark';
@@ -52,6 +53,8 @@ function Skyline({
         return (
           <rect
             key={s.id}
+            className="sky-bar"
+            style={{ '--i': i } as CSSProperties}
             x={cx - barW / 2}
             y={top}
             width={barW}
@@ -134,44 +137,41 @@ export function HomeScreen({
         </button>
       </div>
 
-      {/* The poster: today's condition as one giant fact. */}
-      <div className="poster">
-        <span className="kicker">{t('home.condKicker')}</span>
-        <div className={`poster-num num cond-${condition.tier}`}>
-          {condition.index}
-        </div>
-        <div className={`poster-word cond-${condition.tier}`}>
+      {/* The condition is the moon: a numbered moon in the sky, with the
+          tier word standing beside it in vertical Japanese type. */}
+      <div className="moon-block">
+        <span className="kicker moon-kicker">{t('home.condKicker')}</span>
+        <div className={`moon-word display cond-${condition.tier}`}>
           {t(`cond.${condition.tier}`)}
         </div>
-        <p className="poster-line">{t(`cond.${condition.tier}Copy`)}</p>
+        <div className="moon" aria-hidden="true">
+          <span className={`moon-num num cond-${condition.tier}`}>
+            {condition.index}
+          </span>
+        </div>
       </div>
+      <p className="poster-line">{t(`cond.${condition.tier}Copy`)}</p>
 
-      {/* Last 7 nights, one tap from the log. */}
+      {/* The last 7 nights stand on the horizon and reflect in the water. */}
       <button
-        className="skyline"
+        className="horizon"
         aria-label={t('tab.history')}
         onClick={onGoLog}
       >
         <Skyline sessions={sessions} goalMin={settings.targetDurationMin} />
+        <span className="horizon-line" aria-hidden="true" />
+        <span className="horizon-reflection" aria-hidden="true">
+          <Skyline sessions={sessions} goalMin={settings.targetDurationMin} />
+        </span>
         <span className="skyline-caption">{lastNightLine}</span>
       </button>
 
-      <div className="cta-wrap">
+      <div className="night-words">
         {last && !isQualityConfirmed(last) && (
           <span className="muted" style={{ fontSize: 12.5 }}>
             {t('home.morningCheckPending', { time: isoToHm(last.endedAt) })}
           </span>
         )}
-        <button
-          className="cta-hero"
-          onClick={() => {
-            void tapMedium();
-            onWindDown();
-          }}
-        >
-          <EyeMark size={44} color="var(--plane-fg)" className="eye-blink" />
-          {t('home.cta')}
-        </button>
         {reminderTime && (
           <span className="bedtime-chip">
             ☾{' '}
@@ -183,14 +183,44 @@ export function HomeScreen({
               : t('home.bedtimeLine', { time: reminderTime })}
           </span>
         )}
-        <div className="quick-row">
-          <button className="quick-btn" onClick={onStartNap}>
-            {t('nap.title')}
-          </button>
-          <button className="quick-btn" onClick={onGoAlarm}>
-            {t('tab.alarm')}
-          </button>
-        </div>
+      </div>
+
+      {/* Good night: a violet moon rising out of the bottom edge, with the
+          nap and alarm orbiting it as two small satellites. */}
+      <div className="night-foot">
+        <button
+          className="quick-orb"
+          aria-label={t('nap.title')}
+          onClick={onStartNap}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12.5 3.5a8.5 8.5 0 1 0 8 11.5 7 7 0 0 1-8-11.5z" />
+          </svg>
+        </button>
+        <button
+          className="moon-dome"
+          onClick={() => {
+            void tapMedium();
+            onWindDown();
+          }}
+        >
+          {/* the wrapper carries the tag that lets reduced motion and the
+              sleep theme switch the blink off at the root */}
+          <span className="eye-blink" data-ambient>
+            <EyeMark size={40} color="var(--plane-fg)" />
+          </span>
+          {t('home.cta')}
+        </button>
+        <button
+          className="quick-orb"
+          aria-label={t('tab.alarm')}
+          onClick={onGoAlarm}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 4.5a5 5 0 0 0-5 5c0 2.9-.7 4.4-1.7 5.6-.35.42-.05 1.4.55 1.4h12.3c.6 0 .9-.98.55-1.4-1-1.2-1.7-2.7-1.7-5.6a5 5 0 0 0-5-5z" />
+            <path d="M10.3 19.5a1.8 1.8 0 0 0 3.4 0" />
+          </svg>
+        </button>
       </div>
     </div>
   );

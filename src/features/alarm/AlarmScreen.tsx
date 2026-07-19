@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
+import { prefersReducedMotion } from '../../app/useReducedMotion';
 import { Toggle } from '../../components/Toggle';
 import { AlarmEditor } from './AlarmEditor';
 import type { AlarmConfig, Lang } from '../../domain/types';
 import { subtractMinutesHm, weekdayName } from '../../domain/format';
 import { recommendedBedtime } from '../../domain/bedtime';
+import { nextAlarmFor } from '../../domain/alarmFire';
 import { useT, useLang } from '../../i18n/useT';
 import { sleepDebtMin } from '../../domain/debt';
 import { DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
@@ -32,36 +34,108 @@ function newAlarm(time: string): AlarmConfig {
 
 const R = 112;
 const C = 140;
+const MIN_PER_DAY = 1440;
+const TWEEN_MS = 900;
 
-function angleOf(hm: string): number {
+function toMin(hm: string): number {
   const [h, m] = hm.split(':').map(Number);
-  return ((h * 60 + m) / 1440) * Math.PI * 2 - Math.PI / 2;
+  return h * 60 + m;
 }
-function ptOf(hm: string, r = R): [number, number] {
-  const a = angleOf(hm);
+function ptOfMin(min: number, r = R): [number, number] {
+  const a = (min / MIN_PER_DAY) * Math.PI * 2 - Math.PI / 2;
   return [C + r * Math.cos(a), C + r * Math.sin(a)];
 }
+function ptOf(hm: string, r = R): [number, number] {
+  return ptOfMin(toMin(hm), r);
+}
+
+/** Everything the orbit draws, derived from two clock positions. */
+function geomOf(bedMin: number, wakeMin: number) {
+  const [bx, by] = ptOfMin(bedMin);
+  const [wx, wy] = ptOfMin(wakeMin);
+  const span = (wakeMin - bedMin + MIN_PER_DAY) % MIN_PER_DAY;
+  return {
+    bx,
+    by,
+    wx,
+    wy,
+    d: `M ${bx} ${by} A ${R} ${R} 0 ${span > 720 ? 1 : 0} 1 ${wx} ${wy}`,
+    // Arc length WITHOUT touching the DOM: a circular arc of radius R
+    // subtending θ has length R·θ. Keeps this jsdom-safe.
+    arcLen: R * (span / MIN_PER_DAY) * Math.PI * 2,
+  };
+}
+
+/** Interpolate between two clock minutes the shortest way round the dial. */
+function lerpClock(a: number, b: number, k: number): number {
+  const d = ((b - a + MIN_PER_DAY * 1.5) % MIN_PER_DAY) - MIN_PER_DAY / 2;
+  return (a + d * k + MIN_PER_DAY) % MIN_PER_DAY;
+}
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
 function NightOrbit({
   bed,
   wake,
   alarms,
+  skipId,
   t,
 }: {
   bed: string;
   wake: string;
   alarms: AlarmConfig[];
+  /** The alarm already drawn as the waking eye; not repeated as a ring dot. */
+  skipId?: string;
   t: (key: string) => string;
 }) {
-  const [bx, by] = ptOf(bed);
-  const [wx, wy] = ptOf(wake);
-  // Night length in minutes, walking clockwise from bed to wake.
-  const toMin = (hm: string) => {
-    const [h, m] = hm.split(':').map(Number);
-    return h * 60 + m;
-  };
-  const span = (toMin(wake) - toMin(bed) + 1440) % 1440;
-  const largeArc = span > 720 ? 1 : 0;
+  const arcRef = useRef<SVGPathElement>(null);
+  const moonRef = useRef<SVGTextElement>(null);
+  const wakeRingRef = useRef<SVGCircleElement>(null);
+  const wakeDotRef = useRef<SVGCircleElement>(null);
+
+  // React always renders the TRUE geometry. When a time changes, this effect
+  // temporarily overrides the DOM to show the bodies travelling there along
+  // the orbit, and its last frame lands exactly on what React already drew —
+  // so the two can never disagree, and React stays out of the frame loop.
+  const prevRef = useRef<{ bedMin: number; wakeMin: number } | null>(null);
+
+  useEffect(() => {
+    const to = { bedMin: toMin(bed), wakeMin: toMin(wake) };
+    const from = prevRef.current;
+    prevRef.current = to;
+    if (!from || (from.bedMin === to.bedMin && from.wakeMin === to.wakeMin)) {
+      return;
+    }
+    // CSS cannot reach rAF — this is the gate the media query can't provide.
+    if (prefersReducedMotion() || typeof requestAnimationFrame !== 'function') {
+      return;
+    }
+    let id = 0;
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / TWEEN_MS);
+      const e = easeOut(k);
+      const g = geomOf(
+        lerpClock(from.bedMin, to.bedMin, e),
+        lerpClock(from.wakeMin, to.wakeMin, e),
+      );
+      arcRef.current?.setAttribute('d', g.d);
+      arcRef.current?.setAttribute('stroke-dasharray', String(g.arcLen));
+      moonRef.current?.setAttribute('x', String(g.bx));
+      moonRef.current?.setAttribute('y', String(g.by + 5));
+      for (const r of [wakeRingRef, wakeDotRef]) {
+        r.current?.setAttribute('cx', String(g.wx));
+        r.current?.setAttribute('cy', String(g.wy));
+      }
+      if (k < 1) id = requestAnimationFrame(step);
+    };
+    id = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(id);
+  }, [bed, wake]);
+
+  const bedMin = toMin(bed);
+  const wakeMin = toMin(wake);
+  const { bx, by, wx, wy, d, arcLen } = geomOf(bedMin, wakeMin);
+  const span = (wakeMin - bedMin + MIN_PER_DAY) % MIN_PER_DAY;
 
   return (
     <svg
@@ -69,6 +143,7 @@ function NightOrbit({
       viewBox="0 0 280 280"
       role="img"
       aria-label={`${t('alarm.bed')} ${bed} — ${t('alarm.wake')} ${wake}`}
+      style={{ '--arc-len': arcLen } as CSSProperties}
     >
       {/* the 24h ring + quarter marks */}
       <circle cx={C} cy={C} r={R} className="orbit-ring" />
@@ -81,25 +156,27 @@ function NightOrbit({
         );
       })}
 
-      {/* the planned night */}
+      {/* the planned night, unspooling from bed to wake */}
       {span > 0 && (
         <path
-          d={`M ${bx} ${by} A ${R} ${R} 0 ${largeArc} 1 ${wx} ${wy}`}
+          ref={arcRef}
+          d={d}
           className="orbit-night"
+          strokeDasharray={arcLen}
         />
       )}
 
       {/* bed = moon */}
-      <text x={bx} y={by + 5} className="orbit-glyph">
+      <text ref={moonRef} x={bx} y={by + 5} className="orbit-glyph">
         ☾
       </text>
       {/* wake = open eye */}
-      <circle cx={wx} cy={wy} r={7.5} className="orbit-wake-ring" />
-      <circle cx={wx} cy={wy} r={2.6} className="orbit-wake-dot" />
+      <circle ref={wakeRingRef} cx={wx} cy={wy} r={7.5} className="orbit-wake-ring" />
+      <circle ref={wakeDotRef} cx={wx} cy={wy} r={2.6} className="orbit-wake-dot" />
 
       {/* every other enabled alarm, as a small light on the ring */}
       {alarms
-        .filter((a) => a.enabled && a.time !== wake)
+        .filter((a) => a.enabled && a.id !== skipId)
         .map((a) => {
           const [x, y] = ptOf(a.time);
           return <circle key={a.id} cx={x} cy={y} r={3} className="orbit-alarm" />;
@@ -150,11 +227,13 @@ export function AlarmScreen() {
     setEditing(newAlarm(settings.defaultWakeTime));
   };
 
-  const wake =
-    alarms
-      .filter((a) => a.enabled)
-      .map((a) => a.time)
-      .sort()[0] ?? settings.defaultWakeTime;
+  // The alarm that will actually ring next, not the earliest clock string —
+  // a weekdays-only 06:30 must not anchor the orbit on a Saturday night.
+  // `screenNow` is captured once so render never reads the clock.
+  const [screenNow] = useState(() => new Date());
+  const next = nextAlarmFor(alarms, screenNow);
+  const wake = next?.alarm.time ?? settings.defaultWakeTime;
+  const nextId = next?.alarm.id;
   const bedtimePlan = settings.bedtimeReminder
     ? recommendedBedtime({
         wakeTime: wake,
@@ -180,7 +259,7 @@ export function AlarmScreen() {
         </button>
       </div>
 
-      <NightOrbit bed={bed} wake={wake} alarms={alarms} t={t} />
+      <NightOrbit bed={bed} wake={wake} alarms={alarms} skipId={nextId} t={t} />
 
       {alarms.length === 0 ? (
         <p className="empty">{t('alarm.empty')}</p>

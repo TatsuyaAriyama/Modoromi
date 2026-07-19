@@ -5,6 +5,7 @@ const KEYS = {
   sessions: 'madoromi.sessions',
   alarms: 'madoromi.alarms',
   settings: 'madoromi.settings',
+  runtime: 'madoromi.runtime',
 } as const;
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -40,6 +41,22 @@ export interface AlarmRepository {
 export interface SettingsRepository {
   get(): Promise<UserSettings>;
   set(settings: UserSettings): Promise<void>;
+}
+
+/**
+ * Transient across-launch state: the night currently being slept, and a night
+ * waiting for its morning check. A sleep session spans 6–9 hours of the app
+ * sitting in the background — precisely when the OS reclaims the WebView — so
+ * holding this only in memory means a reclaim silently eats the whole night.
+ */
+export interface RuntimeState {
+  active: { id: string; startedAt: string } | null;
+  pendingMorning: SleepSession | null;
+}
+
+export interface RuntimeRepository {
+  get(): Promise<RuntimeState>;
+  set(state: RuntimeState): Promise<void>;
 }
 
 class LocalSleepRepository implements SleepRepository {
@@ -88,9 +105,30 @@ class LocalSettingsRepository implements SettingsRepository {
   }
 }
 
+class LocalRuntimeRepository implements RuntimeRepository {
+  async get(): Promise<RuntimeState> {
+    const raw = await getJSON<Partial<RuntimeState>>(KEYS.runtime, {});
+    // Validate on the way in: a half-written or older blob must degrade to
+    // "no night in progress" rather than crash the launch.
+    const a = raw.active;
+    const active =
+      a && typeof a.id === 'string' && !Number.isNaN(Date.parse(a.startedAt))
+        ? { id: a.id, startedAt: a.startedAt }
+        : null;
+    const p = raw.pendingMorning;
+    const pendingMorning =
+      p && typeof p.id === 'string' && Number.isFinite(p.durationMin) ? p : null;
+    return { active, pendingMorning };
+  }
+  async set(state: RuntimeState): Promise<void> {
+    await setJSON(KEYS.runtime, state);
+  }
+}
+
 export const sleepRepo: SleepRepository = new LocalSleepRepository();
 export const alarmRepo: AlarmRepository = new LocalAlarmRepository();
 export const settingsRepo: SettingsRepository = new LocalSettingsRepository();
+export const runtimeRepo: RuntimeRepository = new LocalRuntimeRepository();
 
 /** Full export blob for Settings → Export. */
 export async function exportAll(): Promise<string> {
@@ -108,7 +146,12 @@ export async function exportAll(): Promise<string> {
 
 /** Wipe every Madoromi key (used by Settings → delete all). */
 export async function wipeAll(): Promise<void> {
-  await Promise.all([removeKey(KEYS.sessions), removeKey(KEYS.alarms), removeKey(KEYS.settings)]);
+  await Promise.all([
+    removeKey(KEYS.sessions),
+    removeKey(KEYS.alarms),
+    removeKey(KEYS.settings),
+    removeKey(KEYS.runtime),
+  ]);
 }
 
 /**
@@ -123,6 +166,9 @@ export async function importAll(data: {
   const tasks: Promise<void>[] = [
     setJSON(KEYS.sessions, data.sessions),
     setJSON(KEYS.alarms, data.alarms),
+    // An import replaces the world; any night the old install thought was in
+    // progress belongs to data that no longer exists.
+    setJSON(KEYS.runtime, { active: null, pendingMorning: null }),
   ];
   // Only touch settings when the backup carried a valid set; a missing or
   // corrupt settings block leaves the user's current preferences intact.

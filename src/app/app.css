@@ -1,39 +1,75 @@
-/* Bottom tab bar + full-screen overlays. Flat, hairline-separated. */
+/* Floating dock — a detached pill. One violet plane glides between the three
+   slots; the active tab opens its label. Flat, hairline-separated. */
 
-/* Floating dock — a detached pill; the active tab expands into a violet
-   pill with its label, the rest stay quiet icons. */
 .tabbar {
   position: fixed;
   bottom: calc(14px + env(safe-area-inset-bottom));
   left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex;
+  width: min(330px, calc(100% - 40px));
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   gap: 4px;
   padding: 6px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   z-index: 20;
+  transform: translateX(-50%);
   transition: background 0.5s ease;
 }
 
-.tab {
-  background: none;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 16px;
+/* The one travelling plane. Its width is exactly one grid column, so a slot
+   step is (own width + gap) — no JS measurement anywhere. */
+.tab-pill {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 20px) / 3);
   border-radius: var(--radius-pill);
+  background: var(--primary);
+  z-index: 0;
+  pointer-events: none;
+  transform: translate3d(calc(var(--tab-i, 0) * (100% + 4px)), 0, 0);
+  transition: transform var(--dur-screen) var(--ease-rise),
+    background 0.5s ease;
+}
+
+.tab {
+  position: relative;
+  z-index: 1;
+  height: 44px;
+  padding: 0;
+  background: none; /* the pill carries the plane now */
+  border: none;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
   color: var(--text-mute);
   font-size: 12.5px;
   font-weight: 500;
   letter-spacing: var(--tracking-wide);
-  transition: background 0.25s var(--ease-soft), color 0.25s ease;
+  transition: color var(--dur-state) ease;
 }
 .tab[data-active='true'] {
-  background: var(--primary);
+  /* A short beat, so the plane is under the label before it turns light —
+     long enough to read as sequence, short enough to never look unreadable. */
+  transition: color 160ms ease 60ms;
   color: var(--primary-contrast);
+}
+
+/* An auto-width group centred in the slot: as the label opens the group grows
+   symmetrically, so the icon glides left on its own. Absolutely positioned, so
+   the reveal cannot reflow the dock itself. */
+.tab-inner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 .tab svg {
   width: 20px;
@@ -44,29 +80,13 @@
   max-width: 0;
   opacity: 0;
   overflow: hidden;
-  white-space: nowrap;
-  transition: max-width 0.3s var(--ease-soft), opacity 0.2s ease;
+  transition: max-width var(--dur-state) var(--ease-rise), opacity 140ms ease;
 }
 .tab[data-active='true'] .tab-label {
-  max-width: 88px;
+  /* Capped to the slot, not to a magic number, so a long label clips rather
+     than overlapping its neighbour at 320px. */
+  max-width: 60px;
   opacity: 1;
-}
-
-/* Full-screen overlay (session, morning). */
-.overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  justify-content: center;
-  background: var(--bg);
-  transition: background 0.5s ease;
-}
-.overlay-inner {
-  width: 100%;
-  max-width: 440px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: var(--space-6) var(--space-5);
+  transition: max-width var(--dur-state) var(--ease-rise),
+    opacity 200ms ease 120ms;
 }

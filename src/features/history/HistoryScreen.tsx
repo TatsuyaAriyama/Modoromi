@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { SessionDetail } from './SessionDetail';
@@ -19,6 +19,9 @@ import type { Lang, SleepSession } from '../../domain/types';
 import { useT, useLang } from '../../i18n/useT';
 
 type Range = 'week' | 'month';
+
+/** Mirrors the nth-child stagger cap in src/index.css. */
+const STAGGER_CAP = 7;
 
 /* ── The night river ────────────────────────────────────────────
    Each night floats at its true clock position: a band from bed
@@ -56,23 +59,31 @@ function NightRiver({
           </span>
         ))}
       </div>
-      {nights.map((s) => {
+      {nights.map((s, i) => {
         const x0 = riverX(s.startedAt);
         const x1 = riverX(s.endedAt);
         const q = s.qualityScore;
         return (
-          <button key={s.id} className="river-row" onClick={() => onPick(s)}>
+          <button
+            key={s.id}
+            className="river-row"
+            style={{ '--i': Math.min(i, STAGGER_CAP) } as CSSProperties}
+            onClick={() => onPick(s)}
+          >
             <span className="river-day">
               {weekdayName(new Date(s.endedAt).getDay(), lang)}
             </span>
             <span className="river-lane">
               <span
                 className="river-night"
-                style={{
-                  left: `${x0 * 100}%`,
-                  width: `${Math.max((x1 - x0) * 100, 2)}%`,
-                  opacity: q != null ? 0.3 + 0.7 * (q / 100) : 0.35,
-                }}
+                style={
+                  {
+                    left: `${x0 * 100}%`,
+                    width: `${Math.max((x1 - x0) * 100, 2)}%`,
+                    // quality rides --q so the pour keyframe can own opacity
+                    '--q': q != null ? 0.3 + 0.7 * (q / 100) : 0.35,
+                  } as CSSProperties
+                }
               />
             </span>
             <span className="river-score num">{q ?? '—'}</span>
@@ -108,9 +119,17 @@ function Constellation({
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" aria-hidden="true">
-      {thread && <path d={thread} className="const-thread" />}
-      {stars.map((p) => (
-        <g key={p.i}>
+      {thread && <path d={thread} pathLength={1} className="const-thread" />}
+      {stars.map((p, k) => (
+        <g
+          key={p.i}
+          className="const-node"
+          style={
+            {
+              '--s': stars.length > 1 ? k / (stars.length - 1) : 0,
+            } as CSSProperties
+          }
+        >
           <circle cx={p.x} cy={p.y} r={2} className="const-star" />
           {/* every third star gets a sparkle cross */}
           {p.i % 3 === 0 && (
@@ -220,12 +239,20 @@ export function HistoryScreen() {
           </div>
 
           {/* each night, floating at its true clock position */}
-          <NightRiver nights={nights} lang={lang} onPick={setSelected} />
+          {/* keyed by range so a week⇄month switch re-pours as one cascade
+              instead of leaving the seven shared rows standing still */}
+          <NightRiver
+            key={range}
+            nights={nights}
+            lang={lang}
+            onPick={setSelected}
+          />
 
           {/* quality, drawn as a constellation */}
           <div>
             <span className="kicker">{t('chart.qualityTrend')}</span>
             <Constellation
+              key={range}
               points={series.map((s) => ({
                 label: s.label,
                 value: s.qualityScore,

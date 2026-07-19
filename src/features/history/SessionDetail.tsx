@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import '../screens.css';
 import type { Mood, SleepSession } from '../../domain/types';
 import { Button } from '../../components/Button';
+import { Sheet } from '../../components/Sheet';
 import { MoodPicker } from '../../components/MoodPicker';
 import { MovementGraph } from '../../components/MovementGraph';
 import { useStore } from '../../app/store';
@@ -19,6 +20,7 @@ export function SessionDetail({
 }) {
   const t = useT();
   const lang = useLang();
+  const titleId = useId();
   const updateSession = useStore((s) => s.updateSession);
   const deleteSession = useStore((s) => s.deleteSession);
   const targetMin = useStore((s) => s.settings.targetDurationMin);
@@ -46,10 +48,10 @@ export function SessionDetail({
   };
 
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+    <Sheet titleId={titleId} onClose={onClose}>
+      <>
         <div className="spread">
-          <h2 style={{ fontSize: 18 }}>
+          <h2 style={{ fontSize: 18 }} id={titleId}>
             {formatDate(new Date(session.endedAt), lang)}
           </h2>
           <button className="back-btn" onClick={onClose}>
@@ -155,7 +157,7 @@ export function SessionDetail({
             {t('detail.delete')}
           </Button>
         )}
-      </div>
-    </div>
+      </>
+    </Sheet>
   );
 }

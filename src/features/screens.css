@@ -32,39 +32,80 @@
   height: 20px;
 }
 
-/* The poster — one giant fact, nothing to read. */
-.poster {
+/* The moon block — a numbered moon in the sky, the tier word standing
+   beside it in vertical type. */
+.moon-block {
+  position: relative;
   display: flex;
-  flex-direction: column;
+  justify-content: flex-end;
   align-items: flex-start;
-  gap: var(--space-2);
+  gap: var(--space-5);
+  padding: var(--space-2) var(--space-2) 0 0;
 }
-.poster-num {
-  font-size: 92px;
-  font-weight: 500;
-  line-height: 0.95;
-  letter-spacing: var(--tracking-tight);
+.moon-kicker {
+  position: absolute;
+  left: 0;
+  top: var(--space-2);
 }
-.poster-word {
-  font-family: var(--font-display);
-  font-size: 30px;
+.moon-word {
+  writing-mode: vertical-rl;
+  font-size: 27px;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.28em;
   line-height: 1.2;
+  padding-top: 6px;
+}
+.moon {
+  position: relative;
+  overflow: hidden;
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+}
+/* The terminator: a flat disc in the ground colour, coincident with the moon,
+   sliding off to the right so the numeral is uncovered as the moon waxes.
+   Two circles — no gradient, no shadow, no glow. */
+.moon::before {
+  content: '';
+  position: absolute;
+  inset: -1px; /* covers the hairline too */
+  border-radius: 50%;
+  background: var(--bg);
+  z-index: 1;
+  pointer-events: none;
+  /* `both`, not `backwards`: on backwards the disc snaps back over the moon
+     the instant the animation ends. This fill mode is load-bearing. */
+  animation: moon-wax var(--dur-reveal) var(--ease-rise) 220ms both;
+}
+@keyframes moon-wax {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(103%, 0, 0);
+  }
+}
+.moon-num {
+  font-size: 58px;
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
 }
 /* The sentence under the headline — plain, explanatory, never a label. */
 .poster-line {
   font-size: 14px;
   color: var(--text);
   line-height: 1.8;
-  margin-top: var(--space-2);
 }
 
-/* Last-7-nights skyline — a tappable picture, not a chart. */
-.skyline {
+/* The horizon — seven nights standing on a line, mirrored in the water. */
+.horizon {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 0;
   background: none;
   border: none;
   padding: 0;
@@ -72,10 +113,49 @@
   text-align: left;
   color: inherit;
 }
+.horizon-line {
+  display: block;
+  height: 1px;
+  background: var(--border);
+  margin: 2px 0;
+  transform-origin: center;
+  animation: line-draw var(--dur-screen) var(--ease-rise) 260ms backwards;
+}
+@keyframes line-draw {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* The nights grow up out of the horizon line. The reflection's copies share
+   this selector, so water and sky rise as one. No opacity keyframe — it would
+   override each rect's opacity ATTRIBUTE and pop all seven into unison. */
+.horizon .sky-bar {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: bar-stand var(--dur-screen) var(--ease-rise) backwards;
+  animation-delay: calc(360ms + var(--i, 0) * var(--stagger));
+}
+@keyframes bar-stand {
+  from {
+    /* Not 0.03: at that scale the rx=4 corners squash into visible lozenges
+       for the first third of the animation. */
+    transform: scaleY(0.14);
+  }
+}
+.horizon-reflection {
+  display: block;
+  height: 30px;
+  overflow: hidden;
+  opacity: 0.14;
+  transform: scaleY(-1);
+  pointer-events: none;
+}
 .skyline-caption {
   font-size: 12.5px;
   color: var(--text-mute);
   letter-spacing: var(--tracking-wide);
+  margin-top: var(--space-2);
 }
 
 /* Occasional slow blink on the hero eye. */
@@ -91,7 +171,8 @@
   }
 }
 .eye-blink {
-  animation: eye-blink 7s ease-in-out infinite;
+  display: inline-flex;
+  animation: eye-blink var(--loop-twinkle) var(--ease-tide) infinite;
   transform-origin: center;
 }
 
@@ -101,26 +182,6 @@
   letter-spacing: 0.02em;
   text-align: center;
   line-height: 1.7;
-}
-.quick-row {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-.quick-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  color: var(--text-mute);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: var(--tracking-wide);
-  padding: 9px 20px;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-.quick-btn:active {
-  color: var(--text);
-  border-color: var(--primary);
 }
 .summary-row {
   display: flex;
@@ -203,45 +264,82 @@
   background: var(--primary);
 }
 
-.cta-wrap {
+/* The night's words — the one or two sentences before the moon rises. */
+.night-words {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   align-items: center;
 }
-/* Good-night hero: one flat violet disc. No gradient, no glow. */
-.cta-hero {
+
+/* Good night: a violet moon rising out of the bottom edge; nap and alarm
+   are two small satellites at its sides. */
+.night-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  /* bleed under the floating dock so the dome grows from the very bottom */
+  margin-bottom: calc(-90px - env(safe-area-inset-bottom));
+}
+.moon-dome {
   position: relative;
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
+  width: 264px;
+  height: 168px;
   border: none;
+  border-radius: 264px 264px 0 0;
   background: var(--plane);
   color: var(--plane-fg);
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   white-space: nowrap;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  transition: transform 0.25s var(--ease-soft), background 0.2s ease;
+  padding-top: 24px;
+  gap: var(--space-2);
+  transition: background var(--dur-state) ease,
+    transform var(--dur-state) var(--ease-soft);
 }
-.cta-hero::after {
+.moon-dome::after {
   content: '';
   position: absolute;
-  inset: -12px;
-  border-radius: 50%;
+  inset: -10px -10px 0;
+  border-radius: 274px 274px 0 0;
   border: 1px solid var(--border);
+  border-bottom: none;
   pointer-events: none;
 }
-.cta-hero:active {
-  transform: scale(0.96);
+/* The dome is a moon cresting the bottom edge, so a press pushes it DOWN into
+   the horizon rather than scaling it. */
+.moon-dome:active {
   background: var(--violet-deep);
+  transform: translate3d(0, 10px, 0);
+  transition-duration: var(--dur-press);
+}
+.quick-orb {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-mute);
+  display: grid;
+  place-items: center;
+  margin-bottom: 108px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.quick-orb svg {
+  width: 22px;
+  height: 22px;
+}
+.quick-orb:active {
+  color: var(--text);
+  border-color: var(--primary);
 }
 
 /* Session full-screen */
@@ -251,7 +349,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-7) var(--space-5);
+  padding: calc(var(--space-7) + env(safe-area-inset-top)) var(--space-5)
+    var(--space-7);
   color: var(--text);
 }
 .session-clock {
@@ -286,13 +385,26 @@
   position: relative;
   overflow: hidden;
 }
+/* NOTE: the sleep screen has NO ambient motion of any kind — no pulsing
+   colon, no drift. The clock changing once a minute is the only sign of life
+   a sleeping user is owed. The one animation here is the wake gesture. */
 .wake-fill {
   position: absolute;
   inset: 0;
   background: var(--primary);
   opacity: 0.3;
   transform-origin: left;
-  transition: transform 0.05s linear;
+  /* Held: fast enough to feel attached to the thumb. */
+  transition: transform 60ms linear, opacity var(--dur-state) linear;
+}
+/* Released: it recedes rather than snapping back to zero. */
+.wake-btn:not([data-holding='true']) .wake-fill {
+  transition: transform var(--dur-screen) var(--ease-rise),
+    opacity var(--dur-state) linear;
+}
+/* Gesture-scoped layer hint: the layer exists only while the finger is down. */
+.wake-btn[data-holding='true'] .wake-fill {
+  will-change: transform;
 }
 .keep-awake-row {
   display: flex;
@@ -339,6 +451,17 @@
   stroke: var(--primary);
   stroke-width: 5;
   stroke-linecap: round;
+  animation: orbit-unspool var(--dur-reveal) var(--ease-rise) 180ms both;
+}
+/* The one sanctioned exception to the from-only law: this MUST end at
+   dashoffset 0, so a later tween of stroke-dasharray can never reveal a gap. */
+@keyframes orbit-unspool {
+  from {
+    stroke-dashoffset: calc(var(--arc-len, 400) * 1px);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 .orbit-glyph {
   fill: var(--accent);
@@ -476,7 +599,23 @@
   bottom: 1px;
   border-radius: 9px;
   background: var(--primary);
-  transition: opacity 0.3s ease;
+  opacity: var(--q, 0.35);
+  transform-origin: left center; /* it grows out of its bedtime edge */
+  /* `backwards`, never `forwards`: with forwards the animation keeps owning
+     `transform` and the :active press below would silently never fire. */
+  animation: river-pour var(--dur-screen) var(--ease-rise) backwards;
+  animation-delay: calc(120ms + var(--i, 0) * var(--stagger));
+  transition: opacity var(--dur-state) ease,
+    transform var(--dur-press) var(--ease-soft),
+    background var(--dur-state) ease;
+}
+@keyframes river-pour {
+  /* 0.12, not 0.02: a 2% scaleX on a 9px pill radius reads as a pointed lens
+     rather than a band. */
+  from {
+    opacity: 0;
+    transform: scaleX(0.12);
+  }
 }
 .river-score {
   width: 32px;
@@ -485,8 +624,11 @@
   color: var(--accent);
   text-align: right;
 }
+/* Pressing a night compresses it back toward the edge it was born from —
+   the same press language as every other surface. */
 .river-row:active .river-night {
   background: var(--accent);
+  transform: scaleX(0.985);
 }
 
 /* ── Constellation (quality trend) ───────────────────────── */
@@ -495,6 +637,26 @@
   stroke: var(--primary);
   stroke-width: 1;
   opacity: 0.45;
+  /* pathLength="1" makes the whole line exactly one unit long, so the dash
+     maths needs no measured geometry — jsdom-safe. */
+  stroke-dasharray: 1;
+  animation: const-draw 900ms var(--ease-rise) 200ms both;
+}
+@keyframes const-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Each star lights just behind the travelling line head. */
+.const-node {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: moon-in var(--dur-enter) var(--ease-rise) both;
+  animation-delay: calc(200ms + var(--s, 0) * 700ms);
 }
 .const-star {
   fill: var(--accent);
@@ -588,6 +750,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  animation: fade-in var(--dur-state) var(--ease-state) both;
 }
 .sheet {
   width: 100%;
@@ -599,14 +762,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  animation: sheet-up 0.25s ease;
+  animation: sheet-up var(--dur-screen) var(--ease-rise) both;
 }
+/* The sheet travels but does not fade: a large surface cross-fading looks
+   washy and costs more paint. The 1px top hairline is the only separation. */
 @keyframes sheet-up {
   from {
     transform: translateY(100%);
-  }
-  to {
-    transform: none;
   }
 }
 
@@ -622,7 +784,8 @@
 .onb-inner {
   width: 100%;
   max-width: 440px;
-  padding: var(--space-7) var(--space-5) var(--space-6);
+  padding: calc(var(--space-7) + env(safe-area-inset-top)) var(--space-5)
+    calc(var(--space-6) + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   color: var(--mist);
@@ -708,7 +871,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-7) var(--space-5);
+  padding: calc(var(--space-7) + env(safe-area-inset-top)) var(--space-5)
+    var(--space-7);
   color: var(--text);
 }
 .nap-head {
@@ -855,8 +1019,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-7) var(--space-5);
+  padding: calc(var(--space-7) + env(safe-area-inset-top)) var(--space-5)
+    var(--space-7);
   color: var(--text);
+  transition: opacity 900ms var(--ease-rise), transform 900ms var(--ease-rise);
+}
+/* One last exhale the screen never recovers from: the whole plane sinks away
+   as the sleep session takes over. */
+.wind-wrap[data-leaving='true'] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0) scale(0.97);
+  pointer-events: none;
+}
+/* !important beats the inline transform the rAF loop left on its final frame. */
+.wind-wrap[data-leaving='true'] .wind-orb {
+  transition: transform 900ms var(--ease-state), opacity 760ms linear;
+  transform: scale(0.4) !important;
+  opacity: 0;
 }
 .wind-head {
   display: flex;
@@ -890,7 +1069,10 @@
   height: 220px;
   border-radius: 50%;
   background: var(--plane);
+  /* The app's one justified permanent layer hint: this element is scaled
+     every frame for the length of the ritual. */
   will-change: transform;
+  transform: scale(0.4); /* MIN_SCALE, so first paint is not full size */
 }
 .wind-cue {
   position: absolute;
@@ -908,10 +1090,12 @@
   height: 7px;
   border-radius: 50%;
   background: var(--surface-2);
-  transition: background 0.4s ease;
+  transition: background var(--dur-screen) var(--ease-soft),
+    transform var(--dur-screen) var(--ease-soft);
 }
 .wind-dot[data-on='true'] {
   background: var(--primary);
+  transform: scale(1.25);
 }
 .wind-foot {
   width: 100%;

@@ -92,7 +92,9 @@ function isAlarm(x: unknown): x is AlarmConfig {
     isStr(x.sound) &&
     isBool(x.snoozeEnabled) &&
     isNum(x.snoozeMinutes) &&
-    isBool(x.enabled)
+    isBool(x.enabled) &&
+    // Optional, but must be a string when present.
+    (x.firesAt === undefined || isStr(x.firesAt))
   );
 }
 

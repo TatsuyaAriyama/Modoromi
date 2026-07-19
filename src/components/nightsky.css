@@ -39,5 +39,5 @@
   }
 }
 .sky-star-twinkle {
-  animation: sky-twinkle 7s ease-in-out infinite;
+  animation: sky-twinkle var(--loop-twinkle) var(--ease-tide) infinite;
 }

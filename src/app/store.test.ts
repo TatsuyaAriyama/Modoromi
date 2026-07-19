@@ -178,3 +178,61 @@ describe('settings', () => {
     expect(useStore.getState().loaded).toBe(true);
   });
 });
+
+describe('a night survives the app being reclaimed', () => {
+  it('restores an in-flight session across a fresh init', async () => {
+    await useStore.getState().init();
+    useStore.getState().startSession();
+    const id = useStore.getState().active!.id;
+    const startedAt = useStore.getState().active!.startedAt;
+    // Flush the fire-and-forget runtime write.
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Simulate a cold start: memory gone, storage intact.
+    useStore.setState({ active: null, pendingMorning: null, loaded: false });
+    await useStore.getState().init();
+
+    expect(useStore.getState().active).toEqual({ id, startedAt });
+  });
+
+  it('drops a session older than the longest plausible night', async () => {
+    await useStore.getState().init();
+    useStore.getState().startSession();
+    await new Promise((r) => setTimeout(r, 0));
+
+    // Rewrite the stored start to 30 hours ago — an abandoned session.
+    const key = 'CapacitorStorage.madoromi.runtime';
+    const raw = JSON.parse(localStorage.getItem(key)!);
+    raw.active.startedAt = new Date(Date.now() - 30 * 3_600_000).toISOString();
+    localStorage.setItem(key, JSON.stringify(raw));
+
+    useStore.setState({ active: null, loaded: false });
+    await useStore.getState().init();
+    expect(useStore.getState().active).toBeNull();
+  });
+
+  it('restores a night still awaiting its morning check', async () => {
+    await useStore.getState().init();
+    useStore.getState().startSession();
+    useStore.getState().endSession();
+    const pending = useStore.getState().pendingMorning!;
+    await new Promise((r) => setTimeout(r, 0));
+
+    useStore.setState({ active: null, pendingMorning: null, loaded: false });
+    await useStore.getState().init();
+    expect(useStore.getState().pendingMorning?.id).toBe(pending.id);
+  });
+
+  it('saves the morning check exactly once under a double tap', async () => {
+    await useStore.getState().init();
+    useStore.getState().startSession();
+    useStore.getState().endSession();
+    const s = useStore.getState();
+    await Promise.all([
+      s.saveMorningCheck({ mood: 'fresh' }),
+      s.saveMorningCheck({ mood: 'fresh' }),
+    ]);
+    expect(useStore.getState().sessions).toHaveLength(1);
+    expect(await sleepRepo.all()).toHaveLength(1);
+  });
+});

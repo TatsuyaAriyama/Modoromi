@@ -10,6 +10,13 @@ import {
 } from '../../domain/breath';
 import { tapMedium } from '../../lib/haptics';
 import { useT } from '../../i18n/useT';
+import {
+  prefersReducedMotion,
+  useReducedMotion,
+} from '../../app/useReducedMotion';
+
+/** How long the plane takes to sink away before the session takes over. */
+const DESCENT_MS = 900;
 
 /**
  * A short paced-breathing ritual before a sleep session. Optional and
@@ -23,33 +30,68 @@ export function WindDownScreen({
   onClose: () => void;
 }) {
   const t = useT();
+  const reduced = useReducedMotion();
   const [state, setState] = useState<BreathState>(() => breathAt(0));
+  const [leaving, setLeaving] = useState(false);
   const startTs = useRef<number | null>(null);
+  const orbRef = useRef<HTMLDivElement>(null);
+  const leavingRef = useRef(false);
 
-  // Drive the breathing animation off the rAF timestamp (no impure clock reads
-  // in render). The first frame anchors the start so elapsed begins at zero.
+  // Drive the breathing off the rAF timestamp (no impure clock reads in
+  // render). The orb's size is written straight to the DOM, so the 60fps
+  // path never re-renders React; state changes only when the cue or the
+  // cycle count changes — roughly once every four seconds.
   useEffect(() => {
+    startTs.current = null;
+
+    if (reduced) {
+      // The ritual still runs and the cue still changes; only the orb stops
+      // moving, resting at full size. A coarse timer replaces rAF so we are
+      // not waking the compositor 60x a second for a circle that never moves.
+      orbRef.current?.style.setProperty('transform', 'scale(1)');
+      const t0 = Date.now();
+      const id = setInterval(
+        () => setState(breathAt(Date.now() - t0)),
+        250,
+      );
+      return () => clearInterval(id);
+    }
+
     let raf = 0;
+    let lastPhase: string | null = null;
+    let lastCycle = -1;
     const tick = (ts: number) => {
       if (startTs.current === null) startTs.current = ts;
-      setState(breathAt(ts - startTs.current));
+      const s = breathAt(ts - startTs.current);
+      if (!leavingRef.current && orbRef.current) {
+        orbRef.current.style.transform = `scale(${s.scale})`;
+      }
+      if (s.phase !== lastPhase || s.cycle !== lastCycle) {
+        lastPhase = s.phase;
+        lastCycle = s.cycle;
+        setState(s);
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [reduced]);
 
   const done = state.cycle >= WIND_DOWN_BREATHS;
 
+  // One last exhale: the plane sinks away before the sleep screen takes over.
   const start = () => {
+    if (leavingRef.current) return;
     void tapMedium();
-    onStart();
+    leavingRef.current = true;
+    setLeaving(true);
+    window.setTimeout(onStart, prefersReducedMotion() ? 0 : DESCENT_MS);
   };
 
   return (
     <div className="app-frame" style={{ background: 'var(--bg)' }}>
       <NightSky />
-      <div className="wind-wrap">
+      <div className="wind-wrap" data-leaving={leaving}>
         <div className="wind-head">
           <EyeMark size={40} color="var(--text)" />
           <h1 className="wind-title">{t('wind.title')}</h1>
@@ -57,10 +99,7 @@ export function WindDownScreen({
         </div>
 
         <div className="wind-orb-wrap">
-          <div
-            className="wind-orb"
-            style={{ transform: `scale(${state.scale})` }}
-          />
+          <div ref={orbRef} className="wind-orb" />
           <div className="wind-cue">{t(`breath.${state.phase}`)}</div>
         </div>
 

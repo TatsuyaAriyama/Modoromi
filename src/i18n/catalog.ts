@@ -22,6 +22,11 @@ interface Msg {
   ja: Tmpl;
 }
 
+/** English plural picker. The catalog has no plural machinery, and
+ *  "1 movements" is the kind of defect that survives forever. */
+const plural = (n: unknown, one: string, other: string) =>
+  Number(n) === 1 ? one : other;
+
 const EN_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const JA_WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
 const EN_MONTHS = [
@@ -40,7 +45,7 @@ export const messages: Record<string, Msg> = {
   'sep.middot': { en: ' · ', ja: '・' },
 
   // ── tab bar ─────────────────────────────────────────────
-  'tab.home': { en: 'Today', ja: '今日' },
+  'tab.home': { en: 'Tonight', ja: '今夜' },
   'tab.alarm': { en: 'Alarm', ja: 'アラーム' },
   'tab.history': { en: 'Log', ja: '記録' },
 
@@ -79,7 +84,7 @@ export const messages: Record<string, Msg> = {
   // ── body movement (Session detail) ──────────────────────
   'motion.title': { en: 'Body movement', ja: '体動' },
   'motion.count': {
-    en: (p) => `${p.count} movements`,
+    en: (p) => `${p.count} ${plural(p.count, 'movement', 'movements')}`,
     ja: (p) => `寝返り ${p.count} 回`,
   },
   'motion.still': { en: 'Slept very still', ja: 'とても静かな眠り' },
@@ -250,7 +255,7 @@ export const messages: Record<string, Msg> = {
   // ── Morning check ───────────────────────────────────────
   'morning.greeting': { en: 'Good morning', ja: 'おはようございます' },
   'morning.movements': {
-    en: (p) => `${p.count} movements`,
+    en: (p) => `${p.count} ${plural(p.count, 'movement', 'movements')}`,
     ja: (p) => `寝返り ${p.count} 回`,
   },
   'morning.condition': { en: 'This morning’s condition', ja: '今朝のコンディション' },
@@ -270,7 +275,7 @@ export const messages: Record<string, Msg> = {
 
   // ── Nap ─────────────────────────────────────────────────
   'nap.title': { en: 'Nap', ja: '仮眠' },
-  'nap.doneTitle': { en: 'Good morning', ja: 'おはよう' },
+  'nap.doneTitle': { en: 'You’re back', ja: 'おかえりなさい' },
   'nap.doneNote': { en: 'Feeling a little clearer?', ja: '少し頭が軽くなりましたか' },
   'nap.wake': { en: 'Wake up', ja: '起きる' },
 
@@ -280,6 +285,13 @@ export const messages: Record<string, Msg> = {
   'session.recording': { en: 'Recording movement', ja: '体動を記録中' },
   'session.keepAwake': { en: 'Keep the screen on', ja: '画面を点けたままにする' },
   'session.holdToWake': { en: 'Press and hold — “I’m up”', ja: '長押しで「起きた」' },
+  'session.holdHint': {
+    en: 'Hold for about a second, or use “End the night” below.',
+    ja: '約1秒長押しします。下の「夜を終える」でも終了できます。',
+  },
+  'session.endNow': { en: 'End the night', ja: '夜を終える' },
+  'session.confirmWake': { en: 'End the night?', ja: '夜を終えますか？' },
+  'session.confirmWakeYes': { en: 'Yes, I’m up', ja: 'はい、起きました' },
   'session.wakeTime': { en: 'Time to wake up', ja: '起きる時間です' },
   'session.dismiss': { en: 'Stop & get up', ja: '止めて起きる' },
   'session.snooze': { en: (p) => `Snooze ${p.min} min`, ja: (p) => `スヌーズ ${p.min}分` },
@@ -288,8 +300,6 @@ export const messages: Record<string, Msg> = {
   'history.week': { en: 'Week', ja: '週' },
   'history.month': { en: 'Month', ja: '月' },
   'history.weeklyReview': { en: 'This week', ja: '今週の振り返り' },
-  'history.logged': { en: (p) => `${p.nights} nights logged`, ja: (p) => `記録 ${p.nights}日` },
-  'history.vsPrev': { en: (p) => ` · ${p.delta} vs last week`, ja: (p) => ` ・ 先週比 ${p.delta}` },
   'history.insights': { en: 'Noticing', ja: '気づき' },
   'history.avgDuration': { en: 'Avg. sleep', ja: '平均睡眠時間' },
   'history.avgQuality': { en: 'Avg. quality', ja: '平均質スコア' },
@@ -351,7 +361,7 @@ export const messages: Record<string, Msg> = {
   'settings.widget': { en: 'Home Screen widget', ja: 'ホーム画面ウィジェット' },
   'settings.widgetHint': {
     en: 'Add the Madoromi widget from your Home Screen to see today’s thinking condition and sleep debt at a glance. It refreshes after each morning check.',
-    ja: 'ホーム画面にまどろみのウィジェットを追加すると、今日の思考コンディションと睡眠負債をひと目で確認できます。朝のチェックのたびに自動で更新されます。',
+    ja: 'ホーム画面にMadoromiのウィジェットを追加すると、今日の思考コンディションと睡眠負債をひと目で確認できます。朝のチェックのたびに自動で更新されます。',
   },
   'settings.exportData': { en: 'Export data (JSON)', ja: 'データをエクスポート（JSON）' },
   'settings.export': { en: 'Export', ja: '書き出す' },
@@ -410,7 +420,10 @@ export const messages: Record<string, Msg> = {
   'onb.permGranted': { en: 'Notifications enabled', ja: '通知を許可しました' },
   'onb.permDenied': { en: 'You can change this later in Settings', ja: 'あとで設定から変更できます' },
   'onb.allowNotif': { en: 'Allow notifications', ja: '通知を許可' },
-  'onb.finishWithReminder': { en: 'Turn on bedtime reminder & start', ja: '就寝リマインダーをON にして始める' },
+  'onb.finishWithReminder': {
+    en: 'Turn on bedtime reminder & start',
+    ja: '就寝リマインダーをオンにして始める',
+  },
   'onb.skipNotif': { en: 'Skip — start without notifications', ja: 'あとで・通知なしで始める' },
 };
 

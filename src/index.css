@@ -96,21 +96,66 @@ p {
   flex: 1;
   /* Clear the floating dock (bottom offset + pill height) plus breathing room. */
   padding: var(--space-6) var(--space-5) calc(90px + env(safe-area-inset-bottom));
+  /* viewport-fit=cover is set, so the top inset must be honoured or titles
+     sit under the Dynamic Island. */
+  padding-top: calc(var(--space-6) + env(safe-area-inset-top));
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  animation: fade-in 0.4s ease;
+  animation: rise-in var(--dur-screen) var(--ease-rise) both;
 }
 
+/* LAW: an entrance keyframe declares ONLY a `from` block. The element's base
+   CSS is its resting state; the keyframe describes only the offset it arrives
+   FROM. So killing an animation — reduced motion, an old engine, a paused
+   state — always lands on the correct final appearance, and nothing can ever
+   be stranded invisible. Never put resting styles in `to`. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
-  to {
-    opacity: 1;
-    transform: none;
+}
+/* A moon or a disc arriving: scale from just under full size. Never from 0 —
+   growing-from-nothing is a pop, and pops grab attention. */
+@keyframes moon-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
   }
+}
+
+/* The stagger convention. Delay = base + (--i × --stagger), where --i is an
+   INDEX, never a measurement — which is what keeps it safe under jsdom. */
+.screen > *,
+.enter > * {
+  animation: rise-in var(--dur-enter) var(--ease-rise) both;
+  animation-delay: calc(var(--enter-base, 60ms) + var(--i, 0) * var(--stagger));
+}
+/* Static markup gets its stagger for free — no React changes needed. */
+.screen > *:nth-child(1), .enter > *:nth-child(1) { --i: 0; }
+.screen > *:nth-child(2), .enter > *:nth-child(2) { --i: 1; }
+.screen > *:nth-child(3), .enter > *:nth-child(3) { --i: 2; }
+.screen > *:nth-child(4), .enter > *:nth-child(4) { --i: 3; }
+.screen > *:nth-child(5), .enter > *:nth-child(5) { --i: 4; }
+.screen > *:nth-child(6), .enter > *:nth-child(6) { --i: 5; }
+.screen > *:nth-child(7), .enter > *:nth-child(7) { --i: 6; }
+/* Cap the stagger. Uncapped, a 30-row month view takes 1.6s to arrive and
+   reads as a loading spinner. */
+.screen > *:nth-child(n + 8), .enter > *:nth-child(n + 8) { --i: 7; }
+
+/* A sheet is fixed-position and must not be offset or delayed by the stagger;
+   it fades only. Higher specificity than `.screen > *`, and overrides just the
+   name and delay so duration/easing/fill still come from the shorthand. */
+.screen > .sheet-backdrop,
+.screen > .no-settle {
+  animation-name: fade-in;
+  animation-delay: 0ms;
 }
 
 .screen-title {
@@ -141,7 +186,35 @@ p {
   *,
   *::before,
   *::after {
-    animation-duration: 0.001ms !important;
-    transition-duration: 0.001ms !important;
+    /* 1ms, not 0.001ms: still sub-frame, but a sane non-zero value so
+       animationend/transitionend still fire for anything awaiting them. */
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+
+    /* Load-bearing, not cosmetic: entrances use fill-mode `both`, so an
+       element holds its `from` state (opacity 0) for the whole delay.
+       Without this, content sits invisible for the length of its stagger. */
+    animation-delay: 0ms !important;
+    transition-delay: 0ms !important;
+
+    /* A near-zero duration does NOT stop an infinite animation — it completes
+       and restarts forever. This terminates every loop without listing them. */
+    animation-iteration-count: 1 !important;
+
+    scroll-behavior: auto !important;
   }
+
+  /* Ambient decoration is removed outright rather than run once: a single 1ms
+     cycle can land mid-travel and read as a glitch. Safe because every ambient
+     loop is authored closed (0% === 100% === the base style). */
+  [data-ambient] {
+    animation: none !important;
+  }
+}
+
+/* Same switch, different reason: during an active sleep session nothing may
+   move. Enforced once at the root rather than policed screen by screen — a
+   transparent element still animates and still holds a compositor layer. */
+[data-theme='sleep'] [data-ambient] {
+  animation: none !important;
 }

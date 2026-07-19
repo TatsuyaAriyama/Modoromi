@@ -4,6 +4,7 @@ import {
 } from '@capacitor/local-notifications';
 import type { AlarmConfig, Lang, SleepSession, UserSettings } from '../domain/types';
 import { parseHm } from '../domain/format';
+import { nextAlarmDate } from '../domain/alarmFire';
 import { bedtimeReminderContent } from '../domain/bedtime';
 import { sleepDebtMin } from '../domain/debt';
 import { translate as tr, formatDuration } from '../i18n/catalog';
@@ -41,6 +42,12 @@ export const MAX_PENDING = 60;
 const BEDTIME_ID = 9_000_000; // reserved, well above the alarm id range
 const SNOOZE_ID = 9_000_001;
 
+/** A snooze rings as a burst too — one notification's sound is ≤30s. */
+export const SNOOZE_IDS = Array.from(
+  { length: ALARM_RING_MINUTES },
+  (_, m) => SNOOZE_ID + m,
+);
+
 export async function ensurePermission(): Promise<boolean> {
   if (!isNative()) return false;
   try {
@@ -51,16 +58,6 @@ export async function ensurePermission(): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-/** Deterministic small integer id from an alarm uuid + per-fire slot. */
-function notifId(alarmId: string, slot: number): number {
-  let h = 0;
-  for (let i = 0; i < alarmId.length; i++) {
-    h = (h * 31 + alarmId.charCodeAt(i)) | 0;
-  }
-  // 100 slots per alarm leaves room for 8 weekday-slots × ring-minutes.
-  return (Math.abs(h) % 4000) * 100 + slot;
 }
 
 type Built = ScheduleOptions['notifications'][number];
@@ -105,6 +102,7 @@ export function buildAlarmNotifications(
   alarms: AlarmConfig[],
   lang: Lang = 'en',
   budget: number = MAX_PENDING,
+  now: Date = new Date(),
 ): Built[] {
   const enabled = alarms.filter((a) => a.enabled);
   if (enabled.length === 0 || budget <= 0) return [];
@@ -135,19 +133,41 @@ export function buildAlarmNotifications(
     }
   }
 
+  // Ids are structural (position in the enabled list), not a hash of the uuid:
+  // a hash modulo 4000 collides, and two colliding alarms silently overwrite
+  // each other's notifications.
+  const idxOf = new Map(enabled.map((a, i) => [a.id, i]));
+
   const out: Built[] = [];
   for (let i = 0; i < occ.length; i++) {
     const { alarm: a, wd } = occ[i];
     const slotBase = (wd === null ? 0 : wd + 1) * ALARM_RING_MINUTES;
     for (let m = 0; m < ring[i]; m++) {
-      const on = occurrence(a.time, wd, m);
-      out.push({
-        id: notifId(a.id, slotBase + m),
+      const common = {
+        id: (idxOf.get(a.id) ?? 0) * 100 + slotBase + m,
         title: tr(lang, 'notif.wakeTitle'),
         body: tr(lang, 'notif.wakeBody'),
         sound: ALARM_SOUND,
-        schedule: { on, allowWhileIdle: true },
-      });
+        // Pierces Sleep Focus without needing the Critical Alerts entitlement.
+        interruptionLevel: 'timeSensitive' as const,
+      };
+      if (wd === null) {
+        // One-shot. `schedule.on` is a CALENDAR trigger — iOS repeats it every
+        // day forever and Android re-arms it — so a "just tomorrow" alarm must
+        // use an absolute instant instead.
+        const base = a.firesAt
+          ? new Date(a.firesAt)
+          : nextAlarmDate(a.time, new Date(now.getTime() + 60_000));
+        const at = new Date(base.getTime() + m * 60_000);
+        // iOS rejects the whole batch if any date is in the past.
+        if (at.getTime() <= now.getTime()) continue;
+        out.push({ ...common, schedule: { at, allowWhileIdle: true } });
+      } else {
+        out.push({
+          ...common,
+          schedule: { on: occurrence(a.time, wd, m), allowWhileIdle: true },
+        });
+      }
     }
   }
   return out;
@@ -187,9 +207,12 @@ export async function syncSchedules(
   if (!isNative()) return;
   try {
     const pending = await LocalNotifications.getPending();
-    if (pending.notifications.length) {
+    // Never sweep away a live snooze: this runs on any alarm/settings change,
+    // and cancelling the snooze would silently drop the re-ring.
+    const stale = pending.notifications.filter((n) => !SNOOZE_IDS.includes(n.id));
+    if (stale.length) {
       await LocalNotifications.cancel({
-        notifications: pending.notifications.map((n) => ({ id: n.id })),
+        notifications: stale.map((n) => ({ id: n.id })),
       });
     }
 
@@ -208,24 +231,42 @@ export async function syncSchedules(
   }
 }
 
-/** Schedule a one-off snooze notification `minutes` from now. */
+/**
+ * Schedule the snooze re-ring `minutes` from now, as a burst for the same
+ * reason alarms are. This is the OS-level backstop: the in-app snooze timer
+ * lives in a foregrounded WebView, which the OS suspends the moment the
+ * screen locks — exactly what happens after someone hits snooze.
+ */
 export async function scheduleSnooze(
   minutes: number,
   lang: Lang = 'en',
 ): Promise<void> {
   if (!isNative()) return;
   try {
-    const at = new Date(Date.now() + minutes * 60000);
     await LocalNotifications.schedule({
-      notifications: [
-        {
-          id: SNOOZE_ID,
-          title: tr(lang, 'notif.snoozeTitle'),
-          body: tr(lang, 'notif.snoozeBody'),
-          sound: ALARM_SOUND,
-          schedule: { at, allowWhileIdle: true },
+      notifications: SNOOZE_IDS.map((id, m) => ({
+        id,
+        title: tr(lang, 'notif.snoozeTitle'),
+        body: tr(lang, 'notif.snoozeBody'),
+        sound: ALARM_SOUND,
+        interruptionLevel: 'timeSensitive' as const,
+        schedule: {
+          at: new Date(Date.now() + minutes * 60000 + m * 60000),
+          allowWhileIdle: true,
         },
-      ],
+      })),
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Drop a pending snooze — the user is up, or the session ended. */
+export async function cancelSnooze(): Promise<void> {
+  if (!isNative()) return;
+  try {
+    await LocalNotifications.cancel({
+      notifications: SNOOZE_IDS.map((id) => ({ id })),
     });
   } catch {
     /* ignore */

@@ -81,12 +81,21 @@ export function movementHistogram(
 }
 
 /**
+ * Smart wake stays inert until the session has run this long. Without a floor,
+ * a session started inside the pre-alarm window wakes the user immediately:
+ * the movements of putting the phone down and settling in are indistinguishable
+ * from the light-sleep signal we are looking for.
+ */
+export const SMART_WAKE_MIN_ELAPSED_MIN = 45;
+
+/**
  * Smart-wake decision, evaluated each tick while the session screen is
  * foregrounded. Returns true when the user should be woken now.
  *
+ * - At/after the alarm time: always (the hard alarm boundary).
+ * - Before the settling period is over: never.
  * - Before the window opens: never.
  * - Inside the window: wake if recent movement suggests light sleep.
- * - At/after the alarm time: always (the hard alarm boundary).
  */
 export function shouldSmartWake(opts: {
   movements: Movement[];
@@ -95,9 +104,12 @@ export function shouldSmartWake(opts: {
   windowMin: number;
 }): boolean {
   const { movements, elapsedMin, minutesToAlarm, windowMin } = opts;
+  // The hard boundary is checked FIRST: the settling floor must never be able
+  // to suppress the alarm itself on a short session.
   if (minutesToAlarm <= 0) return true;
+  if (elapsedMin < SMART_WAKE_MIN_ELAPSED_MIN) return false;
   if (minutesToAlarm > windowMin) return false;
   // Light-sleep heuristic: at least two movements in the last ~3 minutes.
-  const recent = movements.filter((m) => m.t >= elapsedMin - 3);
-  return recent.length >= 2;
+  const since = Math.max(0, elapsedMin - 3);
+  return movements.filter((m) => m.t >= since).length >= 2;
 }

@@ -7,9 +7,11 @@ import type {
   UserSettings,
 } from '../domain/types';
 import { computeQualityScore } from '../domain/score';
+import { armAlarm, expireOneShots } from '../domain/alarmFire';
 import {
   DEFAULT_SETTINGS,
   alarmRepo,
+  runtimeRepo,
   settingsRepo,
   sleepRepo,
 } from '../data/repositories';
@@ -31,6 +33,19 @@ export type ActiveSession = {
   id: string;
   startedAt: string;
 } | null;
+
+/**
+ * Longest night we will restore. Past this, a session that survived in storage
+ * is an abandoned one (the user stopped using the app mid-session), and
+ * resuming it would invent a 40-hour night rather than recover a real one.
+ */
+const MAX_ACTIVE_HOURS = 20;
+
+/** Mirror the two transient fields to storage after every transition. */
+const persistRuntime = (get: () => AppState) => {
+  const { active, pendingMorning } = get();
+  void runtimeRepo.set({ active, pendingMorning });
+};
 
 interface AppState {
   loaded: boolean;
@@ -76,18 +91,42 @@ export const useStore = create<AppState>((set, get) => ({
   pendingMorning: null,
 
   async init() {
-    const [sessions, alarms, settings] = await Promise.all([
+    const [sessions, alarms, settings, runtime] = await Promise.all([
       sleepRepo.all(),
       alarmRepo.all(),
       settingsRepo.get(),
+      runtimeRepo.get(),
     ]);
-    set({ sessions, alarms, settings, loaded: true });
-    void syncSchedules(alarms, settings, sessions);
+    // A one-shot alarm whose moment has passed retires here, so it can never
+    // be re-armed for tonight by the scheduler below.
+    const live = expireOneShots(alarms, new Date());
+    live.forEach((a, i) => {
+      if (a !== alarms[i]) void alarmRepo.save(a);
+    });
+    let active = runtime.active;
+    if (active) {
+      const ageH = (Date.now() - Date.parse(active.startedAt)) / 3_600_000;
+      // Stale or future-dated: drop it rather than fabricate a duration.
+      if (!(ageH >= 0 && ageH <= MAX_ACTIVE_HOURS)) active = null;
+    }
+    set({
+      sessions,
+      alarms: live,
+      settings,
+      active,
+      pendingMorning: runtime.pendingMorning,
+      loaded: true,
+    });
+    if (!active && runtime.active) {
+      void runtimeRepo.set({ active: null, pendingMorning: runtime.pendingMorning });
+    }
+    void syncSchedules(live, settings, sessions);
     refreshWidget(sessions, settings);
   },
 
   startSession() {
     set({ active: { id: uid(), startedAt: new Date().toISOString() } });
+    persistRuntime(get);
   },
 
   endSession(movements, smartWoke) {
@@ -110,15 +149,21 @@ export const useStore = create<AppState>((set, get) => ({
       ...(smartWoke ? { smartWoke: true } : {}),
     };
     set({ active: null, pendingMorning: session });
+    persistRuntime(get);
   },
 
   cancelSession() {
     set({ active: null });
+    persistRuntime(get);
   },
 
   async saveMorningCheck({ mood, subjective, note, theme }) {
     const { pendingMorning, settings } = get();
     if (!pendingMorning) return;
+    // Claim the pending night BEFORE the awaited write. Two fast taps would
+    // otherwise both pass the guard above and append the same night twice.
+    set({ pendingMorning: null });
+    persistRuntime(get);
     const qualityScore = computeQualityScore(
       pendingMorning.durationMin,
       mood,
@@ -134,10 +179,7 @@ export const useStore = create<AppState>((set, get) => ({
       qualityScore,
     };
     await sleepRepo.save(session);
-    set((s) => ({
-      sessions: [...s.sessions, session],
-      pendingMorning: null,
-    }));
+    set((s) => ({ sessions: [...s.sessions, session] }));
     if (settings.healthSync) void mirrorSleepToHealth(session);
     void syncSchedules(get().alarms, settings, get().sessions);
     refreshWidget(get().sessions, settings);
@@ -147,11 +189,12 @@ export const useStore = create<AppState>((set, get) => ({
     // Persist the duration-only session even if the user skips the check.
     const { pendingMorning, settings } = get();
     if (!pendingMorning) return;
-    void sleepRepo.save(pendingMorning);
     set((s) => ({
       sessions: [...s.sessions, pendingMorning],
       pendingMorning: null,
     }));
+    persistRuntime(get);
+    void sleepRepo.save(pendingMorning);
     if (settings.healthSync) void mirrorSleepToHealth(pendingMorning);
     void syncSchedules(get().alarms, settings, get().sessions);
     refreshWidget(get().sessions, settings);
@@ -173,7 +216,10 @@ export const useStore = create<AppState>((set, get) => ({
     refreshWidget(get().sessions, get().settings);
   },
 
-  async saveAlarm(alarm) {
+  async saveAlarm(input) {
+    // Arm one-shots to a concrete instant on the way in, so both the OS
+    // scheduler and the expiry pass have something absolute to work from.
+    const alarm = armAlarm(input, new Date());
     await alarmRepo.save(alarm);
     const alarms = (() => {
       const list = get().alarms;

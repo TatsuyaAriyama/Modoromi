@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import '../screens.css';
+import { Sheet } from '../../components/Sheet';
 import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -19,6 +20,9 @@ const SMART_WINDOW_OPTIONS = [15, 20, 30, 45];
 
 export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const t = useT();
+  const exportId = useId();
+  const importId = useId();
+  const wipeId = useId();
   const lang = useLang();
   const settings = useStore((s) => s.settings);
   const sessions = useStore((s) => s.sessions);
@@ -284,7 +288,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
           </Button>
         </div>
         <div className="set-row">
-          <span className="set-label" style={{ color: '#d9748a' }}>
+          <span className="set-label text-danger">
             {t('settings.wipeData')}
           </span>
           <Button variant="danger" onClick={() => setConfirmWipe(true)}>
@@ -296,9 +300,11 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
       <p className="banner">{t('settings.disclaimer')}</p>
 
       {exported && (
-        <div className="sheet-backdrop" onClick={() => setExported(null)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>{t('settings.exportTitle')}</h2>
+        <Sheet titleId={exportId} onClose={() => setExported(null)}>
+          <>
+            <h2 style={{ fontSize: 18 }} id={exportId}>
+              {t('settings.exportTitle')}
+            </h2>
             <textarea
               className="textarea"
               style={{ minHeight: 220 }}
@@ -308,14 +314,16 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             <Button block onClick={() => setExported(null)}>
               {t('common.close')}
             </Button>
-          </div>
-        </div>
+          </>
+        </Sheet>
       )}
 
       {importOpen && (
-        <div className="sheet-backdrop" onClick={() => setImportOpen(false)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>{t('settings.importTitle')}</h2>
+        <Sheet titleId={importId} onClose={() => setImportOpen(false)}>
+          <>
+            <h2 style={{ fontSize: 18 }} id={importId}>
+              {t('settings.importTitle')}
+            </h2>
             <p className="muted" style={{ fontSize: 13, lineHeight: 1.6 }}>
               {t('settings.importHint')}
             </p>
@@ -330,7 +338,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
               }}
             />
             {importError && (
-              <span style={{ color: '#d9748a', fontSize: 13 }}>
+              <span className="text-danger" style={{ fontSize: 13 }}>
                 {translate(lang, `backup.${importError}`)}
               </span>
             )}
@@ -346,14 +354,16 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             <Button variant="ghost" block onClick={() => setImportOpen(false)}>
               {t('common.cancel.soft')}
             </Button>
-          </div>
-        </div>
+          </>
+        </Sheet>
       )}
 
       {confirmWipe && (
-        <div className="sheet-backdrop" onClick={() => setConfirmWipe(false)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18 }}>{t('settings.wipeTitle')}</h2>
+        <Sheet titleId={wipeId} onClose={() => setConfirmWipe(false)}>
+          <>
+            <h2 style={{ fontSize: 18 }} id={wipeId}>
+              {t('settings.wipeTitle')}
+            </h2>
             <p className="muted">{t('settings.wipeHint')}</p>
             <Button variant="danger" block large onClick={() => void onWipe()}>
               {t('settings.wipeConfirm')}
@@ -361,8 +371,8 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
             <Button variant="ghost" block onClick={() => setConfirmWipe(false)}>
               {t('common.cancel.soft')}
             </Button>
-          </div>
-        </div>
+          </>
+        </Sheet>
       )}
     </div>
   );

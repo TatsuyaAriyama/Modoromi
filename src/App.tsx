@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import './app/app.css';
 import { useStore } from './app/store';
 import { useTheme } from './app/useTheme';
@@ -20,6 +20,9 @@ const TABS: { key: TabKey; labelKey: string }[] = [
   { key: 'alarm', labelKey: 'tab.alarm' },
   { key: 'history', labelKey: 'tab.history' },
 ];
+
+/** Slot index the dock's violet plane translates to. */
+const TAB_INDEX: Record<TabKey, number> = { home: 0, alarm: 1, history: 2 };
 
 export default function App() {
   const t = useT();
@@ -92,7 +95,11 @@ export default function App() {
       )}
 
       {!settingsOpen && (
-        <nav className="tabbar">
+        <nav
+          className="tabbar"
+          style={{ '--tab-i': TAB_INDEX[tab] } as CSSProperties}
+        >
+          <span className="tab-pill" aria-hidden="true" />
           {TABS.map((tab2) => (
             <button
               key={tab2.key}
@@ -101,8 +108,10 @@ export default function App() {
               aria-current={tab === tab2.key ? 'page' : undefined}
               onClick={() => setTab(tab2.key)}
             >
-              <TabIcon tab={tab2.key} />
-              <span className="tab-label">{t(tab2.labelKey)}</span>
+              <span className="tab-inner">
+                <TabIcon tab={tab2.key} />
+                <span className="tab-label">{t(tab2.labelKey)}</span>
+              </span>
             </button>
           ))}
         </nav>

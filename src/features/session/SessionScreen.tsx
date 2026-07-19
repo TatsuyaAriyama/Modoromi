@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import '../screens.css';
 import { useStore } from '../../app/store';
 import { EyeMark } from '../../components/EyeMark';
@@ -10,24 +10,16 @@ import { notifySuccess } from '../../lib/haptics';
 import { MotionRecorder, ensureMotionPermission } from '../../lib/motion';
 import { AlarmPlayer, DEFAULT_ALARM_SOUND } from '../../lib/alarmSound';
 import { shouldSmartWake } from '../../domain/motion';
-import { isAlarmDue } from '../../domain/alarmFire';
+import { nextAlarmFor } from '../../domain/alarmFire';
 import type { AlarmConfig } from '../../domain/types';
-import { useT } from '../../i18n/useT';
+import { cancelSnooze, scheduleSnooze } from '../../lib/notifications';
+import { useLang, useT } from '../../i18n/useT';
 
 const HOLD_MS = 1200;
 
-/** Minutes from `now` until the next occurrence of an "HH:mm" alarm. */
-function minutesUntil(hhmm: string, now: Date): number {
-  const [h, m] = hhmm.split(':').map(Number);
-  const target = new Date(now);
-  target.setHours(h, m, 0, 0);
-  let diff = (target.getTime() - now.getTime()) / 60000;
-  if (diff < 0) diff += 24 * 60; // alarm is tomorrow morning
-  return diff;
-}
-
 export function SessionScreen() {
   const t = useT();
+  const lang = useLang();
   const active = useStore((s) => s.active);
   const endSession = useStore((s) => s.endSession);
   const cancelSession = useStore((s) => s.cancelSession);
@@ -41,6 +33,8 @@ export function SessionScreen() {
   const [moveCount, setMoveCount] = useState(0);
   const [ringing, setRinging] = useState(false);
   const [snoozeUntil, setSnoozeUntil] = useState<number | null>(null);
+  const [confirmWake, setConfirmWake] = useState(false);
+  const ringRef = useRef<HTMLDivElement>(null);
   const holdStart = useRef<number | null>(null);
   const holding = useRef(false);
   const raf = useRef<number | null>(null);
@@ -58,6 +52,7 @@ export function SessionScreen() {
   const dueInputs = useRef<{
     active: typeof active;
     alarm: AlarmConfig | null;
+    at: number | null;
     snoozeUntil: number | null;
     ringing: boolean;
   } | null>(null);
@@ -83,7 +78,7 @@ export function SessionScreen() {
         const due =
           s.snoozeUntil != null
             ? d.getTime() >= s.snoozeUntil
-            : isAlarmDue(s.alarm.time, s.active.startedAt, d);
+            : s.at != null && d.getTime() >= s.at;
         if (due) setRinging(true);
       }
     }, 1000);
@@ -113,10 +108,17 @@ export function SessionScreen() {
     };
   }, [keepAwake]);
 
-  const nextAlarmObj =
-    alarms
-      .filter((a) => a.enabled)
-      .sort((a, b) => a.time.localeCompare(b.time))[0] ?? null;
+  // The alarm that will actually ring for THIS night — resolved from the
+  // session start and each alarm's repeat days, not from the earliest clock
+  // string. `alarm` is an element of `alarms`, so its identity is stable
+  // across the 1s ticks and the tone effect below never restarts.
+  const startedAt = active?.startedAt;
+  const next = useMemo(
+    () => (startedAt ? nextAlarmFor(alarms, new Date(startedAt)) : null),
+    [alarms, startedAt],
+  );
+  const nextAlarmObj = next?.alarm ?? null;
+  const nextAlarmAt = next?.at ?? null;
   const nextAlarm = nextAlarmObj?.time;
 
   // Keep the interval's alarm-due inputs current. In-app alarm rings at the
@@ -124,8 +126,14 @@ export function SessionScreen() {
   // the loud, reliable wake that doesn't depend on the OS notification
   // surviving silent mode.
   useEffect(() => {
-    dueInputs.current = { active, alarm: nextAlarmObj, snoozeUntil, ringing };
-  }, [active, nextAlarmObj, snoozeUntil, ringing]);
+    dueInputs.current = {
+      active,
+      alarm: nextAlarmObj,
+      at: nextAlarmAt,
+      snoozeUntil,
+      ringing,
+    };
+  }, [active, nextAlarmObj, nextAlarmAt, snoozeUntil, ringing]);
 
   // Play / stop the tone as the ringing state flips.
   useEffect(() => {
@@ -139,7 +147,24 @@ export function SessionScreen() {
   // Tear down the audio context when the session screen unmounts.
   useEffect(() => () => playerRef.current?.dispose(), []);
 
+  // Never leave the hold's rAF running after an interrupted touch or unmount.
+  useEffect(
+    () => () => {
+      if (raf.current) cancelAnimationFrame(raf.current);
+    },
+    [],
+  );
+
+  // Move focus into the ring when the alarm fires. role="alertdialog" plus the
+  // focus move is what announces it to a screen reader; it also collapses any
+  // half-open confirmation behind the ring.
+  useEffect(() => {
+    if (!ringing) return;
+    ringRef.current?.querySelector('button')?.focus();
+  }, [ringing]);
+
   const dismiss = () => {
+    void cancelSnooze();
     setRinging(false);
     wake();
   };
@@ -147,15 +172,26 @@ export function SessionScreen() {
     setRinging(false);
     const min = nextAlarmObj?.snoozeMinutes ?? 5;
     setSnoozeUntil(Date.now() + min * 60000);
+    // OS backstop: the in-app timer above dies the moment the screen locks.
+    void scheduleSnooze(min, lang);
   };
+
+  // Covers every other way out of a session — hold-to-wake, smart wake and
+  // Cancel — none of which go through dismiss().
+  useEffect(
+    () => () => {
+      void cancelSnooze();
+    },
+    [],
+  );
 
   // Smart wake: each tick, check whether movement suggests light sleep inside
   // the window before the alarm. Only runs while this screen is foregrounded.
   useEffect(() => {
-    if (!active || !smartAlarm || !nextAlarm) return;
+    if (!active || !smartAlarm || nextAlarmAt == null) return;
     const elapsedMin =
       (now.getTime() - new Date(active.startedAt).getTime()) / 60000;
-    const minutesToAlarm = minutesUntil(nextAlarm, now);
+    const minutesToAlarm = (nextAlarmAt - now.getTime()) / 60000;
     if (
       shouldSmartWake({
         movements: recorderRef.current?.current ?? [],
@@ -166,7 +202,7 @@ export function SessionScreen() {
     ) {
       wake(true);
     }
-  }, [now, active, smartAlarm, nextAlarm, smartWindowMin, wake]);
+  }, [now, active, smartAlarm, nextAlarmAt, smartWindowMin, wake]);
 
   if (!active) return null;
 
@@ -203,7 +239,11 @@ export function SessionScreen() {
   return (
     <div className="app-frame" style={{ background: 'var(--bg)' }}>
       <NightSky />
-      <div className="session-wrap">
+      <div
+        className="session-wrap"
+        inert={ringing ? true : undefined}
+        aria-hidden={ringing || undefined}
+      >
         <EyeMark size={56} color="var(--text)" open={false} />
 
         <div className="session-mid">
@@ -218,7 +258,7 @@ export function SessionScreen() {
               {smartAlarm && ` ${t('sep.middot')}${t('session.smartWake')}`}
             </div>
           )}
-          <div className="session-alarm" style={{ opacity: 0.55 }}>
+          <div className="session-alarm">
             {t('session.recording')}
             {moveCount > 0 ? ` ${t('sep.middot')}${moveCount}` : ''}
           </div>
@@ -232,18 +272,60 @@ export function SessionScreen() {
 
           <button
             className="wake-btn"
+            data-holding={holdProgress > 0}
+            aria-describedby="wake-hint"
             onMouseDown={startHold}
             onMouseUp={endHold}
             onMouseLeave={endHold}
             onTouchStart={startHold}
             onTouchEnd={endHold}
+            onTouchCancel={endHold}
+            onPointerCancel={endHold}
+            onBlur={endHold}
+            onKeyDown={(e) => {
+              if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) {
+                e.preventDefault();
+                startHold();
+              }
+            }}
+            onKeyUp={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') endHold();
+            }}
           >
             <span
               className="wake-fill"
+              aria-hidden="true"
               style={{ transform: `scaleX(${holdProgress})` }}
             />
             <span style={{ position: 'relative' }}>{t('session.holdToWake')}</span>
           </button>
+          <p
+            id="wake-hint"
+            className="muted"
+            style={{ fontSize: 13, textAlign: 'center' }}
+          >
+            {t('session.holdHint')}
+          </p>
+
+          {/* A single-tap escape hatch with no timing requirement. Its own
+              control rather than a click handler on the hold button, so a
+              stray tap while asleep still does nothing. Collapsed while the
+              alarm rings — the ring owns the screen then. */}
+          {confirmWake && !ringing ? (
+            <div className="alarm-ring-actions">
+              <span className="muted">{t('session.confirmWake')}</span>
+              <Button block onClick={() => wake()}>
+                {t('session.confirmWakeYes')}
+              </Button>
+              <button className="back-btn" onClick={() => setConfirmWake(false)}>
+                {t('common.cancel.soft')}
+              </button>
+            </div>
+          ) : (
+            <button className="back-btn" onClick={() => setConfirmWake(true)}>
+              {t('session.endNow')}
+            </button>
+          )}
 
           <button className="back-btn" onClick={cancelSession}>
             {t('common.cancel')}
@@ -252,12 +334,20 @@ export function SessionScreen() {
       </div>
 
       {ringing && (
-        <div className="alarm-ring">
+        <div
+          className="alarm-ring"
+          ref={ringRef}
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="alarm-ring-title"
+        >
           <EyeMark size={72} color="var(--mist)" open />
           <div className="alarm-ring-time num">
             {hh}:{mm}
           </div>
-          <div className="alarm-ring-title">{t('session.wakeTime')}</div>
+          <div className="alarm-ring-title" id="alarm-ring-title">
+            {t('session.wakeTime')}
+          </div>
           <div className="alarm-ring-actions">
             <Button block large onClick={dismiss}>
               {t('session.dismiss')}

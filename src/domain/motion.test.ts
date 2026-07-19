@@ -136,3 +136,29 @@ describe('shouldSmartWake', () => {
     ).toBe(false);
   });
 });
+
+describe('shouldSmartWake settling floor', () => {
+  const movements = [{ t: 10, magnitude: 2 }, { t: 11, magnitude: 2 }];
+
+  it('does not fire from the movements of settling into bed', () => {
+    // Session started 12 min ago, alarm 20 min away, window 30: inside the
+    // window and moving, but this is someone putting the phone down.
+    expect(
+      shouldSmartWake({ movements, elapsedMin: 12, minutesToAlarm: 20, windowMin: 30 }),
+    ).toBe(false);
+  });
+
+  it('fires on the same signal once the night is under way', () => {
+    const late = [{ t: 400, magnitude: 2 }, { t: 401, magnitude: 2 }];
+    expect(
+      shouldSmartWake({ movements: late, elapsedMin: 402, minutesToAlarm: 20, windowMin: 30 }),
+    ).toBe(true);
+  });
+
+  it('still honours the hard alarm boundary on a short session', () => {
+    // The floor must never be able to suppress the alarm itself.
+    expect(
+      shouldSmartWake({ movements: [], elapsedMin: 5, minutesToAlarm: 0, windowMin: 30 }),
+    ).toBe(true);
+  });
+});

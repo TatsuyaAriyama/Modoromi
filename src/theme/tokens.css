@@ -42,14 +42,46 @@
   --tracking-wider: 0.14em;
   --tracking-widest: 0.24em;
 
-  /* Motion */
+  /* ── Motion ─────────────────────────────────────────────────────
+     A calm night: things arrive on a long ease-out and come to rest.
+     Nothing overshoots, nothing bounces, nothing pulses asymmetrically. */
+
+  /* Durations. Slower than a typical product-UI scale on purpose — speed
+     reads as urgency, and this app's job is to lower arousal. */
+  --dur-press: 120ms; /* tap / release feedback */
+  --dur-state: 220ms; /* colour, selection, toggle */
+  --dur-enter: 380ms; /* one element arriving */
+  --dur-screen: 620ms; /* a whole screen, a sheet, the dock pill */
+  --dur-reveal: 900ms; /* celestial reveals: the moon terminator, the arc */
+
+  /* Ambient loop periods. Long enough to read as weather, not as UI. */
+  --loop-twinkle: 7s;
+
+  /* Stagger step between siblings; a unitless --i multiplies it. */
+  --stagger: 55ms;
+
+  /* Easing.
+     rise  — ENTRANCES, the default. Both y control points are 1, so it
+             approaches its target and stops: incapable of overshoot.
+     soft  — kept verbatim; .btn, .tab and .tab-label already depend on it.
+     tide  — AMBIENT LOOPS ONLY. Symmetric sine in-out. An asymmetric loop
+             has a fast phase and a slow phase, which reads as a heartbeat
+             (arousal); a symmetric one reads as breathing (calm).
+     state — non-spatial changes (colour, opacity): a neutral in-out. */
+  --ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-tide: cubic-bezier(0.37, 0, 0.63, 1);
+  --ease-state: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Pressed fill for .btn-primary; per-theme so it always reads as deeper
+     than the resting plane rather than merging with it. */
+  --primary-press: #6d5ca8;
 }
 
 /* ---- day theme (paper × violet ink) ---- */
 [data-theme="day"] {
   --mint: #2c8a60; /* darker doses for paper ground */
-  --rose: #bf4f6c;
+  --rose: #a83a56; /* the destructive label needs AA on --surface */
   --bg: #f2effa;
   --surface: #fbfaff;
   --surface-2: #e9e4f6;
@@ -67,6 +99,7 @@
   --sky-star: transparent;
   --sky-ring: rgba(22, 16, 31, 0.06);
   --sky-opacity: 1;
+  --primary-press: #4b3ba8;
 }
 
 /* ---- night theme (default: near-black × violet) ---- */
@@ -87,15 +120,19 @@
   --sky-star: #cfc6f4;
   --sky-ring: rgba(207, 198, 244, 0.09);
   --sky-opacity: 1;
+  --primary-press: #5b48c8;
 }
 
 /* ---- sleep theme (active session, minimal luminance) ---- */
 [data-theme="sleep"] {
   --bg: #06040d;
   --surface: #06040d;
-  --surface-2: #0d0918;
+  /* 0d0918 sat at 1.04:1 against the ground — the off-toggle plane was
+     invisible. Still near-zero luminance, just actually perceivable. */
+  --surface-2: #1a1430;
   --text: #8f7cb4;
-  --text-mute: #514566;
+  /* was #514566 — 2.3:1, under WCAG 1.4.3. */
+  --text-mute: #7f7099;
   --primary: #64549c;
   --primary-contrast: #06040d;
   --accent: #64549c;
@@ -108,4 +145,5 @@
   --sky-star: transparent;
   --sky-ring: transparent;
   --sky-opacity: 0;
+  --primary-press: #4e4180;
 }

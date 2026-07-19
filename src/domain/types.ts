@@ -45,6 +45,12 @@ export interface AlarmConfig {
   snoozeEnabled: boolean;
   snoozeMinutes: number;
   enabled: boolean;
+  /**
+   * For a one-shot alarm (empty `repeatDays`): the ISO instant it is armed
+   * for. Lets the OS schedule an absolute, non-repeating trigger and lets the
+   * app retire the alarm once that instant has passed.
+   */
+  firesAt?: string;
 }
 
 export type ThemePref = 'auto' | 'day' | 'night';

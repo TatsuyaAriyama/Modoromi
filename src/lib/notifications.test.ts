@@ -39,12 +39,43 @@ describe('buildAlarmNotifications', () => {
   });
 
   it('rings a one-shot alarm as a chained burst with the alarm sound', () => {
-    const n = buildAlarmNotifications([alarm()]);
+    const now = new Date('2026-07-19T22:00:00');
+    const n = buildAlarmNotifications([alarm()], 'en', MAX_PENDING, now);
     expect(n).toHaveLength(ALARM_RING_MINUTES);
     expect(n.every((x) => x.sound === ALARM_SOUND)).toBe(true);
-    // consecutive minutes 07:00, 07:01, 07:02 — and no weekday (one-shot)
-    expect(n.map((x) => x.schedule?.on?.minute)).toEqual([0, 1, 2]);
-    expect(n.every((x) => x.schedule?.on?.weekday === undefined)).toBe(true);
+    // A one-shot must use an ABSOLUTE trigger: `schedule.on` is a calendar
+    // trigger, which iOS repeats every day forever.
+    expect(n.every((x) => x.schedule?.on === undefined)).toBe(true);
+    const ats = n.map((x) => x.schedule?.at as Date);
+    expect(ats.map((d) => d.getMinutes())).toEqual([0, 1, 2]);
+    expect(ats.every((d) => d.getHours() === 7)).toBe(true);
+    // 22:00 on the 19th → the 07:00 the next morning.
+    expect(ats.every((d) => d.getDate() === 20)).toBe(true);
+  });
+
+  it('arms a one-shot from firesAt when the alarm carries one', () => {
+    const now = new Date('2026-07-19T22:00:00');
+    const firesAt = new Date('2026-07-23T06:30:00').toISOString();
+    const n = buildAlarmNotifications([alarm({ firesAt })], 'en', MAX_PENDING, now);
+    const first = n[0].schedule?.at as Date;
+    expect(first.toISOString()).toBe(firesAt);
+  });
+
+  it('drops a one-shot whose instant has already passed', () => {
+    const now = new Date('2026-07-19T22:00:00');
+    const firesAt = new Date('2026-07-18T06:30:00').toISOString();
+    // A past date makes iOS reject the whole batch, so it must not be emitted.
+    expect(
+      buildAlarmNotifications([alarm({ firesAt })], 'en', MAX_PENDING, now),
+    ).toHaveLength(0);
+  });
+
+  it('gives colliding alarm ids distinct notification ids', () => {
+    const n = buildAlarmNotifications([
+      alarm({ id: 'aaaaaaaa', time: '06:00' }),
+      alarm({ id: 'zzzzzzzz', time: '06:30' }),
+    ]);
+    expect(new Set(n.map((x) => x.id)).size).toBe(n.length);
   });
 
   it('schedules a burst per repeat weekday with Capacitor weekday numbers', () => {
@@ -100,10 +131,10 @@ describe('buildAlarmNotifications', () => {
     );
     const n = buildAlarmNotifications(many, 'en', 60);
     const ids = new Set(many.map((a) => a.id));
-    // Each one-shot alarm owns a distinct notifId slot-0; count alarms covered.
+    // Each one-shot alarm owns a distinct id at its first chime; count them.
     const covered = new Set(
       n
-        .filter((x) => x.schedule?.on?.minute === 0)
+        .filter((x) => (x.schedule?.at as Date).getMinutes() === 0)
         .map((x) => x.id),
     );
     expect(covered.size).toBe(ids.size);
@@ -117,7 +148,7 @@ describe('buildAlarmNotifications', () => {
     );
     const n = buildAlarmNotifications(many, 'en', 60);
     expect(n).toHaveLength(60);
-    expect(n.every((x) => x.schedule?.on?.minute === 0)).toBe(true);
+    expect(n.every((x) => (x.schedule?.at as Date).getMinutes() === 0)).toBe(true);
   });
 
   it('returns nothing when the budget is exhausted', () => {

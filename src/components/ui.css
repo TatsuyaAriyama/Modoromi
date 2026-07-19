@@ -27,20 +27,65 @@
   justify-content: center;
   gap: var(--space-2);
 }
+/* ── One press language ──────────────────────────────────────────
+   Filled planes compress under the finger. Anything that owns a 1px hairline
+   is NEVER scaled — scaling visibly thickens or thins the hairline — so those
+   controls answer with colour instead. */
 .btn:active {
-  transform: scale(0.97);
+  transform: scale(0.972);
+  transition-duration: var(--dur-press);
 }
 .btn:disabled {
   opacity: 0.4;
   cursor: default;
 }
 
+/* The app had no focus indicator at all: a keyboard or Switch Control user
+   could not see where they were. */
+.btn:focus-visible,
+.wake-btn:focus-visible,
+.back-btn:focus-visible,
+.icon-btn:focus-visible,
+.tab:focus-visible,
+.seg button:focus-visible,
+.quick-orb:focus-visible,
+.moon-dome:focus-visible,
+.day-chip:focus-visible,
+.nap-chip:focus-visible,
+.mood-opt:focus-visible,
+.toggle:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+/* The sheet itself is focused programmatically on open; the UA ring there
+   would read as a stray rectangle around the whole panel. */
+.sheet:focus {
+  outline: none;
+}
+
 .btn-primary {
   background: var(--primary);
   color: var(--primary-contrast);
 }
+/* A themed press colour: a fixed --violet-deep made the pressed state read as
+   the plane behind it on the day theme, and vanish entirely on sleep. */
 .btn-primary:active {
-  background: var(--violet-deep);
+  background: var(--primary-press, var(--violet-deep));
+}
+/* The wake action sits ON a violet plane, so it must invert rather than
+   deepen — violet-on-violet is not a button. */
+.alarm-ring .btn-primary {
+  background: var(--mist);
+  color: var(--violet-deep);
+}
+.alarm-ring .btn-primary:active {
+  background: var(--lavender);
+  color: var(--violet-deep);
+}
+
+/* One semantic class instead of a colour literal repeated inline. */
+.text-danger {
+  color: var(--rose);
 }
 .btn-ghost {
   background: transparent;
@@ -88,6 +133,15 @@
   border-color: var(--primary);
   background: var(--primary);
   color: var(--primary-contrast);
+}
+/* Selected = a filled plane, so it may compress; unselected owns a hairline. */
+.mood-opt[data-selected='true']:active {
+  transform: scale(0.972);
+  transition-duration: var(--dur-press);
+}
+.mood-opt:active {
+  border-color: var(--primary);
+  transition-duration: var(--dur-press);
 }
 .mood-emoji {
   display: grid;
