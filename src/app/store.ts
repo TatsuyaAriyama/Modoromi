@@ -11,9 +11,11 @@ import { armAlarm, expireOneShots } from '../domain/alarmFire';
 import {
   DEFAULT_SETTINGS,
   alarmRepo,
+  dataFaults,
   runtimeRepo,
   settingsRepo,
   sleepRepo,
+  type DataFault,
 } from '../data/repositories';
 import { uid } from '../lib/id';
 import { syncSchedules } from '../lib/notifications';
@@ -57,6 +59,8 @@ interface AppState {
   active: ActiveSession;
   /** Session awaiting the morning check (set after waking). */
   pendingMorning: SleepSession | null;
+  /** Reads that could not be trusted this launch; surfaced in Settings. */
+  faults: DataFault[];
 
   init(): Promise<void>;
 
@@ -70,7 +74,7 @@ interface AppState {
     note?: string;
     theme?: string;
   }): Promise<void>;
-  dismissMorning(): void;
+  dismissMorning(): Promise<void>;
 
   updateSession(session: SleepSession): Promise<void>;
   deleteSession(id: string): Promise<void>;
@@ -89,6 +93,7 @@ export const useStore = create<AppState>((set, get) => ({
   settings: DEFAULT_SETTINGS,
   active: null,
   pendingMorning: null,
+  faults: [],
 
   async init() {
     const [sessions, alarms, settings, runtime] = await Promise.all([
@@ -115,6 +120,8 @@ export const useStore = create<AppState>((set, get) => ({
       settings,
       active,
       pendingMorning: runtime.pendingMorning,
+      // Recorded by the repository reads that just ran above.
+      faults: dataFaults(),
       loaded: true,
     });
     if (!active && runtime.active) {
@@ -185,16 +192,22 @@ export const useStore = create<AppState>((set, get) => ({
     refreshWidget(get().sessions, settings);
   },
 
-  dismissMorning() {
+  async dismissMorning() {
     // Persist the duration-only session even if the user skips the check.
     const { pendingMorning, settings } = get();
     if (!pendingMorning) return;
+    try {
+      await sleepRepo.save(pendingMorning);
+    } catch {
+      // Keep the night pending rather than clearing it: a failed write must
+      // leave the check outstanding, not delete the night.
+      return;
+    }
     set((s) => ({
       sessions: [...s.sessions, pendingMorning],
       pendingMorning: null,
     }));
     persistRuntime(get);
-    void sleepRepo.save(pendingMorning);
     if (settings.healthSync) void mirrorSleepToHealth(pendingMorning);
     void syncSchedules(get().alarms, settings, get().sessions);
     refreshWidget(get().sessions, settings);

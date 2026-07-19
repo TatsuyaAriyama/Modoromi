@@ -63,7 +63,7 @@ function isMovement(x: unknown): x is Movement {
   return isObject(x) && isNum(x.t) && isNum(x.magnitude);
 }
 
-function isSleepSession(x: unknown): x is SleepSession {
+export function isSleepSession(x: unknown): x is SleepSession {
   if (!isObject(x)) return false;
   if (!isStr(x.id) || !isStr(x.startedAt) || !isStr(x.endedAt)) return false;
   if (!isNum(x.durationMin)) return false;
@@ -82,7 +82,7 @@ function isSleepSession(x: unknown): x is SleepSession {
   return true;
 }
 
-function isAlarm(x: unknown): x is AlarmConfig {
+export function isAlarm(x: unknown): x is AlarmConfig {
   return (
     isObject(x) &&
     isStr(x.id) &&

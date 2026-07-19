@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import '../screens.css';
 import { Sheet } from '../../components/Sheet';
+import { DataFaultNotice } from './DataFaultNotice';
 import { useStore } from '../../app/store';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
@@ -25,6 +26,7 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
   const wipeId = useId();
   const lang = useLang();
   const settings = useStore((s) => s.settings);
+  const faults = useStore((s) => s.faults);
   const sessions = useStore((s) => s.sessions);
   const saveSettings = useStore((s) => s.saveSettings);
   const init = useStore((s) => s.init);
@@ -104,6 +106,8 @@ export function SettingsScreen({ onClose }: { onClose: () => void }) {
         <h1 style={{ fontSize: 18 }}>{t('settings.title')}</h1>
         <span style={{ width: 48 }} />
       </div>
+
+      <DataFaultNotice faults={faults} />
 
       <Card>
         <div className="set-row">

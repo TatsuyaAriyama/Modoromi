@@ -106,7 +106,9 @@ describe('session lifecycle', () => {
     useStore.getState().endSession();
     vi.useRealTimers();
 
-    useStore.getState().dismissMorning();
+    // Awaited now: the night is committed to storage BEFORE it leaves the
+    // pending slot, so a failed write can no longer delete it.
+    await useStore.getState().dismissMorning();
     const { sessions, pendingMorning } = useStore.getState();
     expect(pendingMorning).toBeNull();
     expect(sessions).toHaveLength(1);

@@ -363,6 +363,27 @@ export const messages: Record<string, Msg> = {
     en: 'Add the Madoromi widget from your Home Screen to see today’s thinking condition and sleep debt at a glance. It refreshes after each morning check.',
     ja: 'ホーム画面にMadoromiのウィジェットを追加すると、今日の思考コンディションと睡眠負債をひと目で確認できます。朝のチェックのたびに自動で更新されます。',
   },
+  // ── data faults (a read that could not be trusted) ──────
+  'data.faultTitle': {
+    en: 'Some stored data could not be read',
+    ja: '読み取れなかったデータがあります',
+  },
+  'data.faultSessions': {
+    en: 'Your sleep log could not be read, so the app is starting a fresh one.',
+    ja: '睡眠の記録を読み取れなかったため、新しい記録を開始しています。',
+  },
+  'data.faultAlarms': {
+    en: 'Your alarms could not be read, so the list is starting empty.',
+    ja: 'アラームを読み取れなかったため、一覧は空から始まっています。',
+  },
+  'data.faultPartial': {
+    en: (p) => `${p.count} ${plural(p.count, 'entry was', 'entries were')} unreadable and left out.`,
+    ja: (p) => `${p.count}件が読み取れず、除外されています。`,
+  },
+  'data.faultKept': {
+    en: 'The original file has been set aside, not deleted — restoring a backup replaces it.',
+    ja: '元のファイルは削除せず退避してあります。バックアップを読み込むと置き換わります。',
+  },
   'settings.exportData': { en: 'Export data (JSON)', ja: 'データをエクスポート（JSON）' },
   'settings.export': { en: 'Export', ja: '書き出す' },
   'settings.exportCsvData': { en: 'Export sleep log (CSV)', ja: '睡眠ログを書き出す（CSV）' },

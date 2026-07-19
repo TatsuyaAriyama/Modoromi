@@ -9,6 +9,7 @@ import { bedtimeReminderContent } from '../domain/bedtime';
 import { sleepDebtMin } from '../domain/debt';
 import { translate as tr, formatDuration } from '../i18n/catalog';
 import { isNative } from './platform';
+import { enqueue } from '../data/keyQueue';
 
 /**
  * Notification scheduling.
@@ -198,8 +199,25 @@ export function buildBedtimeNotification(
   };
 }
 
-/** Rebuild all scheduled notifications from the current alarms + settings. */
-export async function syncSchedules(
+/**
+ * Rebuild all scheduled notifications from the current alarms + settings.
+ *
+ * Serialized: this is itself an unguarded read-modify-write over OS state
+ * (getPending → cancel → schedule) and it is fired with a bare `void` after
+ * every mutation, so two fast alarm toggles could otherwise interleave and
+ * leave the stale set pending — or nothing at all.
+ */
+export function syncSchedules(
+  alarms: AlarmConfig[],
+  settings: UserSettings,
+  sessions: SleepSession[] = [],
+): Promise<void> {
+  return enqueue('madoromi.notifications', () =>
+    syncSchedulesImpl(alarms, settings, sessions),
+  );
+}
+
+async function syncSchedulesImpl(
   alarms: AlarmConfig[],
   settings: UserSettings,
   sessions: SleepSession[] = [],

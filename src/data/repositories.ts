@@ -1,5 +1,71 @@
 import type { AlarmConfig, SleepSession, UserSettings } from '../domain/types';
-import { getJSON, removeKey, setJSON } from './storage';
+import {
+  getJSON,
+  purgeQuarantine,
+  readChecked,
+  removeKey,
+  setJSON,
+  type FaultReason,
+  type ParseOutcome,
+} from './storage';
+import { enqueue } from './keyQueue';
+import { isAlarm, isSleepSession } from '../domain/backup';
+
+/* ── Data faults ─────────────────────────────────────────────────────────
+   A read that could not be trusted, recorded for this launch only. There is
+   deliberately NO persisted fault index and NO write lock: quarantining the
+   blob already prevents the permanent loss, whereas refusing later writes
+   would create a NEW one — every night recorded between the bad read and the
+   user noticing would be thrown away. */
+
+export type DataKey = 'sessions' | 'alarms';
+
+export interface DataFault {
+  key: DataKey;
+  reason: FaultReason;
+  /** Entries individually invalid and left out; 0 when the whole blob failed. */
+  dropped: number;
+}
+
+let faults: DataFault[] = [];
+
+/** Faults recorded since launch. The originals are in quarantine storage. */
+export function dataFaults(): DataFault[] {
+  return faults;
+}
+
+export function clearFaults(): void {
+  faults = [];
+}
+
+/** Keep the entries we understand and count the ones we do not. Rejecting a
+ *  whole log because one night is malformed would throw away months. */
+function arrayOf<T>(guard: (x: unknown) => x is T) {
+  return (raw: unknown): ParseOutcome<T[]> => {
+    if (!Array.isArray(raw)) return { ok: false };
+    const value = raw.filter(guard);
+    return { ok: true, value, dropped: raw.length - value.length };
+  };
+}
+
+async function readList<T>(
+  key: string,
+  faultKey: DataKey,
+  guard: (x: unknown) => x is T,
+): Promise<T[]> {
+  const r = await readChecked<T[]>(key, arrayOf(guard), []);
+  if (!r.ok) {
+    faults = [...faults.filter((f) => f.key !== faultKey), { key: faultKey, reason: r.reason, dropped: 0 }];
+    return [];
+  }
+  if (r.dropped > 0) {
+    faults = [
+      ...faults.filter((f) => f.key !== faultKey),
+      { key: faultKey, reason: 'partial', dropped: r.dropped },
+    ];
+  }
+  return r.value;
+}
 
 const KEYS = {
   sessions: 'madoromi.sessions',
@@ -59,40 +125,56 @@ export interface RuntimeRepository {
   set(state: RuntimeState): Promise<void>;
 }
 
+/* Mutations run on the key's FIFO chain, so two saves in the same tick cannot
+   both read the pre-change list. Reads stay UNqueued: a read is a single atomic
+   load, and queueing one would deadlock the RMW bodies, which read while
+   holding the key — hence getJSON directly below rather than this.all(). */
 class LocalSleepRepository implements SleepRepository {
   async all(): Promise<SleepSession[]> {
-    return getJSON<SleepSession[]>(KEYS.sessions, []);
+    return readList(KEYS.sessions, 'sessions', isSleepSession);
   }
-  async save(session: SleepSession): Promise<void> {
-    const list = await this.all();
-    const idx = list.findIndex((s) => s.id === session.id);
-    if (idx >= 0) list[idx] = session;
-    else list.push(session);
-    await setJSON(KEYS.sessions, list);
+  save(session: SleepSession): Promise<void> {
+    return enqueue(KEYS.sessions, async () => {
+      const list = await getJSON<SleepSession[]>(KEYS.sessions, []);
+      const idx = list.findIndex((s) => s.id === session.id);
+      if (idx >= 0) list[idx] = session;
+      else list.push(session);
+      await setJSON(KEYS.sessions, list);
+    });
   }
-  async remove(id: string): Promise<void> {
-    const list = (await this.all()).filter((s) => s.id !== id);
-    await setJSON(KEYS.sessions, list);
+  remove(id: string): Promise<void> {
+    return enqueue(KEYS.sessions, async () => {
+      const list = (await getJSON<SleepSession[]>(KEYS.sessions, [])).filter(
+        (s) => s.id !== id,
+      );
+      await setJSON(KEYS.sessions, list);
+    });
   }
-  async replaceAll(sessions: SleepSession[]): Promise<void> {
-    await setJSON(KEYS.sessions, sessions);
+  replaceAll(sessions: SleepSession[]): Promise<void> {
+    return enqueue(KEYS.sessions, () => setJSON(KEYS.sessions, sessions));
   }
 }
 
 class LocalAlarmRepository implements AlarmRepository {
   async all(): Promise<AlarmConfig[]> {
-    return getJSON<AlarmConfig[]>(KEYS.alarms, []);
+    return readList(KEYS.alarms, 'alarms', isAlarm);
   }
-  async save(alarm: AlarmConfig): Promise<void> {
-    const list = await this.all();
-    const idx = list.findIndex((a) => a.id === alarm.id);
-    if (idx >= 0) list[idx] = alarm;
-    else list.push(alarm);
-    await setJSON(KEYS.alarms, list);
+  save(alarm: AlarmConfig): Promise<void> {
+    return enqueue(KEYS.alarms, async () => {
+      const list = await getJSON<AlarmConfig[]>(KEYS.alarms, []);
+      const idx = list.findIndex((a) => a.id === alarm.id);
+      if (idx >= 0) list[idx] = alarm;
+      else list.push(alarm);
+      await setJSON(KEYS.alarms, list);
+    });
   }
-  async remove(id: string): Promise<void> {
-    const list = (await this.all()).filter((a) => a.id !== id);
-    await setJSON(KEYS.alarms, list);
+  remove(id: string): Promise<void> {
+    return enqueue(KEYS.alarms, async () => {
+      const list = (await getJSON<AlarmConfig[]>(KEYS.alarms, [])).filter(
+        (a) => a.id !== id,
+      );
+      await setJSON(KEYS.alarms, list);
+    });
   }
 }
 
@@ -100,8 +182,9 @@ class LocalSettingsRepository implements SettingsRepository {
   async get(): Promise<UserSettings> {
     return { ...DEFAULT_SETTINGS, ...(await getJSON(KEYS.settings, {})) };
   }
-  async set(settings: UserSettings): Promise<void> {
-    await setJSON(KEYS.settings, settings);
+  set(settings: UserSettings): Promise<void> {
+    // A blind write, but still queued so last-caller-wins is deterministic.
+    return enqueue(KEYS.settings, () => setJSON(KEYS.settings, settings));
   }
 }
 
@@ -120,8 +203,8 @@ class LocalRuntimeRepository implements RuntimeRepository {
       p && typeof p.id === 'string' && Number.isFinite(p.durationMin) ? p : null;
     return { active, pendingMorning };
   }
-  async set(state: RuntimeState): Promise<void> {
-    await setJSON(KEYS.runtime, state);
+  set(state: RuntimeState): Promise<void> {
+    return enqueue(KEYS.runtime, () => setJSON(KEYS.runtime, state));
   }
 }
 
@@ -130,8 +213,58 @@ export const alarmRepo: AlarmRepository = new LocalAlarmRepository();
 export const settingsRepo: SettingsRepository = new LocalSettingsRepository();
 export const runtimeRepo: RuntimeRepository = new LocalRuntimeRepository();
 
+const BULK = 'madoromi.bulk';
+const ALL_KEYS: string[] = Object.values(KEYS);
+
+/**
+ * Run `task` while holding every key's chain, so a bulk read or write always
+ * corresponds to a state the app was actually in — an export must never
+ * capture new sessions alongside old alarms.
+ *
+ * Bulk operations are serialized on their own chain first, so two of them can
+ * never each hold a subset of the keys and deadlock. Ordinary writes never
+ * wait on the bulk chain, so there is no cycle in the other direction.
+ */
+function withAllKeys<T>(task: () => Promise<T>): Promise<T> {
+  return enqueue(BULK, () => {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    const acquired: Promise<void>[] = [];
+    for (const k of ALL_KEYS) {
+      let held!: () => void;
+      acquired.push(
+        new Promise<void>((r) => {
+          held = r;
+        }),
+      );
+      void enqueue(k, () => {
+        held();
+        return gate;
+      });
+    }
+    return Promise.all(acquired)
+      .then(task)
+      .then(
+        (v) => {
+          release();
+          return v;
+        },
+        (e: unknown) => {
+          release();
+          throw e;
+        },
+      );
+  });
+}
+
 /** Full export blob for Settings → Export. */
-export async function exportAll(): Promise<string> {
+export function exportAll(): Promise<string> {
+  return withAllKeys(exportAllImpl);
+}
+
+async function exportAllImpl(): Promise<string> {
   const [sessions, alarms, settings] = await Promise.all([
     sleepRepo.all(),
     alarmRepo.all(),
@@ -145,7 +278,13 @@ export async function exportAll(): Promise<string> {
 }
 
 /** Wipe every Madoromi key (used by Settings → delete all). */
-export async function wipeAll(): Promise<void> {
+export function wipeAll(): Promise<void> {
+  return withAllKeys(wipeAllImpl);
+}
+
+async function wipeAllImpl(): Promise<void> {
+  clearFaults();
+  await purgeQuarantine();
   await Promise.all([
     removeKey(KEYS.sessions),
     removeKey(KEYS.alarms),
@@ -158,11 +297,21 @@ export async function wipeAll(): Promise<void> {
  * Overwrite stored data from a validated backup (Settings → Import). Settings
  * are merged onto the current defaults so older backups stay forward-compatible.
  */
-export async function importAll(data: {
+export function importAll(data: {
   sessions: SleepSession[];
   alarms: AlarmConfig[];
   settings: UserSettings | null;
 }): Promise<void> {
+  return withAllKeys(() => importAllImpl(data));
+}
+
+async function importAllImpl(data: {
+  sessions: SleepSession[];
+  alarms: AlarmConfig[];
+  settings: UserSettings | null;
+}): Promise<void> {
+  // A validated restore is the remedy for a fault; stop reporting it.
+  clearFaults();
   const tasks: Promise<void>[] = [
     setJSON(KEYS.sessions, data.sessions),
     setJSON(KEYS.alarms, data.alarms),

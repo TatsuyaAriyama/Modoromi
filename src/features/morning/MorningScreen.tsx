@@ -20,6 +20,7 @@ export function MorningScreen() {
   const dismissMorning = useStore((s) => s.dismissMorning);
 
   const [eyeOpen, setEyeOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [mood, setMood] = useState<Mood | undefined>(undefined);
   const [subjective, setSubjective] = useState(3);
   const [note, setNote] = useState('');
@@ -34,9 +35,11 @@ export function MorningScreen() {
   if (!pending) return null;
 
   const save = async () => {
-    if (!mood) return;
+    if (!mood || saving) return;
+    setSaving(true);
     await saveMorningCheck({ mood, subjective, note, theme });
     void notifySuccess();
+    // No setSaving(false): the store clears pendingMorning and this unmounts.
   };
 
   return (
@@ -101,10 +104,20 @@ export function MorningScreen() {
         </div>
 
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Button block large disabled={!mood} onClick={() => void save()}>
+          <Button
+            block
+            large
+            disabled={!mood || saving}
+            onClick={() => void save()}
+          >
             {t('morning.save')}
           </Button>
-          <Button variant="ghost" block onClick={dismissMorning}>
+          <Button
+            variant="ghost"
+            block
+            disabled={saving}
+            onClick={() => void dismissMorning()}
+          >
             {t('morning.later')}
           </Button>
         </div>
