@@ -6,6 +6,9 @@ import type { SleepSession } from './types';
  * labels in, a flat description out. Nothing here touches a canvas, so it is
  * fully testable under jsdom (which has no canvas at all).
  *
+ * The card carries no prose: no theme, no tier word, no slogan. The only
+ * words on it are the date and the duration, which are the data itself.
+ *
  * REDACTION IS STRUCTURAL. When the user has not opted into showing times,
  * the model carries no bed/wake keys whatsoever — not empty strings, not
  * nulls. A painter bug therefore cannot leak a time, and the test asserts the
@@ -15,7 +18,6 @@ import type { SleepSession } from './types';
 
 export interface ShareOptions {
   showTimes: boolean;
-  showTheme: boolean;
 }
 
 /** Pre-formatted and pre-localized by the caller — this module has no i18n. */
@@ -36,8 +38,6 @@ export interface ShareCardModel {
   sweepMin: number;
   /** Absent unless showTimes. */
   timesLabel?: string;
-  /** Absent unless showTheme AND the theme is non-empty. */
-  theme?: string;
 }
 
 export function buildShareCard(
@@ -47,7 +47,6 @@ export function buildShareCard(
 ): ShareCardModel {
   const bedMin = minuteOfDay(session.startedAt);
   const wakeMin = minuteOfDay(session.endedAt);
-  const theme = session.theme?.trim();
   return {
     dateLabel: labels.date,
     durationLabel: labels.duration,
@@ -60,6 +59,5 @@ export function buildShareCard(
     ...(opts.showTimes
       ? { timesLabel: `${labels.bedHm} → ${labels.wakeHm}` }
       : {}),
-    ...(opts.showTheme && theme ? { theme } : {}),
   };
 }

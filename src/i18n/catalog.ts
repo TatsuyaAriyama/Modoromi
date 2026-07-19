@@ -407,7 +407,6 @@ export const messages: Record<string, Msg> = {
   },
   'share.retry': { en: 'Try again', ja: 'もう一度' },
   'share.showTimes': { en: 'Include bed & wake times', ja: '就寝・起床の時刻を入れる' },
-  'share.showTheme': { en: 'Include the night’s theme', ja: 'その夜のテーマを入れる' },
   'share.privacyNote': {
     en: 'A shared image stays on the other person’s device. Your notes are never included.',
     ja: '共有した画像は相手の端末に残ります。メモが入ることはありません。',
@@ -417,8 +416,6 @@ export const messages: Record<string, Msg> = {
     en: 'Press and hold the card above to save it. A screenshot works too.',
     ja: '上のカードを長押しすると保存できます。スクリーンショットでも大丈夫です。',
   },
-  'share.card.kicker': { en: 'SLEEP', ja: '睡眠時間' },
-  'share.card.tagline': { en: 'Sleep for thinking', ja: '思考のための睡眠' },
   'share.aria': {
     en: (p) => `Share card: ${p.date}, slept ${p.dur}.`,
     ja: (p) => `共有カード：${p.date}、睡眠 ${p.dur}。`,

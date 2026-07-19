@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildShareCard, type ShareLabels } from './shareCard';
 import {
+  CAP_ANGLE,
   CARD_H,
   CARD_W,
   MIN_SWEEP,
@@ -21,9 +22,7 @@ const LABELS: ShareLabels = {
   bedHm: '23:40',
   wakeHm: '07:10',
 };
-const TXT = { kicker: 'この夜', tagline: '眠りを、設計する。' };
-
-function ops(over: Partial<SleepSession> = {}, opts = { showTimes: false, showTheme: false }) {
+function ops(over: Partial<SleepSession> = {}, opts = { showTimes: false }) {
   const s: SleepSession = {
     id: 'n1',
     startedAt: '2026-07-18T23:40:00',
@@ -31,7 +30,7 @@ function ops(over: Partial<SleepSession> = {}, opts = { showTimes: false, showTh
     durationMin: 450,
     ...over,
   };
-  return buildCardOps(buildShareCard(s, LABELS, opts), TXT, measure);
+  return buildCardOps(buildShareCard(s, LABELS, opts), measure);
 }
 
 const texts = (list: Op[]) =>
@@ -45,7 +44,7 @@ describe('buildCardOps', () => {
 
   it('never emits rose, and never emits an unknown ink', () => {
     const allowed = ['ground', 'plane', 'arcInk', 'lavender', 'mist', 'mint'];
-    for (const o of ops({ theme: '論文を書く' }, { showTimes: true, showTheme: true })) {
+    for (const o of ops({ theme: '論文を書く' }, { showTimes: true })) {
       const ink = 'fill' in o ? o.fill : 'ink' in o ? o.ink : null;
       if (ink) expect(allowed).toContain(ink);
     }
@@ -73,18 +72,25 @@ describe('buildCardOps', () => {
   it('draws no time text unless the user opted in', () => {
     const off = texts(ops()).map((t) => t.s).join(' ');
     expect(off).not.toContain('23:40');
-    const on = texts(ops({}, { showTimes: true, showTheme: false })).map((t) => t.s).join(' ');
+    const on = texts(ops({}, { showTimes: true })).map((t) => t.s).join(' ');
     expect(on).toContain('23:40 → 07:10');
   });
 
-  it('never draws the private note', () => {
+  it('draws no free text at all — not the note, not the theme', () => {
     const drawn = texts(
-      ops({ note: '薬を飲んだ', theme: '論文を書く' }, { showTimes: true, showTheme: true }),
+      ops({ note: '薬を飲んだ', theme: '論文の章立てを整理する' }, { showTimes: true }),
     )
       .map((t) => t.s)
       .join(' ');
     expect(drawn).not.toContain('薬');
-    expect(drawn).toContain('論文を書く');
+    // The theme is prose and the user does not want prose on the card. It has
+    // no flag and no path to the canvas — this asserts the absence of both.
+    expect(drawn).not.toContain('論文');
+  });
+
+  it('paints only the wordmark, the date, and the duration as words', () => {
+    const drawn = texts(ops()).map((t) => t.s);
+    expect(drawn).toEqual(['Madoromi', '7月19日(日)', '7', '時間', '30', '分']);
   });
 
   it('anchors the arc at the bed minute and sweeps the night', () => {
@@ -96,27 +102,38 @@ describe('buildCardOps', () => {
   });
 
   it('keeps a 20-minute nap above the visibility floor', () => {
-    const arc = ops(
-      { startedAt: '2026-07-19T14:00:00', endedAt: '2026-07-19T14:20:00', durationMin: 20 },
-    ).find((o) => o.k === 'ring' && o.lw === 26);
+    const nap = { startedAt: '2026-07-19T14:00:00', endedAt: '2026-07-19T14:20:00', durationMin: 20 };
+    const arc = ops(nap).find((o) => o.k === 'ring' && o.lw === 26);
+    const dot = ops(nap).find((o) => o.k === 'dot' && o.fill === 'mint');
+    if (arc?.k !== 'ring' || dot?.k !== 'dot') throw new Error('missing arc or dot');
+    expect(arc.cap).toBe('round');
+    // The drawn range is inset by the cap bleed, so the lozenge's visible tip
+    // lands ON the mint dot rather than a half-stroke beyond it.
+    const tip = arc.a0 + arc.sweep + CAP_ANGLE;
+    const at = theta(14 * 60) + MIN_SWEEP;
+    expect(tip).toBeCloseTo(at, 6);
+    expect(dot.cx).toBeCloseTo(540 + 344 * Math.cos(at), 6);
+    expect(dot.cy).toBeCloseTo(764 + 344 * Math.sin(at), 6);
+  });
+
+  it('does not inset a full night, where a butt cap has no bleed', () => {
+    const arc = ops().find((o) => o.k === 'ring' && o.lw === 26);
     if (arc?.k !== 'ring') throw new Error('not a ring');
-    expect(arc.sweep).toBe(MIN_SWEEP);
+    expect(arc.cap).toBeUndefined();
+    expect(arc.a0).toBeCloseTo(theta(23 * 60 + 40), 6);
   });
 
   it('never lets the hero numeral exceed its column', () => {
-    const long = ops({ durationMin: 725 }, { showTimes: false, showTheme: false });
-    void long;
     // A deliberately huge label must step down the ladder rather than overflow.
     const wide = buildCardOps(
-      { ...buildShareCard(
-          { id: 'x', startedAt: '2026-07-18T22:00:00', endedAt: '2026-07-19T09:05:00', durationMin: 665 },
-          { ...LABELS, duration: '11時間05分' },
-          { showTimes: false, showTheme: false },
-        ) },
-      TXT,
+      buildShareCard(
+        { id: 'x', startedAt: '2026-07-18T22:00:00', endedAt: '2026-07-19T09:05:00', durationMin: 665 },
+        { ...LABELS, duration: '11時間05分' },
+        { showTimes: false },
+      ),
       measure,
     );
-    const heroRuns = texts(wide).filter((t) => t.face === 'num' && t.y === 716);
+    const heroRuns = texts(wide).filter((t) => t.face === 'num' && t.y === 800);
     const total = heroRuns.reduce((w, t) => w + measure(t.s, t.size, 'num'), 0);
     expect(total).toBeLessThanOrEqual(508);
   });

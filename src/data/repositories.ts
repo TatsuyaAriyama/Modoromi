@@ -86,7 +86,6 @@ export const DEFAULT_SETTINGS: UserSettings = {
   smartWindowMin: 30,
   healthSync: false,
   shareShowTimes: false,
-  shareShowTheme: false,
 };
 
 /**

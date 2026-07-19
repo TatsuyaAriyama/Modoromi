@@ -57,7 +57,6 @@ export function ShareSheet({
   } | null>(null);
 
   const showTimes = settings.shareShowTimes ?? false;
-  const showTheme = settings.shareShowTheme ?? false;
 
   const model = useMemo(
     () =>
@@ -69,14 +68,9 @@ export function ShareSheet({
           bedHm: formatHm(isoToHm(session.startedAt), clock),
           wakeHm: formatHm(isoToHm(session.endedAt), clock),
         },
-        { showTimes, showTheme },
+        { showTimes },
       ),
-    [session, lang, clock, showTimes, showTheme],
-  );
-
-  const txt = useMemo(
-    () => ({ kicker: t('share.card.kicker'), tagline: t('share.card.tagline') }),
-    [t],
+    [session, lang, clock, showTimes],
   );
   const caption = t('share.caption', {
     date: model.dateLabel,
@@ -90,7 +84,7 @@ export function ShareSheet({
   // Re-render whenever the model changes — flipping a toggle must repaint.
   useEffect(() => {
     let live = true;
-    void renderCardPng(model, txt).then((blob) => {
+    void renderCardPng(model).then((blob) => {
       if (!live) return;
       const f = blob
         ? new File([blob], 'madoromi.png', { type: 'image/png' })
@@ -100,7 +94,7 @@ export function ShareSheet({
     return () => {
       live = false;
     };
-  }, [model, txt]);
+  }, [model]);
 
   // Only a render that belongs to the CURRENT model may be shown or shared.
   const fresh = render && render.key === model ? render : null;
@@ -158,17 +152,6 @@ export function ShareSheet({
             onChange={(v) => setShare({ shareShowTimes: v })}
           />
         </div>
-
-        {session.theme?.trim() ? (
-          <div className="set-row">
-            <span className="set-label">{t('share.showTheme')}</span>
-            <Toggle
-              on={showTheme}
-              label={t('share.showTheme')}
-              onChange={(v) => setShare({ shareShowTheme: v })}
-            />
-          </div>
-        ) : null}
 
         <p className="muted share-note">{t('share.privacyNote')}</p>
         {route === 'longpress' && status === 'ready' ? (

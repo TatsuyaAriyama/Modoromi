@@ -97,5 +97,4 @@ export interface UserSettings {
    * Put the morning's one-line theme on a shared card. Off by default.
    * `note` has no equivalent flag and is never shareable.
    */
-  shareShowTheme?: boolean;
 }

@@ -5,7 +5,6 @@ import {
   buildCardOps,
   type Face,
   type Ink,
-  type LayoutText,
   type Measure,
   type Op,
 } from '../domain/shareCardLayout';
@@ -128,10 +127,7 @@ export function paintOps(
  * canvas), a refused buffer, a null toBlob — and never throws, so the caller
  * has exactly one branch to handle.
  */
-export async function renderCardPng(
-  model: ShareCardModel,
-  txt: LayoutText,
-): Promise<Blob | null> {
+export async function renderCardPng(model: ShareCardModel): Promise<Blob | null> {
   try {
     const canvas = document.createElement('canvas');
     canvas.width = CARD_W;
@@ -144,7 +140,7 @@ export async function renderCardPng(
     } catch {
       /* no FontFaceSet on this engine */
     }
-    paintOps(ctx, buildCardOps(model, txt, measureWith(ctx)), 1);
+    paintOps(ctx, buildCardOps(model, measureWith(ctx)), 1);
     return await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/png'),
     );

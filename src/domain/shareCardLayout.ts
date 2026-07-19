@@ -40,20 +40,23 @@ export type Op =
 
 /** ~5.2°, applied to the SWEEP so a 20-minute nap is still visible. */
 export const MIN_SWEEP = 0.09;
+/** Half the arc stroke expressed as an angle at radius R: the round-cap bleed. */
+export const CAP_ANGLE = 13 / 344;
 /** Midnight at the top, clockwise. */
 export const theta = (min: number) => -Math.PI / 2 + (min / 1440) * Math.PI * 2;
 
 const CX = 540;
-const CY = 660;
-const R = 300;
+/** Centred in the area the masthead leaves: (178 + 1350) / 2. */
+const CY = 764;
+const R = 344;
 
-/** Fixed, never random: the same night must paint identically twice. None of
- *  these lies inside the orbit box (x 240..840, y 360..960). */
+/** Fixed, never random: the same night must paint identically twice. All sit
+ *  above the orbit, which now owns everything below the masthead rule. */
 const STARS: [number, number, number, number][] = [
   [146, 104, 4.0, 0.3], [332, 168, 3.0, 0.18], [498, 92, 4.6, 0.34],
   [664, 196, 2.6, 0.16], [830, 120, 3.6, 0.24], [962, 232, 3.0, 0.2],
-  [222, 288, 3.2, 0.2], [414, 352, 2.6, 0.14], [586, 306, 4.0, 0.22],
-  [748, 398, 2.8, 0.15], [906, 340, 3.2, 0.18], [112, 420, 2.6, 0.12],
+  [222, 288, 3.2, 0.2], [586, 306, 4.0, 0.22], [906, 340, 3.2, 0.18],
+  [112, 300, 2.6, 0.12], [1006, 148, 2.8, 0.2], [58, 196, 3.0, 0.16],
 ];
 
 export type Measure = (s: string, size: number, face: Face) => number;
@@ -92,16 +95,7 @@ function splitRuns(label: string): { s: string; digit: boolean }[] {
   return out;
 }
 
-export interface LayoutText {
-  kicker: string;
-  tagline: string;
-}
-
-export function buildCardOps(
-  m: ShareCardModel,
-  txt: LayoutText,
-  measure: Measure,
-): Op[] {
+export function buildCardOps(m: ShareCardModel, measure: Measure): Op[] {
   const ops: Op[] = [
     { k: 'rect', x: 0, y: 0, w: CARD_W, h: CARD_H, fill: 'ground' },
   ];
@@ -144,10 +138,20 @@ export function buildCardOps(
   const sweep = Math.max(trueSweep, MIN_SWEEP);
   // A nap at the visibility floor is ~27px of a 26px-wide stroke: with butt
   // caps that is a square, which reads as a rendering fault rather than a
-  // short night. Round it into a lozenge instead.
+  // short night. Round it into a lozenge instead — but a round cap paints
+  // HALF A STROKE past each endpoint, which on a stub that short pushes the
+  // violet clean past the mint dot and makes the marker read as the start of
+  // the night. Inset the drawn range by that overshoot so the lozenge's
+  // visible tips land exactly on a0 and a0 + sweep.
+  const round = trueSweep <= MIN_SWEEP * 1.6;
+  const cap = round ? CAP_ANGLE : 0;
   ops.push({
-    k: 'ring', cx: CX, cy: CY, r: R, a0, sweep, ink: 'arcInk', lw: 26,
-    ...(trueSweep <= MIN_SWEEP * 1.6 ? { cap: 'round' as const } : {}),
+    k: 'ring',
+    cx: CX, cy: CY, r: R,
+    a0: a0 + cap,
+    sweep: Math.max(sweep - cap * 2, 0.001),
+    ink: 'arcInk', lw: 26,
+    ...(round ? { cap: 'round' as const } : {}),
   });
   // The night's one semantic dose, and non-valenced: it marks where the night
   // ended, never whether it was any good.
@@ -156,11 +160,6 @@ export function buildCardOps(
     cx: CX + R * Math.cos(a0 + sweep),
     cy: CY + R * Math.sin(a0 + sweep),
     r: 13, fill: 'mint',
-  });
-
-  ops.push({
-    k: 'text', s: txt.kicker, x: CX, y: 505, size: 40,
-    face: 'sans', ink: 'lavender', align: 'c', track: 0.24, a: 0.45,
   });
 
   // ── the hero numeral: digits full size, units small, centred as one run ──
@@ -183,7 +182,7 @@ export function buildCardOps(
   for (const r of runs) {
     const size = r.digit ? heroSize : Math.round(heroSize * UNIT);
     ops.push({
-      k: 'text', s: r.s, x: hx, y: 700, size,
+      k: 'text', s: r.s, x: hx, y: 800, size,
       face: 'num', ink: 'lavender', align: 'l', ...(r.digit ? {} : { a: 0.55 }),
     });
     hx += measure(r.s, size, 'num');
@@ -191,26 +190,12 @@ export function buildCardOps(
 
   if (m.timesLabel) {
     ops.push({
-      k: 'text', s: m.timesLabel, x: CX, y: 794, size: 40,
+      k: 'text', s: m.timesLabel, x: CX, y: 900, size: 40,
       face: 'num', ink: 'mist', align: 'c', a: 0.6,
     });
   }
 
-  if (m.theme) {
-    const th = fitText(m.theme, 820, [48, 40, 34], 'display', measure);
-    ops.push({
-      k: 'text', s: th.text, x: CX, y: 1088, size: th.size,
-      face: 'display', ink: 'mist', align: 'c', a: 0.85,
-    });
-  }
-
-  // ── colophon: the eye and the wordmark are the whole signature ──
-  ops.push({ k: 'line', x1: 88, y1: 1212, x2: 992, y2: 1212, ink: 'lavender', a: 0.14 });
-  ops.push({ k: 'rect', x: 88, y: 1252, w: 22, h: 22, fill: 'plane' });
-  ops.push({
-    k: 'text', s: txt.tagline, x: 128, y: 1274, size: 30,
-    face: 'display', ink: 'lavender', align: 'l', track: 0.14, a: 0.5,
-  });
-
+  // No colophon, no slogan, no theme line. The eye and the wordmark in the
+  // masthead are the whole signature; everything else on this card is data.
   return ops;
 }
